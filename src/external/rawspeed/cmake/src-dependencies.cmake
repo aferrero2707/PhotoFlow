@@ -1,7 +1,6 @@
-if(BUILD_TESTING)
-  # want GTEST_ADD_TESTS() macro. NOT THE ACTUAL MODULE!
-  include(GTEST_ADD_TESTS)
+include(FeatureSummary)
 
+if(BUILD_TESTING)
   # for the actual gtest:
 
   # at least in debian, they are the package only installs their source code,
@@ -17,28 +16,92 @@ if(BUILD_BENCHMARKING)
   add_dependencies(dependencies benchmark)
 endif()
 
-if(WITH_PTHREADS)
-  message(STATUS "Looking for PThreads")
-  set(CMAKE_THREAD_PREFER_PTHREAD 1)
-  find_package(Threads)
-  if(NOT CMAKE_USE_PTHREADS_INIT)
-    message(SEND_ERROR "Did not find POSIX Threads! Either make it find PThreads, or pass -DWITH_PTHREADS=OFF to disable threading.")
-  else()
-    message(STATUS "Looking for PThreads - found")
-    set(HAVE_PTHREAD 1)
-    target_link_libraries(rawspeed PUBLIC Threads::Threads)
-    set_package_properties(Threads PROPERTIES
-                           TYPE RECOMMENDED
-                           DESCRIPTION "POSIX Threads"
-                           PURPOSE "Used for parallelization of the library itself")
+unset(HAVE_OPENMP)
+if(WITH_OPENMP)
+  message(STATUS "Looking for OpenMP")
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
+     CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+    # Clang has an option to specify the OpenMP standard to use. Specify it.
+    set(OPENMP_VERSION_SPECIFIER "-fopenmp-version=40")
   endif()
+
+  set(CMAKE_C_FLAGS_SAVE "${CMAKE_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS_SAVE "${CMAKE_CXX_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPENMP_VERSION_SPECIFIER}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPENMP_VERSION_SPECIFIER}")
+
+  find_package(OpenMP 4.0)
+
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_SAVE}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_SAVE}")
+
+  if(NOT OPENMP_FOUND)
+    message(SEND_ERROR "Did not find OpenMP! Either make it find OpenMP, "
+                       "or pass -DWITH_OPENMP=OFF to disable OpenMP support.")
+  else()
+    message(STATUS "Looking for OpenMP - found (system)")
+  endif()
+
+  # FIXME: OpenMP::OpenMP_CXX target, and ${OpenMP_CXX_LIBRARIES} were both
+  # added in cmake-3.9. Until then, this is correct:
+  if(NOT TARGET OpenMP::OpenMP_CXX)
+    add_library(OpenMP::OpenMP_CXX INTERFACE IMPORTED)
+    if(OpenMP_CXX_FLAGS)
+      set_property(TARGET OpenMP::OpenMP_CXX PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
+      set_property(TARGET OpenMP::OpenMP_CXX PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS})
+      # Yes, both of them to the same value.
+    endif()
+  endif()
+
+  # The wrapper library that *actually* should be linked to.
+  add_library(RawSpeed::OpenMP_CXX INTERFACE IMPORTED)
+  set_property(TARGET RawSpeed::OpenMP_CXX        PROPERTY INTERFACE_COMPILE_OPTIONS $<TARGET_PROPERTY:OpenMP::OpenMP_CXX,INTERFACE_COMPILE_OPTIONS>)
+  set_property(TARGET RawSpeed::OpenMP_CXX APPEND PROPERTY INTERFACE_COMPILE_OPTIONS ${OPENMP_VERSION_SPECIFIER})
+  if(NOT USE_BUNDLED_LLVMOPENMP)
+    set_property(TARGET RawSpeed::OpenMP_CXX      PROPERTY INTERFACE_LINK_LIBRARIES  $<TARGET_PROPERTY:OpenMP::OpenMP_CXX,INTERFACE_LINK_LIBRARIES>)
+  else()
+    include(LLVMOpenMP)
+
+    message(STATUS "Looking for OpenMP - found 'in-tree' runtime library")
+
+    add_dependencies(RawSpeed::OpenMP_CXX omp)
+    add_dependencies(dependencies omp)
+
+    set_property(TARGET RawSpeed::OpenMP_CXX PROPERTY INTERFACE_LINK_LIBRARIES omp)
+  endif()
+
+  target_link_libraries(rawspeed PRIVATE RawSpeed::OpenMP_CXX)
+
+  set(HAVE_OPENMP 1)
+
+  if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+      CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0) OR
+     (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
+      # XCode 10 is broken. Maybe XCode 11 will be ok?
+     ))
+    # See https://bugs.llvm.org/show_bug.cgi?id=35873
+    #     https://redmine.darktable.org/issues/12568
+    set(OPENMP_FIRSTPRIVATE_CLAUSE_IS_BROKEN_FOR_CONST_VARIABLES TRUE)
+  endif()
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+     CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+    # See https://godbolt.org/z/AiyuX9
+    set(OPENMP_SHARED_CLAUSE_IS_BROKEN_FOR_CONST_VARIABLES TRUE)
+  endif()
+
+  set_package_properties(OpenMP PROPERTIES
+                         TYPE RECOMMENDED
+                         URL https://www.openmp.org/
+                         DESCRIPTION "Open Multi-Processing"
+                         PURPOSE "Used for parallelization of the library")
 else()
-  message(STATUS "PThread-based threading is disabled. Not searching for PThreads")
+  message(STATUS "OpenMP is disabled")
 endif()
-add_feature_info("PThread-based library threading" HAVE_PTHREAD "used for parallelized image decoding")
+add_feature_info("OpenMP-based threading" HAVE_OPENMP "used for parallelization of the library")
 
-include(OpenMP)
-
+unset(HAVE_PUGIXML)
 if(WITH_PUGIXML)
   message(STATUS "Looking for pugixml")
   if(NOT USE_BUNDLED_PUGIXML)
@@ -67,7 +130,7 @@ if(WITH_PUGIXML)
       set_property(TARGET Pugixml::Pugixml PROPERTY INTERFACE_LINK_LIBRARIES "${Pugixml_LIBRARIES}")
     endif()
 
-    target_link_libraries(rawspeed PUBLIC Pugixml::Pugixml)
+    target_link_libraries(rawspeed PRIVATE Pugixml::Pugixml)
     set_package_properties(Pugixml PROPERTIES
                            TYPE REQUIRED
                            URL http://pugixml.org/
@@ -79,6 +142,7 @@ else()
 endif()
 add_feature_info("XML reading" HAVE_PUGIXML "used for loading of data/cameras.xml")
 
+unset(HAVE_JPEG)
 if(WITH_JPEG)
   message(STATUS "Looking for JPEG")
   find_package(JPEG)
@@ -94,7 +158,7 @@ if(WITH_JPEG)
       set_property(TARGET JPEG::JPEG PROPERTY INTERFACE_LINK_LIBRARIES "${JPEG_LIBRARIES}")
     endif()
 
-    target_link_libraries(rawspeed PUBLIC JPEG::JPEG)
+    target_link_libraries(rawspeed PRIVATE JPEG::JPEG)
     set_package_properties(JPEG PROPERTIES
                            TYPE RECOMMENDED
                            DESCRIPTION "free library for handling the JPEG image data format, implements a JPEG codec"
@@ -107,6 +171,7 @@ else()
 endif()
 add_feature_info("Lossy JPEG decoding" HAVE_JPEG "used for DNG Lossy JPEG compression decoding")
 
+unset(HAVE_ZLIB)
 if (WITH_ZLIB)
   message(STATUS "Looking for ZLIB")
   if(NOT USE_BUNDLED_ZLIB)
@@ -136,7 +201,7 @@ if (WITH_ZLIB)
       set_property(TARGET ZLIB::ZLIB PROPERTY INTERFACE_LINK_LIBRARIES "${ZLIB_LIBRARIES}")
     endif()
 
-    target_link_libraries(rawspeed PUBLIC ZLIB::ZLIB)
+    target_link_libraries(rawspeed PRIVATE ZLIB::ZLIB)
     set_package_properties(ZLIB PROPERTIES
                            TYPE RECOMMENDED
                            DESCRIPTION "software library used for data compression"

@@ -5,8 +5,6 @@ FILE(GLOB SOURCES
   "AbstractHuffmanTable.h"
   "AbstractLJpegDecompressor.cpp"
   "AbstractLJpegDecompressor.h"
-  "AbstractParallelizedDecompressor.cpp"
-  "AbstractParallelizedDecompressor.h"
   "AbstractSamsungDecompressor.h"
   "BinaryHuffmanTree.h"
   "Cr2Decompressor.cpp"
@@ -40,6 +38,8 @@ FILE(GLOB SOURCES
   "PanasonicDecompressorV5.h"
   "PentaxDecompressor.cpp"
   "PentaxDecompressor.h"
+  "PhaseOneDecompressor.cpp"
+  "PhaseOneDecompressor.h"
   "SamsungV0Decompressor.cpp"
   "SamsungV0Decompressor.h"
   "SamsungV1Decompressor.cpp"
@@ -52,6 +52,8 @@ FILE(GLOB SOURCES
   "SonyArw2Decompressor.h"
   "UncompressedDecompressor.cpp"
   "UncompressedDecompressor.h"
+  "VC5Decompressor.cpp"
+  "VC5Decompressor.h"
 )
 
 target_sources(rawspeed PRIVATE

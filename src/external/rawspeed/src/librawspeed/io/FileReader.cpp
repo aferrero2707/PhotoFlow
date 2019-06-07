@@ -27,7 +27,6 @@
 #include <limits>               // for numeric_limits
 #include <memory>               // for unique_ptr, make_unique, operator==
 #include <utility>              // for move
-#include <iostream>
 
 #if !(defined(__unix__) || defined(__APPLE__))
 #ifndef NOMINMAX
@@ -35,7 +34,7 @@
 #endif
 
 #include "io/FileIO.h" // for widenFileName
-#include <windows.h>
+#include <Windows.h>
 #include <io.h>
 #include <tchar.h>
 #endif
@@ -77,9 +76,7 @@ std::unique_ptr<const Buffer> FileReader::readFile() {
 
 #else // __unix__
 
-  std::cout<<"FileReader::readFile: fileName: \""<<fileName<<"\"\n";
   auto wFileName = widenFileName(fileName);
-  std::wcout<<"FileReader::readFile: wFileName: \""<<wFileName<<"\"\n";
 
   using file_ptr = std::unique_ptr<std::remove_pointer<HANDLE>::type,
                                    decltype(&CloseHandle)>;

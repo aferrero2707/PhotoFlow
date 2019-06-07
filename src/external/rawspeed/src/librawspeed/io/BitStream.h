@@ -3,7 +3,7 @@
 
     Copyright (C) 2009-2014 Klaus Post
     Copyright (C) 2017 Axel Waggershauser
-    Copyright (C) 2017 Roman Lebedev
+    Copyright (C) 2017-2019 Roman Lebedev
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -73,6 +73,7 @@ struct BitStreamCacheRightInLeftOut : BitStreamCacheBase
 {
   inline void push(uint64 bits, uint32 count) noexcept {
     assert(count + fillLevel <= Size);
+    assert(count < BitStreamCacheBase::Size);
     cache = cache << count | bits;
     fillLevel += count;
   }
@@ -97,7 +98,8 @@ class BitStream final : public ByteStream {
   // this method hase to be implemented in the concrete BitStream template
   // specializations. It will return the number of bytes processed. It needs
   // to process up to BitStreamCacheBase::MaxProcessBytes bytes of input.
-  size_type fillCache(const uchar8* input);
+  size_type fillCache(const uchar8* input, size_type bufferSize,
+                      size_type* bufPos);
 
 public:
   BitStream() = default;
@@ -113,25 +115,31 @@ private:
   inline void fillSafe() {
     assert(data);
     if (pos + BitStreamCacheBase::MaxProcessBytes <= size) {
-      uchar8 tmp[BitStreamCacheBase::MaxProcessBytes] = {0};
+      std::array<uchar8, BitStreamCacheBase::MaxProcessBytes> tmp;
+      tmp.fill(0);
       assert(!(size - pos < BitStreamCacheBase::MaxProcessBytes));
-      memcpy(tmp, data + pos, BitStreamCacheBase::MaxProcessBytes);
-      pos += fillCache(tmp);
+      memcpy(tmp.data(), data + pos, BitStreamCacheBase::MaxProcessBytes);
+      pos += fillCache(tmp.data(), size, &pos);
     } else if (pos < size) {
-      uchar8 tmp[BitStreamCacheBase::MaxProcessBytes] = {0};
+      std::array<uchar8, BitStreamCacheBase::MaxProcessBytes> tmp;
+      tmp.fill(0);
       assert(size - pos < BitStreamCacheBase::MaxProcessBytes);
-      memcpy(tmp, data + pos, size - pos);
-      pos += fillCache(tmp);
-    } else if (pos < size + Cache::MaxGetBits / 8) {
-      // yes, this case needs to continue using Cache::MaxGetBits
-      // assert(size <= pos);
-      cache.push(0, Cache::MaxGetBits);
-      pos += Cache::MaxGetBits / 8;
+      memcpy(tmp.data(), data + pos, size - pos);
+      pos += fillCache(tmp.data(), size, &pos);
+    } else if (pos <= size + BitStreamCacheBase::MaxProcessBytes) {
+      std::array<uchar8, BitStreamCacheBase::MaxProcessBytes> tmp;
+      tmp.fill(0);
+      pos += fillCache(tmp.data(), size, &pos);
     } else {
       // assert(size < pos);
       ThrowIOE("Buffer overflow read in BitStream");
     }
   }
+
+  // In non-DEBUG builds, fillSafe() will be called at most once
+  // per the life-time of the BitStream  therefore it should *NOT* be inlined
+  // into the normal codepath.
+  inline void __attribute__((noinline, cold)) fillSafeNoinline() { fillSafe(); }
 
 public:
   inline void fill(uint32 nbits = Cache::MaxGetBits) {
@@ -144,13 +152,15 @@ public:
 #elif BUFFER_PADDING >= 8
       static_assert(BitStreamCacheBase::MaxProcessBytes == 8,
                     "update these too");
-      pos += fillCache(data + pos);
+      // FIXME: this looks very wrong. We don't check pos at all here.
+      // I suspect this should be:  if (pos <= size)
+      pos += fillCache(data + pos, size, &pos);
 #else
       // disabling this run-time bounds check saves about 1% on intel x86-64
       if (pos + BitStreamCacheBase::MaxProcessBytes <= size)
-        pos += fillCache(data + pos);
+        pos += fillCache(data + pos, size, &pos);
       else
-        fillSafe();
+        fillSafeNoinline();
 #endif
     }
   }
@@ -203,6 +213,21 @@ public:
     if (nbits > cache.fillLevel)
       ThrowIOE("skipBits overflow");
     cache.skip(nbits);
+  }
+
+  // This may be used to skip arbitrarily large number of *bytes*,
+  // not limited by the fill level.
+  inline void skipBytes(uint32 nbytes) {
+    uint32 remainingBitsToSkip = 8 * nbytes;
+    for (; remainingBitsToSkip >= Cache::MaxGetBits;
+         remainingBitsToSkip -= Cache::MaxGetBits) {
+      fill(Cache::MaxGetBits);
+      skipBitsNoFill(Cache::MaxGetBits);
+    }
+    if (remainingBitsToSkip > 0) {
+      fill(remainingBitsToSkip);
+      skipBitsNoFill(remainingBitsToSkip);
+    }
   }
 };
 

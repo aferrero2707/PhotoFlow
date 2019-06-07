@@ -5,9 +5,9 @@ set(ALL_FUZZERS "" CACHE INTERNAL "" FORCE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "COVERAGE")
   # want all the symbols.
-  add_library(rawspeed_fuzz STATIC) # SHARED, but crashes due to global constructors/destructors
+  rawspeed_add_library(rawspeed_fuzz STATIC) # SHARED, but crashes due to global constructors/destructors
 else()
-  add_library(rawspeed_fuzz STATIC)
+  rawspeed_add_library(rawspeed_fuzz STATIC)
 endif()
 
 target_link_libraries(rawspeed_fuzz PUBLIC rawspeed)
@@ -19,7 +19,7 @@ macro(add_fuzz_target__base fuzzer)
   list(APPEND ALL_FUZZERS "${fuzzer}")
   set(ALL_FUZZERS "${ALL_FUZZERS}" CACHE INTERNAL "" FORCE)
 
-  add_test(NAME fuzzers/${fuzzer} COMMAND ${fuzzer} -help=1)
+  rawspeed_add_test(NAME fuzzers/${fuzzer} COMMAND ${fuzzer} -help=1)
 endmacro()
 
 if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL "FUZZ"))
@@ -29,23 +29,16 @@ if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE STREQUAL "FU
     "${CMAKE_CURRENT_SOURCE_DIR}/libFuzzer_dummy_main.cpp"
   )
 
-  if(WITH_OPENMP AND OPENMP_FOUND AND TARGET OpenMP::OpenMP)
-    target_link_libraries(rawspeed_fuzz PUBLIC OpenMP::OpenMP)
+  if(TARGET RawSpeed::OpenMP_CXX)
+    target_link_libraries(rawspeed_fuzz PRIVATE RawSpeed::OpenMP_CXX)
   endif()
 
   macro(add_fuzz_target fuzzer)
     add_fuzz_target__base(${fuzzer})
   endmacro()
 else()
-  if(NOT LIB_FUZZING_ENGINE)
-    # specialhandling: oss-fuzz provides all the needed flags already.
-    target_compile_options(rawspeed_fuzz INTERFACE "-fsanitize=fuzzer")
-    target_link_libraries (rawspeed_fuzz INTERFACE "-fsanitize=fuzzer")
-  else()
-    message(STATUS "LIB_FUZZING_ENGINE override option is passed, not setting special compiler flags.")
-    find_package(LibFuzzingEngine REQUIRED)
-    target_link_libraries(rawspeed_fuzz PUBLIC LibFuzzingEngine)
-  endif()
+  find_package(LibFuzzingEngine REQUIRED)
+  target_link_libraries(rawspeed_fuzz PUBLIC LibFuzzingEngine)
 
   add_feature_info("Fuzzing" ON "will be actually able to do the fuzzing")
 

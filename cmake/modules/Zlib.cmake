@@ -1,15 +1,12 @@
-cmake_minimum_required(VERSION 3.0)
-
-project(zlib NONE)
-
 # Download and unpack zlib at configure time
-configure_file(${RAWSPEED_SOURCE_DIR}/cmake/Modules/Zlib.cmake.in ${CMAKE_BINARY_DIR}/zlib/CMakeLists.txt @ONLY)
+set(ZLIB_PREFIX "${RAWSPEED_BINARY_DIR}/src/external/zlib")
+configure_file(${RAWSPEED_SOURCE_DIR}/cmake/Modules/Zlib.cmake.in ${ZLIB_PREFIX}/CMakeLists.txt @ONLY)
 
 execute_process(
   COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
   -DALLOW_DOWNLOADING_ZLIB=${ALLOW_DOWNLOADING_ZLIB} -DZLIB_PATH:PATH=${ZLIB_PATH} .
   RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/zlib
+  WORKING_DIRECTORY ${ZLIB_PREFIX}
 )
 
 if(result)
@@ -19,7 +16,7 @@ endif()
 execute_process(
   COMMAND ${CMAKE_COMMAND} --build .
   RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/zlib
+  WORKING_DIRECTORY ${ZLIB_PREFIX}
 )
 
 if(result)
@@ -40,15 +37,17 @@ set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE_SAVE "${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
 unset(CMAKE_CXX_CLANG_TIDY)
 unset(CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
 
+include(${ZLIB_PREFIX}/zlib-paths.cmake)
+
 # XXX make sure that zlib is using it's own headers
 # see https://github.com/madler/zlib/issues/218
-include_directories(BEFORE ${CMAKE_BINARY_DIR}/zlib/zlib-src)
-include_directories(BEFORE ${CMAKE_BINARY_DIR}/zlib/zlib-build)
+include_directories(BEFORE SYSTEM ${ZLIB_PREFIX}/zlib-src)
+include_directories(BEFORE SYSTEM ${ZLIB_PREFIX}/zlib-build)
 
 # Add zlib directly to our build. This defines
 # the gtest and gtest_main targets.
-add_subdirectory(${CMAKE_BINARY_DIR}/zlib/zlib-src
-                 ${CMAKE_BINARY_DIR}/zlib/zlib-build)
+add_subdirectory(${ZLIB_SOURCE_DIR}
+                 ${ZLIB_BINARY_DIR})
 
 set(_zlib_lib zlib)       # shared
 set(_zlib_lib zlibstatic) # static

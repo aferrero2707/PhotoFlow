@@ -38,6 +38,10 @@ elseif(NOT (CMAKE_BUILD_TYPE STREQUAL "RELWITHDEBINFO" OR CMAKE_BUILD_TYPE STREQ
   add_definitions(-D_GLIBCXX_SANITIZE_VECTOR)
 endif()
 
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+
 IF(NOT APPLE)
   set(linkerflags "-Wl,--as-needed")
 ELSE()
@@ -61,12 +65,15 @@ MARK_AS_ADVANCED(
 if(RAWSPEED_ENABLE_LTO)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     include(llvm-toolchain)
-    set(lto_compile "-flto=thin")
+    set(lto_compile "-flto=thin -fforce-emit-vtables -fwhole-program-vtables -fstrict-vtable-pointers")
     set(lto_link "-flto=thin -fuse-ld=\"${LLVMLLD_EXECUTABLE}\" ${LLVMLLD_INCREMENTAL_LDFLAGS}")
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     include(gcc-toolchain)
     set(lto_compile "-flto")
     set(lto_link "-flto")
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+    set(lto_compile "-flto=thin -fstrict-vtable-pointers")
+    set(lto_link "-flto=thin")
   endif()
 
   set(CMAKE_C_FLAGS
@@ -171,6 +178,8 @@ else()
 endif()
 
 set(fuzz "${fuzz} -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION")
+set(fuzz "${fuzz} -ffunction-sections -fdata-sections")
+set(fuzz_link "-Wl,--gc-sections")
 SET(CMAKE_CXX_FLAGS_FUZZ
     "${fuzz}"
     CACHE STRING "Flags used by the C++ compiler during FUZZ builds."
@@ -180,15 +189,15 @@ SET(CMAKE_C_FLAGS_FUZZ
     CACHE STRING "Flags used by the C compiler during FUZZ builds."
     FORCE )
 SET(CMAKE_EXE_LINKER_FLAGS_FUZZ
-    "${fuzz}"
+    "${fuzz} ${fuzz_link}"
     CACHE STRING "Flags used for linking binaries during FUZZ builds."
     FORCE )
 SET(CMAKE_SHARED_LINKER_FLAGS_FUZZ
-    "${fuzz}"
+    "${fuzz} ${fuzz_link}"
     CACHE STRING "Flags used by the shared libraries linker during FUZZ builds."
     FORCE )
-SET(CMAKE_SHARED_MODULE_FLAGS_FUZZ
-    "${fuzz}"
+SET(CMAKE_MODULE_LINKER_FLAGS_FUZZ
+    "${fuzz} ${fuzz_link}"
     CACHE STRING "Flags used by the module linker during FUZZ builds."
     FORCE )
 MARK_AS_ADVANCED(
@@ -196,7 +205,7 @@ MARK_AS_ADVANCED(
     CMAKE_C_FLAGS_FUZZ
     CMAKE_EXE_LINKER_FLAGS_FUZZ
     CMAKE_SHARED_LINKER_FLAGS_FUZZ
-    CMAKE_SHARED_MODULE_FLAGS_FUZZ )
+    CMAKE_MODULE_LINKER_FLAGS_FUZZ )
 
 set(ubsan "${SANITIZATION_DEFAULTS} -fsanitize=thread")
 SET(CMAKE_CXX_FLAGS_TSAN

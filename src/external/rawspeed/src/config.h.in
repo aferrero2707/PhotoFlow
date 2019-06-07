@@ -28,7 +28,7 @@
 
 #cmakedefine HAVE_PUGIXML
 
-#cmakedefine HAVE_PTHREAD
+#cmakedefine HAVE_OPENMP
 
 #cmakedefine HAVE_PUGIXML
 
@@ -49,11 +49,35 @@
 
 #cmakedefine RAWSPEED_STANDALONE_BUILD
 #ifdef RAWSPEED_STANDALONE_BUILD
-#define CMAKE_SOURCE_DIR "@CMAKE_SOURCE_DIR@"
+#define RAWSPEED_SOURCE_DIR "@RAWSPEED_SOURCE_DIR@"
 #else
 // If rawspeed is being built as part of some larger build, we can not retain
-// the CMAKE_SOURCE_DIR, because that would affect the reproducible builds.
+// the RAWSPEED_SOURCE_DIR, because that would affect the reproducible builds.
 #endif
+
+#undef OPENMP_FIRSTPRIVATE_CLAUSE_IS_BROKEN_FOR_CONST_VARIABLES
+#undef OPENMP_SHARED_CLAUSE_IS_BROKEN_FOR_CONST_VARIABLES
+
+#ifdef HAVE_OPENMP
+#cmakedefine OPENMP_FIRSTPRIVATE_CLAUSE_IS_BROKEN_FOR_CONST_VARIABLES
+#ifdef OPENMP_FIRSTPRIVATE_CLAUSE_IS_BROKEN_FOR_CONST_VARIABLES
+// See https://bugs.llvm.org/show_bug.cgi?id=35873
+//     https://redmine.darktable.org/issues/12568
+#define OMPFIRSTPRIVATECLAUSE(...)
+#else
+#define OMPFIRSTPRIVATECLAUSE(...) firstprivate(__VA_ARGS__)
+#endif
+#undef OPENMP_FIRSTPRIVATE_CLAUSE_IS_BROKEN_FOR_CONST_VARIABLES
+
+#cmakedefine OPENMP_SHARED_CLAUSE_IS_BROKEN_FOR_CONST_VARIABLES
+#ifdef OPENMP_SHARED_CLAUSE_IS_BROKEN_FOR_CONST_VARIABLES
+// See https://godbolt.org/z/AiyuX9
+#define OMPSHAREDCLAUSE(...)
+#else
+#define OMPSHAREDCLAUSE(...) shared(__VA_ARGS__)
+#endif
+#undef OPENMP_SHARED_CLAUSE_IS_BROKEN_FOR_CONST_VARIABLES
+#endif // HAVE_OPENMP
 
 // see http://clang.llvm.org/docs/LanguageExtensions.html
 #ifndef __has_feature      // Optional of course.

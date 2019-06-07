@@ -64,7 +64,7 @@ bool NefDecoder::isAppropriateDecoder(const TiffRootIFD* rootIFD,
 
 RawImage NefDecoder::decodeRawInternal() {
   auto raw = mRootIFD->getIFDWithTag(CFAPATTERN);
-  int compression = raw->getEntry(COMPRESSION)->getU32();
+  auto compression = raw->getEntry(COMPRESSION)->getU32();
 
   TiffEntry *offsets = raw->getEntry(STRIPOFFSETS);
   TiffEntry *counts = raw->getEntry(STRIPBYTECOUNTS);
@@ -147,17 +147,43 @@ bool NefDecoder::D100IsCompressed(uint32 offset) {
    as if they were compressed. For those cases we set uncompressed mode
    by figuring out that the image is the size of uncompressed packing */
 bool NefDecoder::NEFIsUncompressed(const TiffIFD* raw) {
-  TiffEntry *counts = raw->getEntry(STRIPBYTECOUNTS);
+  TiffEntry* counts = raw->getEntry(STRIPBYTECOUNTS);
   uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
   uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
   uint32 bitPerPixel = raw->getEntry(BITSPERSAMPLE)->getU32();
 
-  const uint64 bitCount = uint64(8) * counts->getU32(0);
-  if (!bitPerPixel || bitCount % bitPerPixel != 0)
+  if (!width || !height || !bitPerPixel)
     return false;
 
-  const auto pixelCount = bitCount / bitPerPixel;
-  return pixelCount == iPoint2D(width, height).area();
+  const auto avaliableInputBytes = counts->getU32(0);
+  const auto requiredPixels = iPoint2D(width, height).area();
+
+  // Now, there can be three situations.
+
+  // We might have not enough input to produce the requested image size.
+  const uint64 avaliableInputBits = uint64(8) * avaliableInputBytes;
+  const auto avaliablePixels = avaliableInputBits / bitPerPixel; // round down!
+  if (avaliablePixels < requiredPixels)
+    return false;
+
+  // We might have exactly enough input with no padding whatsoever.
+  if (avaliablePixels == requiredPixels)
+    return true;
+
+  // Or, we might have too much input. And sadly this is the worst case.
+  // We can't just accept this. Some *compressed* NEF's also pass this check :(
+  // Thus, let's accept *some* *small* padding.
+  const auto requiredInputBits = bitPerPixel * requiredPixels;
+  const auto requiredInputBytes = roundUpDivision(requiredInputBits, 8);
+  // While we might have more *pixels* than needed, it does not nessesairly mean
+  // that we have more input *bytes*. We might be off by a few pixels, and with
+  // small image dimensions and bpp, we might still be in the same byte.
+  assert(avaliableInputBytes >= requiredInputBytes);
+  const auto totalPadding = avaliableInputBytes - requiredInputBytes;
+  if (totalPadding % height != 0)
+    return false; // Inconsistent padding makes no sense here.
+  const auto perRowPadding = totalPadding / height;
+  return perRowPadding < 16;
 }
 
 /* At least the D810 has a broken firmware that tags uncompressed images
@@ -263,7 +289,10 @@ void NefDecoder::DecodeUncompressed() {
         readCoolpixSplitRaw(in, size, pos, width * bitPerPixel / 8);
       else {
         UncompressedDecompressor u(in, mRaw);
-        u.readUncompressedRaw(size, pos, width * bitPerPixel / 8, bitPerPixel,
+        if (in.getSize() % size.y != 0)
+          ThrowRDE("Inconsistent row size");
+        const auto inputPitchBytes = in.getSize() / size.y;
+        u.readUncompressedRaw(size, pos, inputPitchBytes, bitPerPixel,
                               bitorder ? BitOrder_MSB : BitOrder_LSB);
       }
     }
@@ -509,9 +538,9 @@ void NefDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
         ByteStream bs = wb->getData();
         bs.skipBytes(version == 0x204 ? 284 : 4);
 
-        uchar8 buf[14+8];
+        std::array<uchar8, 14 + 8> buf;
         for (unsigned char& i : buf) {
-          cj += ci * ck;
+          cj = uchar8(cj + ci * ck); // modulo arithmetics.
           i = bs.getByte() ^ cj;
           ck++;
         }
@@ -519,11 +548,11 @@ void NefDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
         // Finally set the WB coeffs
         uint32 off = (version == 0x204) ? 6 : 14;
         mRaw->metadata.wbCoeffs[0] =
-            static_cast<float>(getU16BE(buf + off + 0));
+            static_cast<float>(getU16BE(buf.data() + off + 0));
         mRaw->metadata.wbCoeffs[1] =
-            static_cast<float>(getU16BE(buf + off + 2));
+            static_cast<float>(getU16BE(buf.data() + off + 2));
         mRaw->metadata.wbCoeffs[2] =
-            static_cast<float>(getU16BE(buf + off + 6));
+            static_cast<float>(getU16BE(buf.data() + off + 6));
       }
     }
   } else if (mRootIFD->hasEntryRecursive(static_cast<TiffTag>(0x0014))) {
@@ -697,7 +726,9 @@ std::vector<ushort16> NefDecoder::gammaCurve(double pwr, double ts, int mode,
   std::vector<ushort16> curve(65536);
 
   int i;
-  double g[6], bnd[2]={0,0}, r;
+  std::array<double, 6> g;
+  std::array<double, 2> bnd = {{}};
+  double r;
   g[0] = pwr;
   g[1] = ts;
   g[2] = g[3] = g[4] = 0;

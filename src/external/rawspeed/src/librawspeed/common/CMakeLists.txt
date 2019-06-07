@@ -1,9 +1,11 @@
 FILE(GLOB SOURCES
+  "Array2DRef.h"
   "ChecksumFile.cpp"
   "ChecksumFile.h"
   "Common.cpp"
   "Common.h"
   "Cpuid.cpp"
+  "DefaultInitAllocatorAdaptor.h"
   "DngOpcodes.cpp"
   "DngOpcodes.h"
   "ErrorLog.cpp"
@@ -12,6 +14,7 @@ FILE(GLOB SOURCES
   "Memory.h"
   "Mutex.h"
   "NORangesSet.h"
+  "Optional.h"
   "Point.h"
   "Range.h"
   "RawImage.cpp"
@@ -19,12 +22,31 @@ FILE(GLOB SOURCES
   "RawImageDataFloat.cpp"
   "RawImageDataU16.cpp"
   "RawspeedException.h"
+  "SimpleLUT.h"
   "Spline.h"
   "TableLookUp.cpp"
   "TableLookUp.h"
-  "Threading.h"
 )
 
 target_sources(rawspeed PRIVATE
   ${SOURCES}
 )
+
+# Provide naive implementation of rawspeed_get_number_of_processor_cores().
+
+if(CMAKE_BUILD_TYPE STREQUAL "COVERAGE")
+  # want all the symbols.
+  rawspeed_add_library(rawspeed_get_number_of_processor_cores SHARED)
+else()
+  rawspeed_add_library(rawspeed_get_number_of_processor_cores STATIC)
+endif()
+
+FILE(GLOB SOURCES
+  "GetNumberOfProcessorCores.cpp"
+)
+
+target_sources(rawspeed_get_number_of_processor_cores PRIVATE
+  ${SOURCES}
+)
+
+target_link_libraries(rawspeed_get_number_of_processor_cores PRIVATE rawspeed)

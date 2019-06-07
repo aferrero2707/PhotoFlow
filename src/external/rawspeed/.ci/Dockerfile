@@ -37,20 +37,20 @@ RUN echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/80forceyes
 RUN echo 'APT::Get::Fix-Missing "true";' > /etc/apt/apt.conf.d/80fixmissin
 
 ENV GCC_VER=8
-ENV LLVM_VER=6.0
+ENV LLVM_VER=7
 
 # pls keep sorted :)
 RUN rm -rf /var/lib/apt/lists/* && apt-get update && \
-    apt-get install \
-    clang++-$LLVM_VER clang-tidy-$LLVM_VER clang-tools-$LLVM_VER \
-    cmake curl default-jdk-headless default-jre-headless dirmngr doxygen \
-    g++-$GCC_VER git gnupg googletest graphviz libjpeg-dev libpugixml-dev \
+    apt-get install clang++-$LLVM_VER clang-tidy-$LLVM_VER \
+    clang-tools-$LLVM_VER cmake curl default-jdk-headless default-jre-headless \
+    dirmngr doxygen g++-$GCC_VER git gnupg googletest graphviz \
+    libc++-$LLVM_VER-dev libjpeg-dev libomp-$LLVM_VER-dev libpugixml-dev \
     libxml2-utils make ninja-build python3-sphinx python3-sphinx-rtd-theme \
     unzip zlib1g-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # sonarqube support.
 
-ENV SONAR_SCANNER_CLI_VERSION=3.1.0.1141-linux \
+ENV SONAR_SCANNER_CLI_VERSION=3.2.0.1227-linux \
     SONARQUBE_HOME=/opt/sonarqube
 
 RUN set -x \
@@ -61,8 +61,8 @@ RUN set -x \
     # sub   2048R/06855C1D 2015-05-25
     && gpg --keyserver keys.gnupg.net --recv-keys F1182E81C792928921DBCAB4CFCA4A29D26468DE \
     && cd /opt \
-    && curl -o sonar-scanner-cli.zip -fSL https://sonarsource.bintray.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_CLI_VERSION.zip \
-    && curl -o sonar-scanner-cli.zip.asc -fSL https://sonarsource.bintray.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_CLI_VERSION.zip.asc \
+    && curl -o sonar-scanner-cli.zip -fSL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_CLI_VERSION.zip \
+    && curl -o sonar-scanner-cli.zip.asc -fSL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_CLI_VERSION.zip.asc \
     && gpg --batch --verify sonar-scanner-cli.zip.asc sonar-scanner-cli.zip \
     && unzip sonar-scanner-cli.zip \
     && mv sonar-scanner-$SONAR_SCANNER_CLI_VERSION $SONARQUBE_HOME \

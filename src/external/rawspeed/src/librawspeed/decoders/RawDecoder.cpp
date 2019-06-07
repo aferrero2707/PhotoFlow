@@ -87,7 +87,7 @@ void RawDecoder::decodeUncompressed(const TiffIFD *rawIFD, BitOrder order) {
     break;
   default:
     ThrowRDE("Unexpected bits per pixel: %u.", bitPerPixel);
-  };
+  }
 
   vector<RawSlice> slices;
   slices.reserve(counts->count);
@@ -195,7 +195,11 @@ void RawDecoder::setMetaData(const CameraMetaData* meta, const string& make,
     return;
   }
 
-  mRaw->cfa = cam->cfa;
+  // Only override CFA with the data from cameras.xml if it actually contained
+  // the CFA.
+  if (cam->cfa.getSize().area() > 0)
+    mRaw->cfa = cam->cfa;
+
   mRaw->metadata.canonical_make = cam->canonical_make;
   mRaw->metadata.canonical_model = cam->canonical_model;
   mRaw->metadata.canonical_alias = cam->canonical_alias;
@@ -224,7 +228,7 @@ void RawDecoder::setMetaData(const CameraMetaData* meta, const string& make,
   if (mRaw->blackAreas.empty() && !sensor->mBlackLevelSeparate.empty()) {
     auto cfaArea = mRaw->cfa.getSize().area();
     if (mRaw->isCFA && cfaArea <= sensor->mBlackLevelSeparate.size()) {
-      for (uint32 i = 0; i < cfaArea; i++) {
+      for (auto i = 0UL; i < cfaArea; i++) {
         mRaw->blackLevelSeparate[i] = sensor->mBlackLevelSeparate[i];
       }
     } else if (!mRaw->isCFA && mRaw->getCpp() <= sensor->mBlackLevelSeparate.size()) {

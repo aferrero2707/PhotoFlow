@@ -72,10 +72,8 @@ DngDecoder::DngDecoder(TiffRootIFDOwner&& rootIFD, const Buffer* file)
 //  if (v[1] > 4)
 //    ThrowRDE("Not a supported DNG image format: v%u.%u.%u.%u", (int)v[0], (int)v[1], (int)v[2], (int)v[3]);
 
-  if ((v[0] <= 1) && (v[1] < 1))  // Prior to v1.1.xxx  fix LJPEG encoding bug
-    mFixLjpeg = true;
-  else
-    mFixLjpeg = false;
+  // Prior to v1.1.xxx  fix LJPEG encoding bug
+  mFixLjpeg = (v[0] <= 1) && (v[1] < 1);
 }
 
 void DngDecoder::dropUnsuportedChunks(std::vector<const TiffIFD*>* data) {
@@ -109,6 +107,7 @@ void DngDecoder::dropUnsuportedChunks(std::vector<const TiffIFD*>* data) {
 #ifdef HAVE_ZLIB
     case 8: // deflate
 #endif
+    case 9: // VC-5 as used by GoPro
 #ifdef HAVE_JPEG
     case 0x884c: // lossy JPEG
 #endif
@@ -276,9 +275,16 @@ void DngDecoder::decodeData(const TiffIFD* raw, uint32 sample_format) {
              "JPEG-compressed data.");
   }
 
-  uint32 predictor = -1;
+  uint32 predictor = ~0U;
   if (raw->hasEntry(PREDICTOR))
     predictor = raw->getEntry(PREDICTOR)->getU32();
+
+  // Some decompressors (such as VC5) may depend on the white point
+  if (raw->hasEntry(WHITELEVEL)) {
+    TiffEntry* whitelevel = raw->getEntry(WHITELEVEL);
+    if (whitelevel->isInt())
+      mRaw->whitePoint = whitelevel->getU32();
+  }
 
   AbstractDngDecompressor slices(mRaw, getTilingDescription(raw), compression,
                                  mFixLjpeg, bps, predictor);
@@ -600,7 +606,7 @@ void DngDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
       mRaw->metadata.wbCoeffs[2] =
           1 - mRaw->metadata.wbCoeffs[0] - mRaw->metadata.wbCoeffs[1];
 
-      const float d65_white[3] = {0.950456, 1, 1.088754};
+      const std::array<float, 3> d65_white = {{0.950456, 1, 1.088754}};
       for (uint32 i = 0; i < 3; i++)
         mRaw->metadata.wbCoeffs[i] /= d65_white[i];
     }
@@ -722,7 +728,7 @@ bool DngDecoder::decodeBlackLevels(const TiffIFD* raw) {
     TiffEntry *blackleveldeltav = raw->getEntry(BLACKLEVELDELTAV);
     if (static_cast<int>(blackleveldeltav->count) < mRaw->dim.y)
       ThrowRDE("BLACKLEVELDELTAV array is too small");
-    float black_sum[2] = {0.0F, 0.0F};
+    std::array<float, 2> black_sum = {{}};
     for (int i = 0; i < mRaw->dim.y; i++)
       black_sum[i&1] += blackleveldeltav->getFloat(i);
 
@@ -743,7 +749,7 @@ bool DngDecoder::decodeBlackLevels(const TiffIFD* raw) {
     TiffEntry *blackleveldeltah = raw->getEntry(BLACKLEVELDELTAH);
     if (static_cast<int>(blackleveldeltah->count) < mRaw->dim.x)
       ThrowRDE("BLACKLEVELDELTAH array is too small");
-    float black_sum[2] = {0.0F, 0.0F};
+    std::array<float, 2> black_sum = {{}};
     for (int i = 0; i < mRaw->dim.x; i++)
       black_sum[i&1] += blackleveldeltah->getFloat(i);
 

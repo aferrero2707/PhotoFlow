@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.4.0)
 
 project(googlebenchmark-download NONE)
 
@@ -17,11 +17,10 @@ if(EXISTS "${GOOGLEBENCHMARK_PATH}" AND IS_DIRECTORY "${GOOGLEBENCHMARK_PATH}" A
 
   ExternalProject_Add(
     googlebenchmark
-    URL               "${GOOGLEBENCHMARK_PATH}"
-    PREFIX            "${CMAKE_BINARY_DIR}/googlebenchmark"
-    SOURCE_DIR        "${CMAKE_BINARY_DIR}/googlebenchmark-src"
-    BINARY_DIR        "${CMAKE_BINARY_DIR}/googlebenchmark-build"
-    # PATCH_COMMAND   patch -p1 -i "@rawspeed_SOURCE_DIR@/cmake/Modules/GoogleBenchmark-fixes.patch"
+    PREFIX            "${CMAKE_BINARY_DIR}"
+    DOWNLOAD_DIR      "${CMAKE_BINARY_DIR}/download"
+    SOURCE_DIR        "${GOOGLEBENCHMARK_PATH}" # use existing src dir.
+    BINARY_DIR        "${CMAKE_BINARY_DIR}/build"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND     ""
     INSTALL_COMMAND   ""
@@ -34,12 +33,13 @@ else()
     message(WARNING "Did not find GOOGLEBENCHMARK sources! Fetching from web...")
     ExternalProject_Add(
       googlebenchmark
-      URL               https://github.com/google/benchmark/archive/v1.4.0.tar.gz
-      URL_HASH          SHA512=4bb5119fe6c0558e5a8b39486169ffcbf24e877ec7f28636dfab1692936b77334f76d28bda2cdada18e5070579da7a5bf0617bfbb6a09848f0b071df8e694d76
-      PREFIX            "${CMAKE_BINARY_DIR}/googlebenchmark"
-      SOURCE_DIR        "${CMAKE_BINARY_DIR}/googlebenchmark-src"
-      BINARY_DIR        "${CMAKE_BINARY_DIR}/googlebenchmark-build"
-      # PATCH_COMMAND   patch -p1 -i "@rawspeed_SOURCE_DIR@/cmake/Modules/GoogleBenchmark-fixes.patch"
+      URL               https://github.com/google/benchmark/archive/v1.5.tar.gz
+      URL_HASH          SHA512=a57122340c4f9a8e434ec70098916aef7c49d5d8312a30e4753f54bacc1099b146698b66c12f9ef116f7cadc93c604809a905c0e259aecf63aa2553390a1b609
+      PREFIX            "${CMAKE_BINARY_DIR}"
+      STAMP_DIR         "${CMAKE_BINARY_DIR}/stamp"
+      DOWNLOAD_DIR      "${CMAKE_BINARY_DIR}/download"
+      SOURCE_DIR        "${CMAKE_BINARY_DIR}/src"
+      BINARY_DIR        "${CMAKE_BINARY_DIR}/build"
       CONFIGURE_COMMAND ""
       BUILD_COMMAND     ""
       INSTALL_COMMAND   ""
@@ -47,3 +47,9 @@ else()
     )
   endif()
 endif()
+
+ExternalProject_Get_Property(googlebenchmark SOURCE_DIR BINARY_DIR)
+file(WRITE googlebenchmark-paths.cmake
+"set(GOOGLEBENCHMARK_SOURCE_DIR \"${SOURCE_DIR}\")
+set(GOOGLEBENCHMARK_BINARY_DIR \"${BINARY_DIR}\")
+")

@@ -3,7 +3,8 @@
 
     Copyright (C) 2009-2014 Klaus Post
     Copyright (C) 2014-2015 Pedro Côrte-Real
-    Copyright (C) 2017-2018 Roman Lebedev
+    Copyright (C) 2017-2019 Roman Lebedev
+    Copyright (C) 2019 Robert Bridge
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -21,25 +22,29 @@
 */
 
 #include "decoders/IiqDecoder.h"
-#include "common/Common.h"                // for uint32, ushort16, int32
-#include "common/Point.h"                 // for iPoint2D
-#include "common/Spline.h"                // for Spline, Spline<>::value_type
-#include "decoders/RawDecoder.h"          // for RawDecoder::(anonymous)
-#include "decoders/RawDecoderException.h" // for ThrowRDE
-#include "io/BitPumpMSB32.h"              // for BitPumpMSB32
-#include "io/Buffer.h"                    // for Buffer, DataBuffer
-#include "io/ByteStream.h"                // for ByteStream
-#include "io/Endianness.h"                // for Endianness, Endianness::li...
-#include "tiff/TiffIFD.h"                 // for TiffRootIFD, TiffID
-#include <algorithm>                      // for adjacent_find, generate_n
-#include <array>                          // for array, array<>::const_iter...
-#include <cassert>                        // for assert
-#include <functional>                     // for greater_equal
-#include <iterator>                       // for advance, next, begin, end
-#include <memory>                         // for unique_ptr
-#include <string>                         // for operator==, string
-#include <utility>                        // for move
-#include <vector>                         // for vector
+#include "common/Array2DRef.h"                  // for Array2DRef
+#include "common/Common.h"                      // for uint32, ushort16
+#include "common/Point.h"                       // for iPoint2D
+#include "common/Spline.h"                      // for Spline, Spline<>::va...
+#include "decoders/RawDecoder.h"                // for RawDecoder::(anonymous)
+#include "decoders/RawDecoderException.h"       // for ThrowRDE
+#include "decompressors/PhaseOneDecompressor.h" // for PhaseOneStrip, Phase...
+#include "io/Buffer.h"                          // for Buffer, DataBuffer
+#include "io/ByteStream.h"                      // for ByteStream
+#include "io/Endianness.h"                      // for Endianness, Endianne...
+#include "metadata/CameraMetaData.h"            // for CameraMetaData for CFA
+#include "tiff/TiffIFD.h"                       // for TiffRootIFD, TiffID
+#include <algorithm>                            // for adjacent_find, gener...
+#include <array>                                // for array, array<>::cons...
+#include <cassert>                              // for assert
+#include <cmath>                                // for lround()
+#include <cstdlib>                              // for int abs(int)
+#include <functional>                           // for greater_equal
+#include <iterator>                             // for advance, next, begin
+#include <memory>                               // for unique_ptr
+#include <string>                               // for operator==, string
+#include <utility>                              // for move
+#include <vector>                               // for vector
 
 namespace rawspeed {
 
@@ -64,7 +69,7 @@ bool IiqDecoder::isAppropriateDecoder(const TiffRootIFD* rootIFD,
 }
 
 // FIXME: this is very close to SamsungV0Decompressor::computeStripes()
-std::vector<IiqDecoder::IiqStrip>
+std::vector<PhaseOneStrip>
 IiqDecoder::computeSripes(const Buffer& raw_data,
                           std::vector<IiqOffset>&& offsets,
                           uint32 height) const {
@@ -85,7 +90,7 @@ IiqDecoder::computeSripes(const Buffer& raw_data,
               return a.offset < b.offset;
             });
 
-  std::vector<IiqDecoder::IiqStrip> slices;
+  std::vector<PhaseOneStrip> slices;
   slices.reserve(height);
 
   auto offset_iterator = std::begin(offsets);
@@ -182,7 +187,7 @@ RawImage IiqDecoder::decodeRawInternal() {
   }
 
   // FIXME: could be wrong. max "active pixels" in "Sensor+" mode - "101 MP"
-  if (width == 0 || height == 0 || width > 11608 || height > 8708)
+  if (width == 0 || height == 0 || width > 11976 || height > 8852)
     ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
 
   if (split_col > width || split_row > height)
@@ -201,13 +206,15 @@ RawImage IiqDecoder::decodeRawInternal() {
   // which will be used much like end()
   offsets.emplace_back(height, raw_data.getSize());
 
-  const std::vector<IiqStrip> strips(
+  std::vector<PhaseOneStrip> strips(
       computeSripes(raw_data, std::move(offsets), height));
 
   mRaw->dim = iPoint2D(width, height);
-  mRaw->createData();
 
-  DecodePhaseOneC(strips, width, height);
+  PhaseOneDecompressor p(mRaw, std::move(strips));
+  mRaw->createData();
+  p.decompress();
+
   if (correction_meta_data.getSize() != 0 && iiq)
     CorrectPhaseOneC(correction_meta_data, split_row, split_col);
 
@@ -215,57 +222,6 @@ RawImage IiqDecoder::decodeRawInternal() {
     mRaw->metadata.wbCoeffs[i] = wb.getFloat();
 
   return mRaw;
-}
-
-void IiqDecoder::DecodeStrip(const IiqStrip& strip, uint32 width,
-                             uint32 height) {
-  const int length[] = {8, 7, 6, 9, 11, 10, 5, 12, 14, 13};
-
-  BitPumpMSB32 pump(strip.bs);
-
-  int32 pred[2];
-  uint32 len[2];
-  pred[0] = pred[1] = 0;
-  auto* img = reinterpret_cast<ushort16*>(mRaw->getData(0, strip.n));
-  for (uint32 col = 0; col < width; col++) {
-    if (col >= (width & -8))
-      len[0] = len[1] = 14;
-    else if ((col & 7) == 0) {
-      for (unsigned int& i : len) {
-        int j = 0;
-
-        for (; j < 5; j++) {
-          if (pump.getBits(1) != 0) {
-            if (col == 0)
-              ThrowRDE("Can not initialize lengths. Data is corrupt.");
-
-            // else, we have previously initialized lengths, so we are fine
-            break;
-          }
-        }
-
-        assert((col == 0 && j > 0) || col != 0);
-        if (j > 0)
-          i = length[2 * (j - 1) + pump.getBits(1)];
-      }
-    }
-
-    int i = len[col & 1];
-    if (i == 14)
-      img[col] = pred[col & 1] = pump.getBits(16);
-    else {
-      pred[col & 1] +=
-          static_cast<signed>(pump.getBits(i)) + 1 - (1 << (i - 1));
-      // FIXME: is the truncation the right solution here?
-      img[col] = ushort16(pred[col & 1]);
-    }
-  }
-}
-
-void IiqDecoder::DecodePhaseOneC(const std::vector<IiqStrip>& strips,
-                                 uint32 width, uint32 height) {
-  for (const auto& strip : strips)
-    DecodeStrip(strip, width, height);
 }
 
 void IiqDecoder::CorrectPhaseOneC(ByteStream meta_data, uint32 split_row,
@@ -280,19 +236,29 @@ void IiqDecoder::CorrectPhaseOneC(ByteStream meta_data, uint32 split_row,
   ByteStream entries(meta_data.getStream(entries_count, 12));
   meta_data.setPosition(0);
 
+  bool QuadrantMultipliersSeen = false;
+  bool SensorDefectsSeen = false;
+
   for (uint32 entry = 0; entry < entries_count; entry++) {
     const uint32 tag = entries.getU32();
     const uint32 len = entries.getU32();
     const uint32 offset = entries.getU32();
 
     switch (tag) {
+    case 0x400: // Sensor Defects
+      if (SensorDefectsSeen)
+        ThrowRDE("Second sensor defects entry seen. Unexpected.");
+      correctSensorDefects(meta_data.getSubStream(offset, len));
+      SensorDefectsSeen = true;
+      break;
     case 0x431:
-      if (!iiq.quadrantMultipliers)
-        return;
-
-      CorrectQuadrantMultipliersCombined(meta_data.getSubStream(offset, len),
-                                         split_row, split_col);
-      return;
+      if (QuadrantMultipliersSeen)
+        ThrowRDE("Second quadrant multipliers entry seen. Unexpected.");
+      if (iiq.quadrantMultipliers)
+        CorrectQuadrantMultipliersCombined(meta_data.getSubStream(offset, len),
+                                           split_row, split_col);
+      QuadrantMultipliersSeen = true;
+      break;
     default:
       break;
     }
@@ -378,6 +344,13 @@ void IiqDecoder::CorrectQuadrantMultipliersCombined(ByteStream data,
 
 void IiqDecoder::checkSupportInternal(const CameraMetaData* meta) {
   checkCameraSupported(meta, mRootIFD->getID(), "");
+
+  auto id = mRootIFD->getID();
+  const Camera* cam = meta->getCamera(id.make, id.model, mRaw->metadata.mode);
+  if (!cam)
+    ThrowRDE("Couldn't find camera %s %s", id.make.c_str(), id.model.c_str());
+
+  mRaw->cfa = cam->cfa;
 }
 
 void IiqDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
@@ -385,6 +358,86 @@ void IiqDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
 
   if (black_level)
     mRaw->blackLevel = black_level;
+}
+
+void IiqDecoder::correctSensorDefects(ByteStream data) {
+  while (data.getRemainSize() != 0) {
+    const ushort16 col = data.getU16();
+    const ushort16 row = data.getU16();
+    const ushort16 type = data.getU16();
+    data.skipBytes(2); // Ignore uknown/unused bits.
+
+    if (col >= mRaw->dim.x) // Value for col is outside the raw image.
+      continue;
+    switch (type) {
+    case 131: // bad column
+    case 137: // bad column
+      correctBadColumn(col);
+      break;
+    case 129: // bad pixel
+      handleBadPixel(col, row);
+      break;
+    default: // Oooh, a sensor defect not in dcraw!
+      break;
+    }
+  }
+}
+
+void IiqDecoder::handleBadPixel(const ushort16 col, const ushort16 row) {
+  MutexLocker guard(&mRaw->mBadPixelMutex);
+  mRaw->mBadPixelPositions.insert(mRaw->mBadPixelPositions.end(),
+                                  (static_cast<uint32>(row) << 16) + col);
+}
+
+void IiqDecoder::correctBadColumn(const ushort16 col) {
+  const Array2DRef<uint16_t> img(reinterpret_cast<uint16_t*>(mRaw->getData()),
+                                 mRaw->dim.x, mRaw->dim.y,
+                                 mRaw->pitch / sizeof(uint16_t));
+
+  for (int row = 2; row < mRaw->dim.y - 2; row++) {
+    if (mRaw->cfa.getColorAt(col, row) == CFA_GREEN) {
+      /* Do green pixels. Let's pretend we are in "G" pixel, in the middle:
+       *   G=G
+       *   BGB
+       *   G0G
+       * We accumulate the values 4 "G" pixels form diagonals, then check which
+       * of 4 values is most distant from the mean of those 4 values, subtract
+       * it from the sum, average (divide by 3) and round to nearest int.
+       */
+      int max = 0;
+      std::array<ushort16, 4> val;
+      std::array<int32, 4> dev;
+      int32 sum = 0;
+      sum += val[0] = img(col - 1, row - 1);
+      sum += val[1] = img(col - 1, row + 1);
+      sum += val[2] = img(col + 1, row - 1);
+      sum += val[3] = img(col + 1, row + 1);
+      for (int i = 0; i < 4; i++) {
+        dev[i] = std::abs((val[i] * 4) - sum);
+        if (dev[max] < dev[i])
+          max = i;
+      }
+      const int three_pixels = sum - val[max];
+      // This is `std::lround(three_pixels / 3.0)`, but without FP.
+      img(col, row) = (three_pixels + 1) / 3;
+    } else {
+      /*
+       * Do non-green pixels. Let's pretend we are in "R" pixel, in the middle:
+       *   RG=GR
+       *   GB=BG
+       *   RGRGR
+       *   GB0BG
+       *   RG0GR
+       * We have 6 other "R" pixels - 2 by horizontal, 4 by diagonals.
+       * We need to combine them, to get the value of the pixel we are in.
+       */
+      uint32 diags = img(col - 2, row + 2) + img(col - 2, row - 2) +
+                     img(col + 2, row + 2) + img(col + 2, row - 2);
+      uint32 horiz = img(col - 2, row) + img(col + 2, row);
+      // But this is not just averaging, we bias towards the horizontal pixels.
+      img(col, row) = std::lround(diags * 0.0732233 + horiz * 0.3535534);
+    }
+  }
 }
 
 } // namespace rawspeed

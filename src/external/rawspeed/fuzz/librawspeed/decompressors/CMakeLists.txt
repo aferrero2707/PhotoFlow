@@ -1,6 +1,6 @@
 macro(add_simple_fuzzer name)
   set(TheFuzzer "${name}Fuzzer")
-  add_executable(${TheFuzzer} "${name}.cpp")
+  rawspeed_add_executable(${TheFuzzer} "${name}.cpp")
 
   add_fuzz_target(${TheFuzzer})
 
@@ -22,11 +22,13 @@ set(DECOMPRESSORS
   "PanasonicDecompressor"
   "PanasonicDecompressorV5"
   "PentaxDecompressor"
+  "PhaseOneDecompressor"
   "SamsungV0Decompressor"
   "SamsungV1Decompressor"
   "SamsungV2Decompressor"
   "SonyArw1Decompressor"
   "SonyArw2Decompressor"
+  "VC5Decompressor"
 )
 
 foreach(decompressor IN LISTS DECOMPRESSORS)

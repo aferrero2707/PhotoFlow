@@ -1,7 +1,7 @@
 /*
     RawSpeed - RAW file decoder.
 
-    Copyright (C) 2017 Roman Lebedev
+    Copyright (C) 2018 Roman Lebedev
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -20,33 +20,33 @@
 
 #pragma once
 
-#include <algorithm> // for fill_n, min
-#include <cassert>   // for assert
-#include <iterator>  // for back_insert_iterator
-#include <numeric>   // for accumulate
-#include <vector>    // for vector
+#include <utility> // for move
 
 namespace rawspeed {
 
-inline std::vector<unsigned> sliceUp(unsigned bucketsNum, unsigned pieces) {
-  std::vector<unsigned> buckets;
+template <class T> class Optional final {
+  T data;
+  bool hasData = false;
 
-  if (!bucketsNum || !pieces)
-    return buckets;
+public:
+  Optional() = default;
 
-  bucketsNum = std::min(bucketsNum, pieces);
-  buckets.reserve(bucketsNum);
+  explicit Optional(T RHS) : data(RHS), hasData(true) {}
 
-  const auto quot = pieces / bucketsNum;
-  const auto rem = pieces % bucketsNum;
+  Optional& operator=(T RHS) {
+    Optional tmp(RHS);
+    *this = std::move(tmp);
+    return *this;
+  }
 
-  std::fill_n(std::back_inserter(buckets), rem, 1 + quot);
-  std::fill_n(std::back_inserter(buckets), bucketsNum - rem, quot);
+  bool hasValue() const { return hasData; }
 
-  assert(buckets.size() == bucketsNum);
-  assert(std::accumulate(buckets.begin(), buckets.end(), 0UL) == pieces);
+  void reset() { hasData = false; }
 
-  return buckets;
-}
+  T getValue() const {
+    assert(hasValue());
+    return data;
+  }
+};
 
 } // namespace rawspeed

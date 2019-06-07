@@ -22,14 +22,14 @@
 
 #include "rawspeedconfig.h"
 
-#include <algorithm>        // for max, min
+#include <algorithm>        // IWYU pragma: keep
 #include <cassert>          // for assert
 #include <climits>          // for CHAR_BIT
 #include <cstdint>          // for uintptr_t
-#include <cstring>          // for memcpy, size_t
+#include <cstring>          // for size_t, memcpy
 #include <initializer_list> // for initializer_list
 #include <string>           // for string
-#include <type_traits>      // for enable_if, is_pointer
+#include <type_traits>      // for enable_if, is_pointer, is_signed, is_uns...
 #include <vector>           // for vector
 
 extern "C" int rawspeed_get_number_of_processor_cores();
@@ -74,8 +74,7 @@ template <typename T> inline constexpr bool isPowerOfTwo(T val) {
   return (val & (~val+1)) == val;
 }
 
-//constexpr
-inline size_t __attribute__((const))
+constexpr inline size_t __attribute__((const))
 roundToMultiple(size_t value, size_t multiple, bool roundDown) {
   if ((multiple == 0) || (value % multiple == 0))
     return value;
@@ -87,20 +86,17 @@ roundToMultiple(size_t value, size_t multiple, bool roundDown) {
   return roundedDown + multiple;
 }
 
-//constexpr
-inline size_t __attribute__((const))
+constexpr inline size_t __attribute__((const))
 roundDown(size_t value, size_t multiple) {
   return roundToMultiple(value, multiple, /*roundDown=*/true);
 }
 
-//constexpr
-inline size_t __attribute__((const))
+constexpr inline size_t __attribute__((const))
 roundUp(size_t value, size_t multiple) {
   return roundToMultiple(value, multiple, /*roundDown=*/false);
 }
 
-//constexpr
-inline size_t __attribute__((const))
+constexpr inline size_t __attribute__((const))
 roundUpDivision(size_t value, size_t div) {
   return (value != 0) ? (1 + ((value - 1) / div)) : 0;
 }
@@ -130,17 +126,6 @@ isIn(const T value, const std::initializer_list<T2>& list) {
     if (t == value)
       return true;
   return false;
-}
-
-inline uint32 getThreadCount()
-{
-#ifndef HAVE_PTHREAD
-  return 1;
-#elif defined(WIN32)
-  return pthread_num_processors_np();
-#else
-  return rawspeed_get_number_of_processor_cores();
-#endif
 }
 
 // Clamps the given unsigned value to the range 0 .. 2^n-1, with n <= 16

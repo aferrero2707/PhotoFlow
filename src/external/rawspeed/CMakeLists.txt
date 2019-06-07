@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.4.0)
 
 cmake_policy(SET CMP0011 NEW)
 cmake_policy(SET CMP0025 NEW)
@@ -11,24 +11,22 @@ If(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "In-source builds are not permitted. Make a separate folder for building:\nmkdir build; cd build; cmake ..\nBefore that, remove the files already created:\nrm -rf CMakeCache.txt CMakeFiles")
 endif(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
 
-# if rawspeed is added as a submodule to another build,
-# this CMakeLists.txt should be added via add_subdirectory().
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
-  set(RAWSPEED_SOURCE_DIR "${CMAKE_SOURCE_DIR}" CACHE PATH "" FORCE)
-  set(RAWSPEED_STANDALONE_BUILD TRUE CACHE BOOL "" FORCE)
-else()
-  set(RAWSPEED_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "" FORCE)
-  set(RAWSPEED_STANDALONE_BUILD FALSE CACHE BOOL "" FORCE)
-endif()
-
 include(GNUInstallDirs)
 include(FeatureSummary)
+include(CheckCXXCompilerFlag)
 
-if(NOT (CMAKE_VERSION VERSION_LESS 3.4.0-rc1))
-  project(rawspeed CXX)
+# NOTE: if rawspeed is being added as a submodule to another build,
+# this CMakeLists.txt should be added via add_subdirectory().
+
+project(rawspeed CXX)
+
+set(RAWSPEED_SOURCE_DIR "${PROJECT_SOURCE_DIR}" CACHE PATH "" FORCE)
+set(RAWSPEED_BINARY_DIR "${PROJECT_BINARY_DIR}" CACHE PATH "" FORCE)
+
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${RAWSPEED_SOURCE_DIR}")
+  set(RAWSPEED_STANDALONE_BUILD TRUE CACHE BOOL "")
 else()
-  # FindThreads.cmake issue
-  project(rawspeed CXX C)
+  set(RAWSPEED_STANDALONE_BUILD FALSE CACHE BOOL "")
 endif()
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules/" ${CMAKE_MODULE_PATH})
@@ -51,9 +49,42 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL
 else()
   set(RAWSPEED_USE_LIBCXX OFF CACHE BOOL "(Clang only) Build using libc++ as the standard library." FORCE)
 endif()
-option(RAWSPEED_ENABLE_DEBUG_INFO "Whether to generate debug info or not." ON)
-option(WITH_PTHREADS "Enable threading support through pthread. Highly recommended" ON)
-option(WITH_OPENMP "Enable OpenMP support. Only used for tools, not the library itself." ON)
+
+set(CMAKE_REQUIRED_FLAGS_ORIG "${CMAKE_REQUIRED_FLAGS}")
+set(CMAKE_REQUIRED_FLAGS "-c -std=c++14 -g")
+# see https://bugs.llvm.org/show_bug.cgi?id=16091
+# see https://reviews.llvm.org/rL221704
+CHECK_CXX_SOURCE_COMPILES(
+"struct foo {
+  static auto func();
+};
+
+foo f;
+
+auto foo::func() {
+  return 1;
+}"
+  RAWSPEED_CXX_DEBUG_INFO_FOR_AUTO_IS_SUPPORTED
+)
+set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS_ORIG}")
+
+option(RAWSPEED_ENABLE_DEBUG_INFO "Whether to generate debug info or not." ${RAWSPEED_CXX_DEBUG_INFO_FOR_AUTO_IS_SUPPORTED})
+
+option(RAWSPEED_ENABLE_WERROR "Stop and fail the build, if a compiler warning is triggered." ON)
+
+option(WITH_OPENMP "Enable OpenMP support." ON)
+if(WITH_OPENMP)
+  option(USE_BUNDLED_LLVMOPENMP "Build and use LLVM OpenMP runtime library in-tree" OFF)
+else()
+  set(USE_BUNDLED_LLVMOPENMP OFF CACHE BOOL "Build and use LLVM OpenMP runtime library in-tree" FORCE)
+endif()
+set(LLVMOPENMP_PATH "/usr/src/openmp" CACHE PATH "Path to the LLVM OpenMP runtime library root tree.")
+if(WITH_OPENMP AND USE_BUNDLED_LLVMOPENMP)
+  option(ALLOW_DOWNLOADING_LLVMOPENMP "If LLVM OpenMP runtime library src tree is not found in location specified by LLVMOPENMP_PATH, do fetch the archive from internet" OFF)
+else()
+  set(ALLOW_DOWNLOADING_LLVMOPENMP OFF CACHE BOOL "If LLVM OpenMP runtime library src tree is not found in location specified by LLVMOPENMP_PATH, do fetch the archive from internet" FORCE)
+endif()
+
 option(WITH_PUGIXML "Enable XML support for cameras.xml reading" ON)
 if(WITH_PUGIXML)
   option(USE_BUNDLED_PUGIXML "Build and use pugixml in-tree" OFF)
@@ -116,7 +147,7 @@ set(ZLIB_PATH "/usr/src/zlib" CACHE PATH "Path to the zlib root tree.")
 set(GOOGLEBENCHMARK_PATH "/usr/src/googlebenchmark" CACHE PATH
                     "Path to the googlebenchmark root tree.")
 
-set(LIB_FUZZING_ENGINE "OFF" CACHE STRING "Either OFF, or overrides location of prebuilt fuzzing engine library (e.g. libFuzzer) that needs to be linked with all fuzz targets.")
+set(LIB_FUZZING_ENGINE "OFF" CACHE STRING "Either OFF, or overrides the fuzzing engine library (e.g. libFuzzer) that needs to be linked with all fuzz targets.")
 
 set(RAWSPEED_REFERENCE_SAMPLE_ARCHIVE "~/raw-camera-samples/raw.pixls.us-unique" CACHE PATH "The location of the reference sample set to use. Should contain filelist.sha1 and timestamp.txt")
 
@@ -149,6 +180,8 @@ else()
   endif()
 endif()
 
+include(cmake-command-wrappers)
+
 include(build-type)
 
 if(RAWSPEED_USE_LIBCXX)
@@ -174,20 +207,25 @@ endif()
 include(compiler-versions)
 include(compiler-flags)
 
-add_custom_target(check ALL)
+add_custom_target(check-rawspeed ALL)
 add_custom_target(dependencies ALL)
 add_custom_target(tests ALL)
 
 include(compiler-warnings)
-set_directory_properties(PROPERTIES COMPILE_OPTIONS "-Werror")
+
+if(RAWSPEED_ENABLE_WERROR)
+  set_directory_properties(PROPERTIES COMPILE_OPTIONS "-Werror")
+endif()
 
 if(BUILD_BENCHMARKING)
   add_custom_target(benchmarks ALL)
 endif()
 
-add_subdirectory(src)
+rawspeed_add_library(rawspeed STATIC)
 
-include(OpenMP)
+include(src-dependencies)
+
+add_subdirectory(src)
 
 if(BUILD_TESTING)
   add_subdirectory(test)

@@ -36,19 +36,8 @@
 #include <Windows.h>
 #endif
 
-#ifdef _OPENMP
+#ifdef HAVE_OPENMP
 #include <omp.h>
-#endif
-
-// define this function, it is only declared in rawspeed:
-#ifdef _OPENMP
-extern "C" int rawspeed_get_number_of_processor_cores() {
-  return omp_get_max_threads();
-}
-#else
-extern "C" int __attribute__((const)) rawspeed_get_number_of_processor_cores() {
-  return 1;
-}
 #endif
 
 namespace rawspeed {
@@ -61,7 +50,7 @@ std::string find_cameras_xml(const char *argv0) {
   struct stat statbuf;
 
 #ifdef RS_CAMERAS_XML_PATH
-  static const char set_camfile[] = RS_CAMERAS_XML_PATH;
+  static const char* set_camfile = RS_CAMERAS_XML_PATH;
   if (stat(set_camfile, &statbuf)) {
     fprintf(stderr, "WARNING: Couldn't find cameras.xml in '%s'\n",
             set_camfile);
@@ -98,14 +87,14 @@ std::string find_cameras_xml(const char *argv0) {
 
 #ifdef RAWSPEED_STANDALONE_BUILD
   // running from build dir?
-  found_camfile = std::string(CMAKE_SOURCE_DIR "/data/cameras.xml");
+  found_camfile = std::string(RAWSPEED_SOURCE_DIR "/data/cameras.xml");
 #endif
 
   if (stat(found_camfile.c_str(), &statbuf)) {
 #ifndef __APPLE__
     fprintf(stderr, "ERROR: Couldn't find cameras.xml in '%s'\n",
             found_camfile.c_str());
-    return nullptr;
+    return std::string();
 #else
     fprintf(stderr, "WARNING: Couldn't find cameras.xml in '%s'\n",
             found_camfile.c_str());
@@ -114,7 +103,7 @@ std::string find_cameras_xml(const char *argv0) {
     if (stat(found_camfile.c_str(), &statbuf)) {
       fprintf(stderr, "ERROR: Couldn't find cameras.xml in '%s'\n",
               found_camfile.c_str());
-      return nullptr;
+      return std::string();
     }
 #endif
   }
@@ -260,8 +249,8 @@ int main(int argc, char* argv[]) { // NOLINT
     fprintf(stdout, "pixel_aspect_ratio: %f\n", r->metadata.pixelAspectRatio);
 
     double sum = 0.0F;
-#ifdef _OPENMP
-#pragma omp parallel for default(none) schedule(static) reduction(+ : sum)
+#ifdef HAVE_OPENMP
+#pragma omp parallel for default(none) OMPFIRSTPRIVATECLAUSE(dimUncropped, raw, bpp) schedule(static) reduction(+ : sum)
 #endif
     for (int y = 0; y < dimUncropped.y; ++y) {
       uchar8* const data = (*raw)->getDataUncropped(0, y);
@@ -276,8 +265,8 @@ int main(int argc, char* argv[]) { // NOLINT
     if (r->getDataType() == TYPE_FLOAT32) {
       sum = 0.0F;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none) schedule(static) reduction(+ : sum)
+#ifdef HAVE_OPENMP
+#pragma omp parallel for default(none) OMPFIRSTPRIVATECLAUSE(dimUncropped, raw, cpp) schedule(static) reduction(+ : sum)
 #endif
       for (int y = 0; y < dimUncropped.y; ++y) {
         auto* const data =
@@ -293,8 +282,8 @@ int main(int argc, char* argv[]) { // NOLINT
     } else if (r->getDataType() == TYPE_USHORT16) {
       sum = 0.0F;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none) schedule(static) reduction(+ : sum)
+#ifdef HAVE_OPENMP
+#pragma omp parallel for default(none) OMPFIRSTPRIVATECLAUSE(dimUncropped, raw, cpp) schedule(static) reduction(+ : sum)
 #endif
       for (int y = 0; y < dimUncropped.y; ++y) {
         auto* const data =

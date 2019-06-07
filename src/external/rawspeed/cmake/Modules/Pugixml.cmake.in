@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.4.0)
 
 project(pugixml-download NONE)
 
@@ -17,10 +17,10 @@ if(EXISTS "${PUGIXML_PATH}" AND IS_DIRECTORY "${PUGIXML_PATH}" AND EXISTS "${PUG
 
   ExternalProject_Add(
     pugixml
-    URL               "${PUGIXML_PATH}"
-    PREFIX            "${CMAKE_BINARY_DIR}/pugixml"
-    SOURCE_DIR        "${CMAKE_BINARY_DIR}/pugixml-src"
-    BINARY_DIR        "${CMAKE_BINARY_DIR}/pugixml-build"
+    PREFIX            "${CMAKE_BINARY_DIR}"
+    DOWNLOAD_DIR      "${CMAKE_BINARY_DIR}/download"
+    SOURCE_DIR        "${PUGIXML_PATH}" # use existing src dir.
+    BINARY_DIR        "${CMAKE_BINARY_DIR}/build"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND     ""
     INSTALL_COMMAND   ""
@@ -33,11 +33,13 @@ else()
     message(WARNING "Did not find pugixml sources! Fetching from web...")
     ExternalProject_Add(
       pugixml
-      URL               https://github.com/zeux/pugixml/releases/download/v1.8.1/pugixml-1.8.1.tar.gz
-      URL_HASH          SHA512=1aec6f8cd0c385b66e848020d94d331db788c78523f72d145726738433a784b518084ec45a6eeffb0a6585bcf2759d09ad1e3d304d15d99068d43dbfd6db9d31
-      PREFIX            "${CMAKE_BINARY_DIR}/pugixml"
-      SOURCE_DIR        "${CMAKE_BINARY_DIR}/pugixml-src"
-      BINARY_DIR        "${CMAKE_BINARY_DIR}/pugixml-build"
+      URL               https://github.com/zeux/pugixml/releases/download/v1.9/pugixml-1.9.tar.gz
+      URL_HASH          SHA512=853a9d985aae537391c6524d5413ef4de237d99d96cc58ea7fe7152f786df1e408cdacd2e4387697e23c3e67cdc1d42b29de554501309eae16d86edd0e24785f
+      PREFIX            "${CMAKE_BINARY_DIR}"
+      STAMP_DIR         "${CMAKE_BINARY_DIR}/stamp"
+      DOWNLOAD_DIR      "${CMAKE_BINARY_DIR}/download"
+      SOURCE_DIR        "${CMAKE_BINARY_DIR}/src"
+      BINARY_DIR        "${CMAKE_BINARY_DIR}/build"
       CONFIGURE_COMMAND ""
       BUILD_COMMAND     ""
       INSTALL_COMMAND   ""
@@ -45,3 +47,9 @@ else()
     )
   endif()
 endif()
+
+ExternalProject_Get_Property(pugixml SOURCE_DIR BINARY_DIR)
+file(WRITE pugixml-paths.cmake
+"set(PUGIXML_SOURCE_DIR \"${SOURCE_DIR}\")
+set(PUGIXML_BINARY_DIR \"${BINARY_DIR}\")
+")

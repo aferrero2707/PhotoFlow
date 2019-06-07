@@ -18,17 +18,18 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "RawSpeed-API.h"        // for RawDecoder, Buffer, FileReader, Raw...
-#include "common/ChecksumFile.h" // for ParseChecksumFile
-#include <benchmark/benchmark.h> // for Counter, State, DoNotOptimize, Init...
+#include "RawSpeed-API.h"        // for RawDecoder, FileReader, RawImage
+#include "common/ChecksumFile.h" // for ChecksumFileEntry, ReadChecksumFile
+#include <benchmark/benchmark.h> // for State, DoNotOptimize, Initialize
 #include <chrono>                // for duration, high_resolution_clock
 #include <ctime>                 // for clock, clock_t
 #include <memory>                // for unique_ptr
 #include <ratio>                 // for ratio
-#include <string>                // for string, to_string, operator!=
+#include <string>                // for string, operator!=, to_string
 #include <sys/time.h>            // for CLOCKS_PER_SEC
+#include <vector>                // for vector
 
-#ifdef _OPENMP
+#ifdef HAVE_OPENMP
 #include <omp.h>
 #endif
 
@@ -99,7 +100,7 @@ static inline void BM_RawSpeed(benchmark::State& state, const char* fileName,
   currThreadCount = threads;
 
 #ifdef HAVE_PUGIXML
-  static const CameraMetaData metadata(CMAKE_SOURCE_DIR "/data/cameras.xml");
+  static const CameraMetaData metadata(RAWSPEED_SOURCE_DIR "/data/cameras.xml");
 #else
   static const CameraMetaData metadata{};
 #endif
@@ -133,15 +134,25 @@ static inline void BM_RawSpeed(benchmark::State& state, const char* fileName,
 
   // For each iteration:
   state.counters.insert({
-      {"CPUTime,s", CPUTime / state.iterations()},
-      {"WallTime,s", WallTime / state.iterations()},
+      {"CPUTime,s",
+       benchmark::Counter(CPUTime, benchmark::Counter::Flags::kAvgIterations)},
+      {"WallTime,s",
+       benchmark::Counter(WallTime, benchmark::Counter::Flags::kAvgIterations)},
       {"CPUTime/WallTime", CPUTime / WallTime}, // 'Threading factor'
       {"Pixels", pixels},
-      {"Pixels/CPUTime", (state.iterations() * pixels) / CPUTime},
-      {"Pixels/WallTime", (state.iterations() * pixels) / WallTime},
+      {"Pixels/CPUTime",
+       benchmark::Counter(pixels / CPUTime,
+                          benchmark::Counter::Flags::kIsIterationInvariant)},
+      {"Pixels/WallTime",
+       benchmark::Counter(pixels / WallTime,
+                          benchmark::Counter::Flags::kIsIterationInvariant)},
       /* {"Raws", 1}, */
-      {"Raws/CPUTime", state.iterations() / CPUTime},
-      {"Raws/WallTime", state.iterations() / WallTime},
+      {"Raws/CPUTime",
+       benchmark::Counter(1.0 / CPUTime,
+                          benchmark::Counter::Flags::kIsIterationInvariant)},
+      {"Raws/WallTime",
+       benchmark::Counter(1.0 / WallTime,
+                          benchmark::Counter::Flags::kIsIterationInvariant)},
   });
   // Could also have counters wrt. the filesize,
   // but i'm not sure they are interesting.
@@ -154,12 +165,13 @@ static void addBench(const char* fName, std::string tName, int threads) {
       benchmark::RegisterBenchmark(tName.c_str(), &BM_RawSpeed, fName, threads);
   b->Unit(benchmark::kMillisecond);
   b->UseRealTime();
+  b->MeasureProcessCPUTime();
 }
 
 int main(int argc, char** argv) {
   benchmark::Initialize(&argc, argv);
 
-  auto hasFlag = [argc, argv](std::string flag) {
+  auto hasFlag = [argc, argv](const std::string& flag) {
     int found = 0;
     for (int i = 1; i < argc; ++i) {
       if (!argv[i] || argv[i] != flag)
@@ -172,7 +184,7 @@ int main(int argc, char** argv) {
 
   bool threading = hasFlag("-t");
 
-#ifdef _OPENMP
+#ifdef HAVE_OPENMP
   const auto threadsMax = omp_get_max_threads();
 #else
   const auto threadsMax = 1;

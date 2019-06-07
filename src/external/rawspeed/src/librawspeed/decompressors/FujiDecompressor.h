@@ -21,22 +21,25 @@
 
 #pragma once
 
-#include "common/Common.h"                                  // for ushort16
-#include "decompressors/AbstractParallelizedDecompressor.h" // for Abstract...
-#include "io/BitPumpMSB.h"                                  // for BitPumpMSB
-#include "io/ByteStream.h"                                  // for ByteStream
-#include "metadata/ColorFilterArray.h"                      // for CFAColor
-#include <array>                                            // for array
-#include <cassert>                                          // for assert
-#include <utility>                                          // for move
-#include <vector>                                           // for vector
+#include "common/Common.h"                      // for ushort16
+#include "common/RawImage.h"                    // for RawImage
+#include "decompressors/AbstractDecompressor.h" // for AbstractDecompressor
+#include "io/BitPumpMSB.h"                      // for BitPumpMSB
+#include "io/ByteStream.h"                      // for ByteStream
+#include "metadata/ColorFilterArray.h"          // for CFAColor
+#include <array>                                // for array
+#include <cassert>                              // for assert
+#include <utility>                              // for move
+#include <vector>                               // for vector
 
 namespace rawspeed {
 
 class RawImage;
 
-class FujiDecompressor final : public AbstractParallelizedDecompressor {
-  void decompressThreaded(const RawDecompressorThread* t) const final;
+class FujiDecompressor final : public AbstractDecompressor {
+  RawImage mRaw;
+
+  void decompressThread() const noexcept;
 
 public:
   struct FujiHeader {
@@ -106,7 +109,7 @@ public:
 
   void fuji_compressed_load_raw();
 
-  void decompress() const final;
+  void decompress() const;
 
 protected:
   struct fuji_compressed_params {
@@ -115,7 +118,7 @@ protected:
     explicit fuji_compressed_params(const FujiDecompressor& d);
 
     std::vector<char> q_table; /* quantization table */
-    int q_point[5]; /* quantization points */
+    std::array<int, 5> q_point; /* quantization points */
     int max_bits;
     int min_value;
     int raw_bits;
@@ -158,10 +161,14 @@ protected:
 
     void reset(const fuji_compressed_params* params);
 
-    int_pair grad_even[3][41]; // tables of gradients
-    int_pair grad_odd[3][41];
+    BitPumpMSB pump;
+
+    // tables of gradients
+    std::array<std::array<int_pair, 41>, 3> grad_even;
+    std::array<std::array<int_pair, 41>, 3> grad_odd;
+
     std::vector<ushort16> linealloc;
-    ushort16* linebuf[_ltotal];
+    std::array<ushort16*, _ltotal> linebuf;
   };
 
 private:
@@ -183,31 +190,30 @@ private:
   void copy_line_to_bayer(fuji_compressed_block* info, const FujiStrip& strip,
                           int cur_line) const;
 
-  void fuji_zerobits(BitPumpMSB* pump, int* count) const;
+  inline void fuji_zerobits(BitPumpMSB* pump, int* count) const;
   int bitDiff(int value1, int value2) const;
 
   template <typename T1, typename T2>
-  int fuji_decode_sample(T1&& func_0, T2&& func_1, fuji_compressed_block* info,
-                         BitPumpMSB* pump, ushort16* line_buf, int* pos,
-                         int_pair* grads) const;
-  int fuji_decode_sample_even(fuji_compressed_block* info, BitPumpMSB* pump,
-                              ushort16* line_buf, int* pos,
-                              int_pair* grads) const;
-  int fuji_decode_sample_odd(fuji_compressed_block* info, BitPumpMSB* pump,
-                             ushort16* line_buf, int* pos,
-                             int_pair* grads) const;
+  void fuji_decode_sample(T1&& func_0, T2&& func_1, fuji_compressed_block* info,
+                          ushort16* line_buf, int* pos,
+                          std::array<int_pair, 41>* grads) const;
+  void fuji_decode_sample_even(fuji_compressed_block* info, ushort16* line_buf,
+                               int* pos, std::array<int_pair, 41>* grads) const;
+  void fuji_decode_sample_odd(fuji_compressed_block* info, ushort16* line_buf,
+                              int* pos, std::array<int_pair, 41>* grads) const;
 
   void fuji_decode_interpolation_even(int line_width, ushort16* line_buf,
                                       int* pos) const;
-  void fuji_extend_generic(ushort16* linebuf[_ltotal], int line_width,
-                           int start, int end) const;
-  void fuji_extend_red(ushort16* linebuf[_ltotal], int line_width) const;
-  void fuji_extend_green(ushort16* linebuf[_ltotal], int line_width) const;
-  void fuji_extend_blue(ushort16* linebuf[_ltotal], int line_width) const;
-  void xtrans_decode_block(fuji_compressed_block* info,
-                           BitPumpMSB* pump, int cur_line) const;
-  void fuji_bayer_decode_block(fuji_compressed_block* info,
-                               BitPumpMSB* pump, int cur_line) const;
+  void fuji_extend_generic(std::array<ushort16*, _ltotal> linebuf,
+                           int line_width, int start, int end) const;
+  void fuji_extend_red(std::array<ushort16*, _ltotal> linebuf,
+                       int line_width) const;
+  void fuji_extend_green(std::array<ushort16*, _ltotal> linebuf,
+                         int line_width) const;
+  void fuji_extend_blue(std::array<ushort16*, _ltotal> linebuf,
+                        int line_width) const;
+  void xtrans_decode_block(fuji_compressed_block* info, int cur_line) const;
+  void fuji_bayer_decode_block(fuji_compressed_block* info, int cur_line) const;
 };
 
 } // namespace rawspeed

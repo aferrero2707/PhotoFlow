@@ -21,7 +21,6 @@
 #pragma once
 
 #include "rawspeedconfig.h"
-
 #include "ThreadSafetyAnalysis.h"      // for GUARDED_BY, REQUIRES
 #include "common/Common.h"             // for uint32, uchar8, ushort16, wri...
 #include "common/ErrorLog.h"           // for ErrorLog
@@ -34,10 +33,6 @@
 #include <memory>                      // for unique_ptr, operator==
 #include <string>                      // for string
 #include <vector>                      // for vector
-
-#ifdef HAVE_PTHREAD
-#include <pthread.h>
-#endif
 
 namespace rawspeed {
 
@@ -54,27 +49,17 @@ public:
   };
 
 private:
-#ifdef HAVE_PTHREAD
-  pthread_t threadid;
-  pthread_attr_t attr;
-#endif
   RawImageData* data;
   RawImageWorkerTask task;
   int start_y;
   int end_y;
 
+  void performTask() noexcept;
+
 public:
   RawImageWorker(RawImageData* img, RawImageWorkerTask task, int start_y,
-                 int end_y);
-#ifdef HAVE_PTHREAD
-  ~RawImageWorker();
-  void startThread();
-  void waitForThread();
-#endif
-  void performTask();
+                 int end_y) noexcept;
 };
-
-void* RawImageWorkerThread(void* _this);
 
 class ImageMetaData {
 public:
@@ -86,7 +71,7 @@ public:
   double pixelAspectRatio;
 
   // White balance coefficients of the image
-  float wbCoeffs[4];
+  std::array<float, 4> wbCoeffs;
 
   // How many pixels far down the left edge and far up the right edge the image
   // corners are when the image is rotated 45 degrees in Fuji rotated sensors.
@@ -206,7 +191,7 @@ protected:
   void doLookup(int start_y, int end_y) override;
 
   RawImageDataU16();
-  explicit RawImageDataU16(const iPoint2D& dim, uint32 cpp = 1);
+  explicit RawImageDataU16(const iPoint2D& dim_, uint32 cpp_ = 1);
   friend class RawImage;
 };
 
@@ -221,7 +206,7 @@ protected:
   void fixBadPixel(uint32 x, uint32 y, int component = 0) override;
   [[noreturn]] void doLookup(int start_y, int end_y) override;
   RawImageDataFloat();
-  explicit RawImageDataFloat(const iPoint2D& dim, uint32 cpp = 1);
+  explicit RawImageDataFloat(const iPoint2D& dim_, uint32 cpp_ = 1);
   friend class RawImage;
 };
 

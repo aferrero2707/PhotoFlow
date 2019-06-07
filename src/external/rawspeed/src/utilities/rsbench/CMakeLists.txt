@@ -1,10 +1,8 @@
-add_executable(rsbench main.cpp)
+rawspeed_add_executable(rsbench main.cpp)
 
 target_link_libraries(rsbench rawspeed)
 target_link_libraries(rsbench rawspeed_bench)
 
-if(WITH_OPENMP AND OPENMP_FOUND AND TARGET OpenMP::OpenMP)
-  target_link_libraries(rsbench OpenMP::OpenMP)
-endif()
+rawspeed_add_test(NAME utilities/rsbench COMMAND rsbench --help)
 
 add_dependencies(benchmarks rsbench)
