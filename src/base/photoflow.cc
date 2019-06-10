@@ -69,7 +69,7 @@
 
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
-char* _lf_get_database_dir()
+const char* _lf_get_database_dir()
 {
   std::string dbdir;
   //if( getenv("LOCALAPPDATA") ) {
