@@ -317,7 +317,7 @@ class Layout2: public Gtk::HBox
   bool on_samplers_label_button_press_event(GdkEventButton*event)
   {
     std::cout<<"on_samplers_label_button_press_event: type="<<event->type<<"  button="<<event->button<<std::endl;
-    if( event->type == Gdk::DOUBLE_BUTTON_PRESS && event->button == 1) {
+    if( event->type == GDK_2BUTTON_PRESS && event->button == 1) {
       std::cout<<"on_samplers_label_button_press_event: double-click detected"<<std::endl;
       samplers_vbox.remove(*samplers_widget);
       stat_notebook.remove_page(samplers_scrollwin);
