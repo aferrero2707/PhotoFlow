@@ -74,7 +74,7 @@ template <typename T> inline constexpr bool isPowerOfTwo(T val) {
   return (val & (~val+1)) == val;
 }
 
-/*constexpr*/ inline size_t __attribute__((const))
+constexpr inline size_t __attribute__((const))
 roundToMultiple(size_t value, size_t multiple, bool roundDown) {
   if ((multiple == 0) || (value % multiple == 0))
     return value;
@@ -86,12 +86,12 @@ roundToMultiple(size_t value, size_t multiple, bool roundDown) {
   return roundedDown + multiple;
 }
 
-/*constexpr*/ inline size_t __attribute__((const))
+constexpr inline size_t __attribute__((const))
 roundDown(size_t value, size_t multiple) {
   return roundToMultiple(value, multiple, /*roundDown=*/true);
 }
 
-/*constexpr*/ inline size_t __attribute__((const))
+constexpr inline size_t __attribute__((const))
 roundUp(size_t value, size_t multiple) {
   return roundToMultiple(value, multiple, /*roundDown=*/false);
 }
