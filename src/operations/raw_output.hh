@@ -667,7 +667,7 @@ enum exposure_mode_t {
           //pout[xi] = CLIPOUT(pout[xi]);
         }
       }
-      delete line; delete line2;
+      delete[] line; delete[] line2;
     }
   };
 
