@@ -601,13 +601,13 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   white_level_label_align.add( white_level_label );
 
 
-  int* pc = new int; *pc = 0;
+  int* pc = (int*)malloc(sizeof(int)); *pc = 0;
   blackLevelRSlider.set_conversion_functions(black_level_slider_to_prop, black_level_prop_to_slider, pc);
-  pc = new int; *pc = 1;
+  pc = (int*)malloc(sizeof(int)); *pc = 1;
   blackLevelG1Slider.set_conversion_functions(black_level_slider_to_prop, black_level_prop_to_slider, pc);
-  pc = new int; *pc = 3;
+  pc = (int*)malloc(sizeof(int)); *pc = 3;
   blackLevelG2Slider.set_conversion_functions(black_level_slider_to_prop, black_level_prop_to_slider, pc);
-  pc = new int; *pc = 2;
+  pc = (int*)malloc(sizeof(int)); *pc = 2;
   blackLevelBSlider.set_conversion_functions(black_level_slider_to_prop, black_level_prop_to_slider, pc);
 
   saturationLevelSlider.set_conversion_functions(white_level_slider_to_prop, white_level_prop_to_slider);

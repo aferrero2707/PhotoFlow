@@ -187,17 +187,16 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   bool changed = in_changed || out_mode_changed || out_type_changed || out_trc_type_changed || out_changed;
 
   cmsHPROFILE out_profile = NULL;
-  profile_mode_t pmode = (profile_mode_t)out_profile_type.get_enum_value().first;
   profile_type_t ptype = (profile_type_t)out_profile_type.get_enum_value().first;
   TRC_type trc_type = (TRC_type)out_trc_type.get_enum_value().first;
   //PF::ICCProfile* iccprof = NULL;
 
-  if( pmode == PF::PROF_TYPE_FROM_SETTINGS ) {
+  if( ptype == PF::PROF_TYPE_FROM_SETTINGS ) {
     ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
     trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
     //std::cout<<"ConvertColorspacePar::build(): Getting output profile from settings..."<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-  } else if( pmode == PF::PROF_TYPE_FROM_DISK ) {
+  } else if( ptype == PF::PROF_TYPE_FROM_DISK ) {
     //std::cout<<"ConvertColorspacePar::build(): Getting output profile from disk: "<<out_profile_name.get()<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
   } else {//if( pmode == PF::PROF_MODE_CUSTOM ) {

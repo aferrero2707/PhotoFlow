@@ -307,7 +307,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   //if( in_profile ) cmsCloseProfile( in_profile );
   //if( out_profile ) cmsCloseProfile( out_profile );
   profile_type_t ptype;
-  profile_mode_t pmode;
+  //profile_mode_t pmode;
   TRC_type trc_type;
   PF::ICCProfile* in_iccprof = NULL;
 
@@ -367,17 +367,17 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   if( (profile_mode_t)in_profile_mode.get_enum_value().first != PF::PROF_MODE_NONE ) {
     PF::set_icc_profile( out, in_iccprof );
     // only retrieve the working profile if the image is color managed
-    pmode = (profile_mode_t)out_profile_type.get_enum_value().first;
-    if( pmode == PF::PROF_TYPE_EMBEDDED ) {
+    ptype = (profile_type_t)out_profile_type.get_enum_value().first;
+    if( ptype == PF::PROF_TYPE_EMBEDDED ) {
       // do nothing
       //std::cout<<"Using embedded profile"<<std::endl;
       out_iccprof = in_iccprof;
-    } else if( pmode == PF::PROF_TYPE_FROM_SETTINGS && in_iccprof ) {
+    } else if( ptype == PF::PROF_TYPE_FROM_SETTINGS && in_iccprof ) {
       ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
       trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
       //std::cout<<"Getting output profile..."<<std::endl;
       out_iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-    } else if( pmode == PF::PROF_TYPE_FROM_DISK && in_iccprof ) {
+    } else if( ptype == PF::PROF_TYPE_FROM_DISK && in_iccprof ) {
       out_iccprof = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
     } else {//if( pmode == PF::PROF_MODE_CUSTOM && in_iccprof ) {
       ptype = (profile_type_t)out_profile_type.get_enum_value().first;

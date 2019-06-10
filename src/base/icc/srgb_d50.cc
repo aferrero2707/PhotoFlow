@@ -118,7 +118,7 @@ PF::sRGBProfileD50::sRGBProfileD50(TRC_type type): ICCProfile()
   cmsCIExyYTRIPLE primaries = srgb_d50_primaries;
   //cmsCIExyY whitepoint = d65_srgb_adobe_specs;
   cmsCIExyY whitepoint = d50_illuminant_specs;
-  cmsToneCurve* tone_curve[3];
+  cmsToneCurve* tone_curve[3] = {NULL};
   switch( type ) {
   case PF::PF_TRC_STANDARD: {
     /* sRGB TRC */
@@ -138,6 +138,25 @@ PF::sRGBProfileD50::sRGBProfileD50(TRC_type type): ICCProfile()
   }
   case PF::PF_TRC_LINEAR: {
     cmsToneCurve *curve = cmsBuildGamma (NULL, 1.00);
+    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
+    break;
+  }
+  case PF::PF_TRC_sRGB: {
+    /* sRGB TRC */
+    cmsFloat64Number srgb_parameters[5] =
+    { 2.4, 1.0 / 1.055,  0.055 / 1.055, 1.0 / 12.92, 0.04045 };
+    cmsToneCurve *curve = cmsBuildParametricToneCurve(NULL, 4, srgb_parameters);
+    //cmsToneCurve *curve = cmsBuildTabulatedToneCurve16(NULL, dt_srgb_tone_curve_values_n, dt_srgb_tone_curve_values);
+    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
+    break;
+  }
+  case PF::PF_TRC_GAMMA_22: {
+    cmsToneCurve *curve = cmsBuildGamma (NULL, 2.20);
+    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
+    break;
+  }
+  case PF::PF_TRC_GAMMA_18: {
+    cmsToneCurve *curve = cmsBuildGamma (NULL, 1.80);
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
     break;
   }

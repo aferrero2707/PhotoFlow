@@ -223,7 +223,7 @@ PF::Slider::Slider( OperationConfigGUI* dialog, PF::ProcessorBase* processor, st
 
 PF::Slider::~Slider()
 {
-  if(user_data) delete user_data;
+  if(user_data) free( user_data );
 }
 
 

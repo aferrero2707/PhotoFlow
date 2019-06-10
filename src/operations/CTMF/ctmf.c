@@ -36,6 +36,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 /* Type declarations */
 #ifdef _MSC_VER

@@ -31,9 +31,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "../base/exif_data.hh"
-#include "white_balance.hh"
-
 /* We need C linkage for this.
  */
 #ifdef __cplusplus
@@ -47,6 +44,9 @@ extern "C" {
 #endif /*__cplusplus*/
 
 #include "../external/darktable/src/external/wb_presets.c"
+
+#include "../base/exif_data.hh"
+#include "white_balance.hh"
 
 int PF::wb_sample_x = 0;
 int PF::wb_sample_y = 0;

@@ -572,7 +572,7 @@ protected:
                     lensAperture = exp( log(a1) + (log(a2) - log(a1)) / (log(f2) - log(f1)) * (log(focalLength) - log(f1)) );
                 }
 
-                dif = abs(lensAperture - maxApertureAtFocal);
+                dif = fabs(lensAperture - maxApertureAtFocal);
             } else {
                 dif = 0;
             }

@@ -251,9 +251,9 @@ void CLASS derror()
   if (!data_error) {
     fprintf (stderr, "%s: ", ifname);
     if (feof(ifp))
-      fprintf (stderr,_("Unexpected end of file\n"));
+      fprintf (stderr,"%s\n", _("Unexpected end of file"));
     else
-      fprintf (stderr,_("Corrupt data near 0x%llx\n"), (INT64) ftello(ifp));
+      fprintf (stderr,"%s 0x%llx\n", _("Corrupt data near"), (INT64) ftello(ifp));
   }
   data_error++;
 /*RT Issue 2467  longjmp (failure, 1);*/
@@ -986,17 +986,22 @@ void CLASS canon_sraw_load_raw()
   ip = (short (*)[4]) image;
   rp = ip[0];
   for (row=0; row < height; row++, ip+=width) {
-    if (row & (jh.sraw >> 1))
-      for (col=0; col < width; col+=2)
-	for (c=1; c < 3; c++)
-	  if (row == height-1)
-	       ip[col][c] =  ip[col-width][c];
-	  else ip[col][c] = (ip[col-width][c] + ip[col+width][c] + 1) >> 1;
-    for (col=1; col < width; col+=2)
-      for (c=1; c < 3; c++)
-	if (col == width-1)
-	     ip[col][c] =  ip[col-1][c];
-	else ip[col][c] = (ip[col-1][c] + ip[col+1][c] + 1) >> 1;
+    if (row & (jh.sraw >> 1)) {
+      for (col=0; col < width; col+=2) {
+        for (c=1; c < 3; c++) {
+          if (row == height-1)
+            ip[col][c] =  ip[col-width][c];
+          else ip[col][c] = (ip[col-width][c] + ip[col+width][c] + 1) >> 1;
+        }
+      }
+    }
+    for (col=1; col < width; col+=2) {
+      for (c=1; c < 3; c++) {
+        if (col == width-1)
+          ip[col][c] =  ip[col-1][c];
+        else ip[col][c] = (ip[col-1][c] + ip[col+1][c] + 1) >> 1;
+      }
+    }
   }
   for ( ; rp < ip[0]; rp+=4) {
     if (unique_id == 0x80000218 ||
@@ -1481,7 +1486,7 @@ void CLASS phase_one_correct()
   int qmult_applied = 0, qlin_applied = 0;
 
   if (half_size || !meta_length) return;
-  if (verbose) fprintf (stderr,_("Phase One correction...\n"));
+  if (verbose) fprintf (stderr,"%s\n", _("Phase One correction..."));
   fseek (ifp, meta_offset, SEEK_SET);
   order = get2();
   fseek (ifp, 6, SEEK_CUR);
@@ -3681,7 +3686,7 @@ void CLASS foveon_interpolate()
   const char* cp;
 
   if (verbose)
-    fprintf (stderr,_("Foveon interpolation...\n"));
+    fprintf (stderr,"%s\n", _("Foveon interpolation..."));
 
   foveon_load_camf();
   foveon_fixed (dscr, 4, "DarkShieldColRange");
@@ -4600,7 +4605,7 @@ skip_block: ;
   }
   if ((aber[0] != 1 || aber[2] != 1) && colors == 3) {
     if (verbose)
-      fprintf (stderr,_("Correcting chromatic aberration...\n"));
+      fprintf (stderr,"%s\n", _("Correcting chromatic aberration..."));
     for (c=0; c < 4; c+=2) {
       if (aber[c] == 1) continue;
       img = (ushort *) malloc (size * sizeof *img);
@@ -8572,9 +8577,9 @@ void CLASS identify()
     parse_fuji (get4());
     if (thumb_offset > 120) {
       fseek (ifp, 120, SEEK_SET);
-      is_raw += (i = get4()) && 1;
+      is_raw += (i = get4()); //&& 1;
       if (is_raw == 2 && shot_select)
-	parse_fuji (i);
+        parse_fuji (i);
     }
     load_raw = &CLASS unpacked_load_raw;
     fseek (ifp, 100+28*(shot_select > 0), SEEK_SET);

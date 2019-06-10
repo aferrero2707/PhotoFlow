@@ -92,7 +92,7 @@ PF::ACESProfile::ACESProfile(TRC_type type): ICCProfile()
   cmsCIExyYTRIPLE primaries = aces_primaries_prequantized;
   cmsCIExyY whitepoint = d60_aces;
   /* rec.709 */
-  cmsToneCurve* tone_curve[3];
+  cmsToneCurve* tone_curve[3] = {NULL};
   cmsHPROFILE profile = NULL;
   switch( type ) {
   case PF::PF_TRC_STANDARD: {
@@ -123,6 +123,25 @@ PF::ACESProfile::ACESProfile(TRC_type type): ICCProfile()
     //std::string wprofname = PF::PhotoFlow::Instance().get_data_dir() + "/icc/ACES-elle-V4-g10.icc";
     //std::cout<<"loading profile "<<wprofname<<std::endl;
     //profile = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
+    break;
+  }
+  case PF::PF_TRC_sRGB: {
+    /* sRGB TRC */
+    cmsFloat64Number srgb_parameters[5] =
+    { 2.4, 1.0 / 1.055,  0.055 / 1.055, 1.0 / 12.92, 0.04045 };
+    cmsToneCurve *curve = cmsBuildParametricToneCurve(NULL, 4, srgb_parameters);
+    //cmsToneCurve *curve = cmsBuildTabulatedToneCurve16(NULL, dt_srgb_tone_curve_values_n, dt_srgb_tone_curve_values);
+    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
+    break;
+  }
+  case PF::PF_TRC_GAMMA_22: {
+    cmsToneCurve *curve = cmsBuildGamma (NULL, 2.20);
+    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
+    break;
+  }
+  case PF::PF_TRC_GAMMA_18: {
+    cmsToneCurve *curve = cmsBuildGamma (NULL, 1.80);
+    tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
     break;
   }
   }

@@ -370,17 +370,17 @@ VipsImage* PF::RawOutputPar::build(std::vector<VipsImage*>& in, int first,
   TRC_type trc_type;
   if( (profile_mode_t)profile_mode.get_enum_value().first != PF::PROF_MODE_NONE ) {
     // only retrieve the working profile if the image is color managed
-    pmode = (profile_mode_t)out_profile_type.get_enum_value().first;
-    if( pmode == PF::PROF_TYPE_EMBEDDED ) {
+    ptype = (profile_type_t)out_profile_type.get_enum_value().first;
+    if( ptype == PF::PROF_TYPE_EMBEDDED ) {
       // do nothing
       //std::cout<<"Using embedded profile"<<std::endl;
       out_profile = cam_profile;
-    } else if( pmode == PF::PROF_TYPE_FROM_SETTINGS && cam_profile ) {
+    } else if( ptype == PF::PROF_TYPE_FROM_SETTINGS && cam_profile ) {
       ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
       trc_type = PF::PhotoFlow::Instance().get_options().get_working_trc_type();
       //std::cout<<"Getting output profile..."<<std::endl;
       out_profile = PF::ICCStore::Instance().get_profile( ptype, trc_type );
-    } else if( pmode == PF::PROF_TYPE_FROM_DISK && cam_profile ) {
+    } else if( ptype == PF::PROF_TYPE_FROM_DISK && cam_profile ) {
       out_profile = PF::ICCStore::Instance().get_profile( out_profile_name.get() );
     } else { //if( pmode == PF::PROF_MODE_CUSTOM && cam_profile ) {
       ptype = (profile_type_t)out_profile_type.get_enum_value().first;

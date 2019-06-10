@@ -27,12 +27,6 @@
 
  */
 
-#include "../base/exif_data.hh"
-#include "../../operations/raw_image.hh"
-#include "../../operations/raw_preprocessor.hh"
-#include "../../operations/raw_output.hh"
-#include "../../operations/white_balance.hh"
-
 /* We need C linkage for this.
  */
 #ifdef __cplusplus
@@ -48,6 +42,13 @@ extern "C" {
 #include "../external/darktable/src/external/wb_presets.c"
 #include "../external/darktable/src/external/adobe_coeff.c"
 #include "../external/darktable/src/external/cie_colorimetric_tables.c"
+
+#include "../base/exif_data.hh"
+#include "../../operations/raw_image.hh"
+#include "../../operations/raw_preprocessor.hh"
+#include "../../operations/raw_output.hh"
+#include "../../operations/white_balance.hh"
+
 
 #include "white_balance_config.hh"
 
