@@ -206,7 +206,7 @@ void PF::ImagePyramid::update( const VipsRect& area )
     unsigned char* buf_in = new unsigned char[in_linesz];
     if( !buf_in ) break;
     unsigned char* buf_out = new unsigned char[out_linesz];
-    if( !buf_out ) { delete( buf_in ); break; }
+    if( !buf_out ) { delete[] buf_in; break; }
 
     for( y = area_out.top; y <= out_bottom; y++ ) {
 
@@ -216,12 +216,12 @@ void PF::ImagePyramid::update( const VipsRect& area )
       read( in_fd, buf_in, in_linesz );
 
       for( x = 0, x2 = 0; x < out_linesz; x += pelsz, x2 += pelsz*2 ) {
-	memcpy( &(buf_out[x]), &(buf_in[x2]), pelsz );
+        memcpy( &(buf_out[x]), &(buf_in[x2]), pelsz );
       }
-      
+
       off_t out_offset = (off_t(out_width)*y+area_out.left)*pelsz;
       lseek( out_fd, out_offset, SEEK_SET );
-      
+
       write( out_fd, buf_out, out_linesz );
     }
 
@@ -230,8 +230,8 @@ void PF::ImagePyramid::update( const VipsRect& area )
     area_in.width = area_out.width;
     area_in.height = area_out.height;
 
-    delete( buf_in );
-    delete( buf_out );
+    delete[] buf_in;
+    delete[] buf_out;
   }  
 }
 
