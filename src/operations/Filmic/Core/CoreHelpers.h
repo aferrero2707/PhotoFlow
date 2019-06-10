@@ -7,9 +7,15 @@
 #include <string>
 #include <math.h>
 
-#define restrict(x)
-#define __int64 long long int
-#define BOOL bool
+#ifndef restrict
+  #define restrict(x)
+#endif
+#ifndef __int64
+  #define __int64 long long int
+#endif
+#ifndef BOOL
+  #define BOOL bool
+#endif
 
 #define ASSERT_ALWAYS(expression) ALWAYS_ASSERT_RAW(expression,__FILE__,__LINE__,__FUNCTION__,#expression)
 
