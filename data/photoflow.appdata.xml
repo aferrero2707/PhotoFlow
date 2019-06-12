@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+	<id>photoflow</id>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>GPL-3.0</project_license>
+	<name>PhotoFlow</name>
+	<summary>Edit raw and raster images</summary>
+	<description>
+		<p>PhotoFlow is an image editor that can non-destructively process raw and raster images.</p>
+	</description>
+	<launchable type="desktop-id">photoflow.desktop</launchable>
+	<url type="homepage">https://github.com/aferrero2707/PhotoFlow/</url>
+	<screenshots>
+		<screenshot type="default">
+			<image>https://github.com/aferrero2707/PhotoFlow/raw/stable/data/pixmaps/photoflow_ui.png</image>
+		</screenshot>
+	</screenshots>
+	<provides>
+		<id>photoflow.desktop</id>
+	</provides>
+</component>
