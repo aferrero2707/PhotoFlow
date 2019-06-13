@@ -289,18 +289,20 @@ int main (int argc, char *argv[])
   std::cout<<"stat_result2="<<stat_result2<<std::endl;
   if( PF::PhotoFlow::Instance().get_options().get_ui_use_system_theme() == false ) {
   if( stat_result2 == 0 ) {
+    Gtk::Settings::get_default()->property_gtk_theme_name() = "";
     std::vector<Glib::ustring> files;
     files.push_back (themerc2);
     Gtk::RC::set_default_files (files);
     Gtk::RC::reparse_all (Gtk::Settings::get_default());
-    GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
+    //GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
     //gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
   } else if( stat_result == 0 ) {
+    Gtk::Settings::get_default()->property_gtk_theme_name() = "";
     std::vector<Glib::ustring> files;
     files.push_back (themerc);
     Gtk::RC::set_default_files (files);
     Gtk::RC::reparse_all (Gtk::Settings::get_default());
-    GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
+    //GdkEventClient event = { GDK_CLIENT_EVENT, NULL, TRUE, gdk_atom_intern("_GTK_READ_RCFILES", FALSE), 8 };
     //gdk_event_send_clientmessage_toall ((GdkEvent*)&event);
   }}
 #endif
@@ -320,8 +322,9 @@ int main (int argc, char *argv[])
   Glib::ustring themerc = themesPath + "\\photoflow-dark.css";
   Glib::ustring themerc2 = themesPath2 + "\\photoflow-dark.css";
 #else
-  Glib::ustring themerc = themesPath + "/photoflow-dark.css";
-  Glib::ustring themerc2 = themesPath2 + "/photoflow-dark.css";
+  Glib::ustring themerc = themesPath + "/photoflow-dark.css_";
+  //Glib::ustring themerc2 = themesPath2 + "/photoflow-dark.css";
+  Glib::ustring themerc2 = themesPath2 + "/gtk-3.0/gtk.css";
 #endif
   std::cout<<"themerc2: "<<themerc2<<std::endl;
 
@@ -334,6 +337,7 @@ int main (int argc, char *argv[])
   if( stat_result2 == 0 ) themerc_real = themerc2;
   else if( stat_result == 0 ) themerc_real = themerc;
 
+  try {
   if( PF::PhotoFlow::Instance().get_options().get_ui_use_system_theme() == false  &&
       !themerc_real.empty() ) {
     Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
@@ -351,6 +355,9 @@ int main (int argc, char *argv[])
     //css->load_from_path(themesPath + "/RawTherapee.css");
     //css->load_from_path(themesPath + "/gtk-3.0/gtk.css");
     //css->load_from_path("themes/photoflow-dark/gtk.css");
+  }
+  } catch( Gtk::CssProviderError& error ) {
+
   }
 #endif
 
