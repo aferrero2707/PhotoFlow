@@ -111,7 +111,7 @@ PF::Image::Image():
   rebuild_done = vips_g_cond_new();
 
   export_mutex = vips_g_mutex_new();
-  //g_mutex_lock( export_mutex );
+  g_mutex_lock( export_mutex );
   export_done = vips_g_cond_new();
 
   sample_mutex = vips_g_mutex_new();
@@ -172,6 +172,26 @@ void PF::Image::unlock()
   //std::cout<<"  UNLOCKING REBUILD MUTEX"<<std::endl;
   //std::cout<<"---------------------"<<std::endl;
   g_mutex_unlock( rebuild_mutex);
+  //std::cout<<"---------------------"<<std::endl;
+  //std::cout<<"  REBUILD MUTEX UNLOCKED"<<std::endl;
+  //std::cout<<"---------------------"<<std::endl;
+}
+
+
+void PF::Image::export_lock()
+{
+  //std::cout<<"+++++++++++++++++++++"<<std::endl;
+  //std::cout<<"  LOCKING REBUILD MUTEX"<<std::endl;
+  //std::cout<<"+++++++++++++++++++++"<<std::endl;
+  g_mutex_lock( export_mutex);
+}
+
+void PF::Image::export_unlock()
+{
+  //std::cout<<"---------------------"<<std::endl;
+  //std::cout<<"  UNLOCKING REBUILD MUTEX"<<std::endl;
+  //std::cout<<"---------------------"<<std::endl;
+  g_mutex_unlock( export_mutex);
   //std::cout<<"---------------------"<<std::endl;
   //std::cout<<"  REBUILD MUTEX UNLOCKED"<<std::endl;
   //std::cout<<"---------------------"<<std::endl;
@@ -1048,8 +1068,9 @@ bool PF::Image::save_backup()
 
 
 
-void PF::Image::export_merged( std::string filename, image_export_opt_t* export_opt )
+bool PF::Image::export_merged( std::string filename, image_export_opt_t* export_opt )
 {
+  export_ok = false;
   if( PF::PhotoFlow::Instance().is_batch() ) {
     do_export_merged( filename, export_opt );
   } else {
@@ -1077,12 +1098,13 @@ void PF::Image::export_merged( std::string filename, image_export_opt_t* export_
     std::cout<<"PF::Image::export_merged(): request submitted."<<std::endl;
 #endif
 
-    //std::cout<<"PF::Image::export_merged(): waiting for export_done...."<<std::endl;
-    //g_cond_wait( export_done, export_mutex );
-    //std::cout<<"PF::Image::export_merged(): ... export_done received."<<std::endl;
+    std::cout<<"PF::Image::export_merged(): waiting for export_done...."<<std::endl;
+    g_cond_wait( export_done, export_mutex );
+    std::cout<<"PF::Image::export_merged(): ... export_done received."<<std::endl;
 
     //g_mutex_unlock( export_mutex );
   }
+  return export_ok;
 }
 
 
@@ -1263,16 +1285,17 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
           quant_table = export_opt->jpeg_quant_table;
         }
         std::cout<<"Image::do_export_merged(): Q="<<Q<<"  no_subsample="<<no_subsample<<std::endl;
-        vips_jpegsave( outimg, filename.c_str(), "Q", Q, "no_subsample", no_subsample,
+        if( vips_jpegsave( outimg, filename.c_str(), "Q", Q, "no_subsample", no_subsample,
             "quant_table", quant_table, "overshoot_deringing", overshoot_deringing,
-            "trellis_quant", trellis_quant, "optimize_scans", optimize_scans, NULL );
+            "trellis_quant", trellis_quant, "optimize_scans", optimize_scans, NULL ) == 0 ) {
+          if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
+              !(PF::PhotoFlow::Instance().is_plugin()) ) {
+            save(filename+".pfi", false);
+          }
+          saved = true;
+        }
         timer.stop();
         std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
-        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
-            !(PF::PhotoFlow::Instance().is_plugin()) ) {
-          save(filename+".pfi", false);
-        }
-        saved = true;
       }
     }
 
@@ -1318,20 +1341,21 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
 #endif
 
         int compression = (export_opt->tiff_compress==1) ? VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE : VIPS_FOREIGN_TIFF_COMPRESSION_NONE;
-        vips_tiffsave( outimg, filename.c_str(), "compression", compression,
+        if( vips_tiffsave( outimg, filename.c_str(), "compression", compression,
             //VIPS_FOREIGN_TIFF_COMPRESSION_DEFLATE,
             //VIPS_FOREIGN_TIFF_COMPRESSION_NONE,
             //    "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_NONE, NULL );
-            "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL );
+            "predictor", VIPS_FOREIGN_TIFF_PREDICTOR_HORIZONTAL, NULL ) == 0 ) {
 #ifndef NDEBUG
-        std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
+          std::cout<<"Image::do_export_merged(): vips_tiffsave() finished..."<<std::endl;
 #endif
-        //vips_image_write_to_file( outimg, filename.c_str(), NULL );
-        if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
-            !(PF::PhotoFlow::Instance().is_plugin()) ) {
-          save(filename+".pfi", false);
+          //vips_image_write_to_file( outimg, filename.c_str(), NULL );
+          if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
+              !(PF::PhotoFlow::Instance().is_plugin()) ) {
+            save(filename+".pfi", false);
+          }
+          saved = true;
         }
-        saved = true;
       }
     }
     /**/
@@ -1376,6 +1400,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
             exiv2_image->writeMetadata();
           }
         }
+        export_ok = true;
       } catch(Exiv2::AnyError &e) {
         std::string s(e.what());
         std::cerr << "[exiv2] " << filename << ": " << s << std::endl;

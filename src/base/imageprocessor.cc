@@ -264,7 +264,9 @@ void PF::ImageProcessor::run()
         complete_caching( request.image );
         signal_status_exporting.emit();
         request.image->lock();
+        request.image->export_lock();
         request.image->do_export_merged( request.filename, (PF::image_export_opt_t*)request.data );
+        request.image->export_unlock();
         request.image->unlock();
         request.image->export_done_signal();
         break;
