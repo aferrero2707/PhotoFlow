@@ -1670,7 +1670,7 @@ void PF::Image::export_merged_to_tiff( const std::string filename )
     char tstr[500];
     snprintf(tstr, 499, "ls -lh %s", filename.c_str());
     std::cout<<tstr<<":"<<std::endl;
-    system(tstr);
+    int ret = system(tstr);
 
     msg = std::string("PF::Image::export_merged_to_tiff(): outimg unref");
     PF_UNREF( outimg, msg.c_str() );

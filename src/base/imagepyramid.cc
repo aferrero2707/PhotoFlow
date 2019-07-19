@@ -213,16 +213,27 @@ void PF::ImagePyramid::update( const VipsRect& area )
       off_t in_offset = (off_t(in_width)*y*2+area_in.left)*pelsz;
       lseek( in_fd, in_offset, SEEK_SET );
 
-      read( in_fd, buf_in, in_linesz );
-
+      ssize_t bread = read( in_fd, buf_in, in_linesz );
+      if( bread != in_linesz ) {
+        std::cout<<"ImagePyramid::update(): read failed"<<std::endl;
+        return;
+      }
       for( x = 0, x2 = 0; x < out_linesz; x += pelsz, x2 += pelsz*2 ) {
         memcpy( &(buf_out[x]), &(buf_in[x2]), pelsz );
       }
 
       off_t out_offset = (off_t(out_width)*y+area_out.left)*pelsz;
-      lseek( out_fd, out_offset, SEEK_SET );
+      off_t bseek = lseek( out_fd, out_offset, SEEK_SET );
+      if( bread != in_linesz ) {
+        std::cout<<"ImagePyramid::update(): lseek failed"<<std::endl;
+        return;
+      }
 
-      write( out_fd, buf_out, out_linesz );
+      ssize_t bwrite = write( out_fd, buf_out, out_linesz );
+      if( bwrite != out_linesz ) {
+        std::cout<<"ImagePyramid::update(): write failed"<<std::endl;
+        return;
+      }
     }
 
     area_in.left = area_out.left;
