@@ -224,7 +224,7 @@ void PF::ImagePyramid::update( const VipsRect& area )
 
       off_t out_offset = (off_t(out_width)*y+area_out.left)*pelsz;
       off_t bseek = lseek( out_fd, out_offset, SEEK_SET );
-      if( bread != in_linesz ) {
+      if( bseek < 0 ) {
         std::cout<<"ImagePyramid::update(): lseek failed"<<std::endl;
         return;
       }
