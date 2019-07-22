@@ -177,6 +177,6 @@ PF::sRGBProfileD50::sRGBProfileD50(TRC_type type): ICCProfile()
 
   cmsMLUfree(description);
 
-  std::cout<<"Initializing sRGB profile"<<std::endl;
+  //std::cout<<"Initializing sRGB profile"<<std::endl;
   set_profile( profile );
 }

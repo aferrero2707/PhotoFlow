@@ -192,7 +192,7 @@ void PF::ICCProfile::set_profile( cmsHPROFILE p )
   char tstr[1024];
   cmsGetProfileInfoASCII(profile, cmsInfoDescription, "en", "US", tstr, 1024);
 //#ifndef NDEBUG
-  std::cout<<"ICCProfile::set_profile(): data="<<profile_data<<" size="<<profile_size<<"  name="<<tstr<<std::endl;
+  //std::cout<<"ICCProfile::set_profile(): data="<<profile_data<<" size="<<profile_size<<"  name="<<tstr<<std::endl;
 //#endif
 
   init_colorants();
@@ -265,6 +265,7 @@ void PF::ICCProfile::init_colorants()
       pc += 1;
     }
   }
+#ifndef NDEBUG
   std::cout<<"RGB -> XYZ:"<<std::endl;
   for( int i = 0; i < 3; i++ ) std::cout<<rgb2xyz[0][i]<<" ";
   std::cout<<std::endl;
@@ -272,6 +273,7 @@ void PF::ICCProfile::init_colorants()
   std::cout<<std::endl;
   for( int i = 0; i < 3; i++ ) std::cout<<rgb2xyz[2][i]<<" ";
   std::cout<<std::endl;
+#endif
 
 
   float D50_to_D65[3][3] = {
@@ -289,6 +291,7 @@ void PF::ICCProfile::init_colorants()
     }
   }
   mat3inv( xyz1002rgb_D65, rgb2xyz100_D65 );
+#ifndef NDEBUG
   std::cout<<"RGB -> XYZ_D65:"<<std::endl;
   for( int i = 0; i < 3; i++ ) std::cout<<rgb2xyz100_D65[0][i]<<" ";
   std::cout<<std::endl;
@@ -296,6 +299,7 @@ void PF::ICCProfile::init_colorants()
   std::cout<<std::endl;
   for( int i = 0; i < 3; i++ ) std::cout<<rgb2xyz100_D65[2][i]<<" ";
   std::cout<<std::endl;
+#endif
 
 
 
@@ -340,7 +344,7 @@ void PF::ICCProfile::init_trc()
   cmsToneCurve *red_trc   = (cmsToneCurve*)cmsReadTag(profile, cmsSigRedTRCTag);
   //cmsToneCurve *green_trc = (cmsToneCurve*)cmsReadTag(profile, cmsSigGreenTRCTag);
   //cmsToneCurve *blue_trc  = (cmsToneCurve*)cmsReadTag(profile, cmsSigBlueTRCTag);
-  std::cout<<"ICCProfile::init_trc(): red_trc="<<red_trc<<std::endl;
+  //std::cout<<"ICCProfile::init_trc(): red_trc="<<red_trc<<std::endl;
 
   //if( !red_trc ) return;
 
@@ -348,7 +352,7 @@ void PF::ICCProfile::init_trc()
   cmsInt32Number tcpt = red_trc ? cmsGetToneCurveParametricType(red_trc) : 1;
   parametric_trc = (tcpt>0) ? true : false;
 
-  std::cout<<"ICCProfile::init_trc(): is_linear="<<is_linear<<"  is_parametric="<<is_parametric()<<std::endl;
+  //std::cout<<"ICCProfile::init_trc(): is_linear="<<is_linear<<"  is_parametric="<<is_parametric()<<std::endl;
 
   if( is_linear ) {
     /* LAB "L" (perceptually uniform) TRC */
@@ -461,7 +465,7 @@ cmsHPROFILE PF::ICCProfile::get_profile()
   cmsSaveProfileToMem( profile, buf, &out_length);
 
   result = cmsOpenProfileFromMem( buf, out_length );
-  std::cout<<"ICCProfile::get_profile(): buf="<<buf<<std::endl;
+  //std::cout<<"ICCProfile::get_profile(): buf="<<buf<<std::endl;
   //free( buf );
   return result;
 }
@@ -1081,7 +1085,7 @@ PF::ICCStore::ICCStore()
   Lab_profile = new LabProfile( PF::PF_TRC_PERCEPTUAL );
   Lab_profile->ref(); profiles.push_back( Lab_profile );
 
-  std::cout<<"Initializing sRGB profiles"<<std::endl;
+  //std::cout<<"Initializing sRGB profiles"<<std::endl;
   srgb_profiles[0] = new sRGBProfile( PF::PF_TRC_STANDARD );
   srgb_profiles[1] = new sRGBProfile( PF::PF_TRC_PERCEPTUAL );
   srgb_profiles[2] = new sRGBProfile( PF::PF_TRC_LINEAR );
@@ -1094,8 +1098,8 @@ PF::ICCStore::ICCStore()
   srgb_profiles[3]->ref(); profiles.push_back( srgb_profiles[3] );
   srgb_profiles[4]->ref(); profiles.push_back( srgb_profiles[4] );
   srgb_profiles[5]->ref(); profiles.push_back( srgb_profiles[5] );
-  std::cout<<"sRGB profiles initialization finished"<<std::endl
-      <<"====================================="<<std::endl;
+  //std::cout<<"sRGB profiles initialization finished"<<std::endl
+  //    <<"====================================="<<std::endl;
 
   srgb_d50_profiles[0] = new sRGBProfileD50( PF::PF_TRC_STANDARD );
   srgb_d50_profiles[1] = new sRGBProfileD50( PF::PF_TRC_PERCEPTUAL );
@@ -1257,7 +1261,7 @@ PF::ICCProfile* PF::ICCStore::get_profile( Glib::ustring pname )
       }
     }
 
-    std::cout<<"ICCStore::get_profile(): loading profile from \""<<pname<<"\""<<std::endl;
+    //std::cout<<"ICCStore::get_profile(): loading profile from \""<<pname<<"\""<<std::endl;
     PF::ICCProfile* new_profile = new PF::ICCProfile();
     new_profile->set_profile( temp_profile );
     new_profile->set_file_name( pname );
