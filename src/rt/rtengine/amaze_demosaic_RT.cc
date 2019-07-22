@@ -41,7 +41,8 @@
 #undef CLIP
 #define CLIP(x) x
 
-//#undef __SSE2__
+#undef __SSE2__
+#define AMAZETS 992
 #undef _OPENMP
 
 namespace rtengine
@@ -237,7 +238,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
                         for (int cc = ccmin; cc < ccmax; cc += 4) {
                             int indx1 = rr * ts + cc;
-                            vfloat tempv = LVFU(rawData[row][cc + left]) / c65535v;
+                            vfloat tempv = LVFU(rawData[row][cc + left]); // / c65535v;
                             STVF(cfa[indx1], tempv);
                             STVF(rgbgreen[indx1], tempv );
                         }
@@ -250,7 +251,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
                     for (int cc = ccmin; cc < ccmax; cc += 4) {
                         int indx1 = rr * ts + cc;
-                        vfloat tempv = LVFU(rawData[row][cc + left]) / c65535v;
+                        vfloat tempv = LVFU(rawData[row][cc + left]); // / c65535v;
                         STVF(cfa[indx1], tempv );
                         STVF(rgbgreen[indx1], tempv );
                     }
@@ -261,7 +262,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
                     for (int rr = 0; rr < 16; rr++)
                         for (int cc = ccmin; cc < ccmax; cc += 4) {
                             int indx1 = (rrmax + rr) * ts + cc;
-                            vfloat tempv = LVFU(rawData[(winy + height - rr - 2)][left + cc]) / c65535v;
+                            vfloat tempv = LVFU(rawData[(winy + height - rr - 2)][left + cc]); // / c65535v;
                             STVF(cfa[indx1], tempv );
                             STVF(rgbgreen[indx1], tempv );
                         }
@@ -273,7 +274,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
                 if (rrmin > 0) {
                     for (int rr = 0; rr < 16; rr++)
                         for (int cc = ccmin, row = 32 - rr + top; cc < ccmax; cc++) {
-                            cfa[rr * ts + cc] = (rawData[row][cc + left]) / 65535.f;
+                            cfa[rr * ts + cc] = (rawData[row][cc + left]); // / 65535.f;
                             rgbgreen[rr * ts + cc] = cfa[rr * ts + cc];
                         }
                 }
@@ -284,8 +285,9 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 
                     for (int cc = ccmin; cc < ccmax; cc++) {
                         int indx1 = rr * ts + cc;
-                        cfa[indx1] = (rawData[row][cc + left]) / 65535.f;
+                        cfa[indx1] = (rawData[row][cc + left]); // / 65535.f;
                         rgbgreen[indx1] = cfa[indx1];
+                        std::cout<<"rgbgreen["<<indx1<<"]["<<row<<"]["<<cc+left<<"] = "<<rgbgreen[indx1]<<std::endl;
                     }
                 }
 
@@ -293,7 +295,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
                 if (rrmax < rr1) {
                     for (int rr = 0; rr < 16; rr++)
                         for (int cc = ccmin; cc < ccmax; cc++) {
-                            cfa[(rrmax + rr)*ts + cc] = (rawData[(winy + height - rr - 2)][left + cc]) / 65535.f;
+                            cfa[(rrmax + rr)*ts + cc] = (rawData[(winy + height - rr - 2)][left + cc]); // / 65535.f;
                             rgbgreen[(rrmax + rr)*ts + cc] = cfa[(rrmax + rr) * ts + cc];
                         }
                 }
@@ -304,7 +306,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
                 if (ccmin > 0) {
                     for (int rr = rrmin; rr < rrmax; rr++)
                         for (int cc = 0, row = rr + top; cc < 16; cc++) {
-                            cfa[rr * ts + cc] = (rawData[row][32 - cc + left]) / 65535.f;
+                            cfa[rr * ts + cc] = (rawData[row][32 - cc + left]); // / 65535.f;
                             rgbgreen[rr * ts + cc] = cfa[rr * ts + cc];
                         }
                 }
@@ -313,7 +315,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
                 if (ccmax < cc1) {
                     for (int rr = rrmin; rr < rrmax; rr++)
                         for (int cc = 0; cc < 16; cc++) {
-                            cfa[rr * ts + ccmax + cc] = (rawData[(top + rr)][(winx + width - cc - 2)]) / 65535.f;
+                            cfa[rr * ts + ccmax + cc] = (rawData[(top + rr)][(winx + width - cc - 2)]); // / 65535.f;
                             rgbgreen[rr * ts + ccmax + cc] = cfa[rr * ts + ccmax + cc];
                         }
                 }
@@ -322,7 +324,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
                 if (rrmin > 0 && ccmin > 0) {
                     for (int rr = 0; rr < 16; rr++)
                         for (int cc = 0; cc < 16; cc++) {
-                            cfa[(rr)*ts + cc] = (rawData[winy + 32 - rr][winx + 32 - cc]) / 65535.f;
+                            cfa[(rr)*ts + cc] = (rawData[winy + 32 - rr][winx + 32 - cc]); // / 65535.f;
                             rgbgreen[(rr)*ts + cc] = cfa[(rr) * ts + cc];
                         }
                 }
@@ -330,7 +332,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
                 if (rrmax < rr1 && ccmax < cc1) {
                     for (int rr = 0; rr < 16; rr++)
                         for (int cc = 0; cc < 16; cc++) {
-                            cfa[(rrmax + rr)*ts + ccmax + cc] = (rawData[(winy + height - rr - 2)][(winx + width - cc - 2)]) / 65535.f;
+                            cfa[(rrmax + rr)*ts + ccmax + cc] = (rawData[(winy + height - rr - 2)][(winx + width - cc - 2)]); // / 65535.f;
                             rgbgreen[(rrmax + rr)*ts + ccmax + cc] = cfa[(rrmax + rr) * ts + ccmax + cc];
                         }
                 }
@@ -338,7 +340,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
                 if (rrmin > 0 && ccmax < cc1) {
                     for (int rr = 0; rr < 16; rr++)
                         for (int cc = 0; cc < 16; cc++) {
-                            cfa[(rr)*ts + ccmax + cc] = (rawData[(winy + 32 - rr)][(winx + width - cc - 2)]) / 65535.f;
+                            cfa[(rr)*ts + ccmax + cc] = (rawData[(winy + 32 - rr)][(winx + width - cc - 2)]); // / 65535.f;
                             rgbgreen[(rr)*ts + ccmax + cc] = cfa[(rr) * ts + ccmax + cc];
                         }
                 }
@@ -346,7 +348,7 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
                 if (rrmax < rr1 && ccmin > 0) {
                     for (int rr = 0; rr < 16; rr++)
                         for (int cc = 0; cc < 16; cc++) {
-                            cfa[(rrmax + rr)*ts + cc] = (rawData[(winy + height - rr - 2)][(winx + 32 - cc)]) / 65535.f;
+                            cfa[(rrmax + rr)*ts + cc] = (rawData[(winy + height - rr - 2)][(winx + 32 - cc)]); // / 65535.f;
                             rgbgreen[(rrmax + rr)*ts + cc] = cfa[(rrmax + rr) * ts + cc];
                         }
                 }
@@ -1525,41 +1527,41 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
                     if((FC(rr, 2) & 1) == 1) {
                         for (; indx < rr * ts + cc1 - 16 - (cc1 & 1); indx++, col++) {
                             float temp =  1.f / (hvwt[(indx - v1) >> 1] + 2.f - hvwt[(indx + 1) >> 1] - hvwt[(indx - 1) >> 1] + hvwt[(indx + v1) >> 1]);
-                            red[row][col] = 65535.f * (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[0][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[0][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[0][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[0][(indx + v1) >> 1]) *
+                            red[row][col] = (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[0][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[0][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[0][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[0][(indx + v1) >> 1]) *
                                                         temp);
-                            blue[row][col] = 65535.f * (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[1][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[1][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[1][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[1][(indx + v1) >> 1]) *
+                            blue[row][col] = (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[1][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[1][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[1][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[1][(indx + v1) >> 1]) *
                                                          temp);
 
                             indx++;
                             col++;
-                            red[row][col] = 65535.f * (rgbgreen[indx] - Dgrb[0][indx >> 1]);
-                            blue[row][col] = 65535.f * (rgbgreen[indx] - Dgrb[1][indx >> 1]);
+                            red[row][col] = (rgbgreen[indx] - Dgrb[0][indx >> 1]);
+                            blue[row][col] = (rgbgreen[indx] - Dgrb[1][indx >> 1]);
                         }
 
                         if(cc1 & 1) { // width of tile is odd
                             float temp =  1.f / (hvwt[(indx - v1) >> 1] + 2.f - hvwt[(indx + 1) >> 1] - hvwt[(indx - 1) >> 1] + hvwt[(indx + v1) >> 1]);
-                            red[row][col] = 65535.f * (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[0][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[0][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[0][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[0][(indx + v1) >> 1]) *
+                            red[row][col] = (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[0][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[0][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[0][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[0][(indx + v1) >> 1]) *
                                                         temp);
-                            blue[row][col] = 65535.f * (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[1][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[1][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[1][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[1][(indx + v1) >> 1]) *
+                            blue[row][col] = (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[1][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[1][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[1][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[1][(indx + v1) >> 1]) *
                                                          temp);
                         }
                     } else {
                         for (; indx < rr * ts + cc1 - 16 - (cc1 & 1); indx++, col++) {
-                            red[row][col] = 65535.f * (rgbgreen[indx] - Dgrb[0][indx >> 1]);
-                            blue[row][col] = 65535.f * (rgbgreen[indx] - Dgrb[1][indx >> 1]);
+                            red[row][col] = (rgbgreen[indx] - Dgrb[0][indx >> 1]);
+                            blue[row][col] = (rgbgreen[indx] - Dgrb[1][indx >> 1]);
 
                             indx++;
                             col++;
                             float temp =  1.f / (hvwt[(indx - v1) >> 1] + 2.f - hvwt[(indx + 1) >> 1] - hvwt[(indx - 1) >> 1] + hvwt[(indx + v1) >> 1]);
-                            red[row][col] = 65535.f * (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[0][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[0][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[0][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[0][(indx + v1) >> 1]) *
+                            red[row][col] = (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[0][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[0][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[0][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[0][(indx + v1) >> 1]) *
                                                         temp);
-                            blue[row][col] = 65535.f * (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[1][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[1][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[1][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[1][(indx + v1) >> 1]) *
+                            blue[row][col] = (rgbgreen[indx] - ((hvwt[(indx - v1) >> 1]) * Dgrb[1][(indx - v1) >> 1] + (1.f - hvwt[(indx + 1) >> 1]) * Dgrb[1][(indx + 1) >> 1] + (1.f - hvwt[(indx - 1) >> 1]) * Dgrb[1][(indx - 1) >> 1] + (hvwt[(indx + v1) >> 1]) * Dgrb[1][(indx + v1) >> 1]) *
                                                          temp);
                         }
 
                         if(cc1 & 1) { // width of tile is odd
-                            red[row][col] = 65535.f * (rgbgreen[indx] - Dgrb[0][indx >> 1]);
-                            blue[row][col] = 65535.f * (rgbgreen[indx] - Dgrb[1][indx >> 1]);
+                            red[row][col] = (rgbgreen[indx] - Dgrb[0][indx >> 1]);
+                            blue[row][col] = (rgbgreen[indx] - Dgrb[1][indx >> 1]);
                         }
                     }
 
@@ -1579,7 +1581,8 @@ SSEFUNCTION void RawImageSource::amaze_demosaic_RT(int winx, int winy, int winw,
 #endif
 
                     for (; cc < cc1 - 16; cc++) {
-                        green[row][cc + left] = 65535.f * rgbgreen[rr * ts + cc];
+                        green[row][cc + left] = rgbgreen[rr * ts + cc];
+                        std::cout<<"green["<<row<<"]["<<cc+left<<"] = "<<green[row][cc + left]<<std::endl;
                     }
                 }
 

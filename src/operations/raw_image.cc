@@ -799,7 +799,7 @@ bool PF::RawImage::load_rawspeed()
       float black = pdata->color.cblack[color4];
       nval = val - black;
       nval /= (pdata->color.maximum - black);
-      nval *= 65535;
+      //nval *= 65535;
 
 
       // Fill raw histogram
@@ -1104,7 +1104,7 @@ bool PF::RawImage::load_rawtherapee()
       float black = pdata->color.cblack[color];
       nval = val - black;
       nval /= (pdata->color.maximum - black);
-      nval *= 65535;
+      //nval *= 65535;
 
 
       // Fill raw histogram
@@ -1668,7 +1668,7 @@ void PF::RawImage::CA_correct_RT_old()
               indx = row * width + col;
               indx1 = rr * TS + cc;
               //rgb[c][indx1] = (rawData[row][col]) / 65535.0f;
-              rgb[c][indx1] = (rawData[row][col]) * mult[c] / 65535.0f;
+              rgb[c][indx1] = (rawData[row][col]) * mult[c]; // / 65535.0f;
               //rgb[indx1][c] = image[indx][c]/65535.0f;//for dcraw implementation
               if(false && row<4 && col<4) printf("rawData[%d][%d](%d) = %f * %f = %f\n",row,col,c,(rawData[row][col]), mult[c], (rawData[row][col]) * mult[c]);
             }
@@ -1687,7 +1687,7 @@ void PF::RawImage::CA_correct_RT_old()
             for (rr = 0; rr < border; rr++)
               for (cc = ccmin; cc < ccmax; cc++) {
                 c = FC(rr, cc);
-                rgb[c][(rrmax + rr)*TS + cc] = (rawData[(height - rr - 2)][left + cc]) / 65535.0f;
+                rgb[c][(rrmax + rr)*TS + cc] = (rawData[(height - rr - 2)][left + cc]); // / 65535.0f;
                 //rgb[(rrmax+rr)*TS+cc][c] = (image[(height-rr-2)*width+left+cc][c])/65535.0f;//for dcraw implementation
               }
           }
@@ -1704,7 +1704,7 @@ void PF::RawImage::CA_correct_RT_old()
             for (rr = rrmin; rr < rrmax; rr++)
               for (cc = 0; cc < border; cc++) {
                 c = FC(rr, cc);
-                rgb[c][rr * TS + ccmax + cc] = (rawData[(top + rr)][(width - cc - 2)]) / 65535.0f;
+                rgb[c][rr * TS + ccmax + cc] = (rawData[(top + rr)][(width - cc - 2)]); // / 65535.0f;
                 //rgb[rr*TS+ccmax+cc][c] = (image[(top+rr)*width+(width-cc-2)][c])/65535.0f;//for dcraw implementation
               }
           }
@@ -1714,7 +1714,7 @@ void PF::RawImage::CA_correct_RT_old()
             for (rr = 0; rr < border; rr++)
               for (cc = 0; cc < border; cc++) {
                 c = FC(rr, cc);
-                rgb[c][(rr)*TS + cc] = (rawData[border2 - rr][border2 - cc]) / 65535.0f;
+                rgb[c][(rr)*TS + cc] = (rawData[border2 - rr][border2 - cc]); // / 65535.0f;
                 //rgb[(rr)*TS+cc][c] = (rgb[(border2-rr)*TS+(border2-cc)][c]);//for dcraw implementation
               }
           }
@@ -1723,7 +1723,7 @@ void PF::RawImage::CA_correct_RT_old()
             for (rr = 0; rr < border; rr++)
               for (cc = 0; cc < border; cc++) {
                 c = FC(rr, cc);
-                rgb[c][(rrmax + rr)*TS + ccmax + cc] = (rawData[(height - rr - 2)][(width - cc - 2)]) / 65535.0f;
+                rgb[c][(rrmax + rr)*TS + ccmax + cc] = (rawData[(height - rr - 2)][(width - cc - 2)]); // / 65535.0f;
                 //rgb[(rrmax+rr)*TS+ccmax+cc][c] = (image[(height-rr-2)*width+(width-cc-2)][c])/65535.0f;//for dcraw implementation
               }
           }
@@ -1732,7 +1732,7 @@ void PF::RawImage::CA_correct_RT_old()
             for (rr = 0; rr < border; rr++)
               for (cc = 0; cc < border; cc++) {
                 c = FC(rr, cc);
-                rgb[c][(rr)*TS + ccmax + cc] = (rawData[(border2 - rr)][(width - cc - 2)]) / 65535.0f;
+                rgb[c][(rr)*TS + ccmax + cc] = (rawData[(border2 - rr)][(width - cc - 2)]); // / 65535.0f;
                 //rgb[(rr)*TS+ccmax+cc][c] = (image[(border2-rr)*width+(width-cc-2)][c])/65535.0f;//for dcraw implementation
               }
           }
@@ -1741,7 +1741,7 @@ void PF::RawImage::CA_correct_RT_old()
             for (rr = 0; rr < border; rr++)
               for (cc = 0; cc < border; cc++) {
                 c = FC(rr, cc);
-                rgb[c][(rrmax + rr)*TS + cc] = (rawData[(height - rr - 2)][(border2 - cc)]) / 65535.0f;
+                rgb[c][(rrmax + rr)*TS + cc] = (rawData[(height - rr - 2)][(border2 - cc)]); // / 65535.0f;
                 //rgb[(rrmax+rr)*TS+cc][c] = (image[(height-rr-2)*width+(border2-cc)][c])/65535.0f;//for dcraw implementation
               }
           }
@@ -2303,15 +2303,15 @@ void PF::RawImage::CA_correct_RT()
 #ifdef __SSE2__
             int c0 = FC(rr, cc);
             if(c0 == 1) {
-              rgb[c0][rr * ts + cc] = rawData[row][col] / 65535.f;
+              rgb[c0][rr * ts + cc] = rawData[row][col]; // / 65535.f;
               cc++;
               col++;
               c0 = FC(rr, cc);
             }
             int indx1 = rr * ts + cc;
             for (; cc < ccmax - 7; cc+=8, col+=8, indx1 += 8) {
-              vfloat val1 = LVFU(rawData[row][col]) / c65535v;
-              vfloat val2 = LVFU(rawData[row][col + 4]) / c65535v;
+              vfloat val1 = LVFU(rawData[row][col]); // / c65535v;
+              vfloat val2 = LVFU(rawData[row][col + 4]); // / c65535v;
               vfloat nonGreenv = _mm_shuffle_ps(val1,val2,_MM_SHUFFLE( 2,0,2,0 ));
               STVFU(rgb[c0][indx1 >> 1], nonGreenv);
               STVFU(rgb[1][indx1], val1);
@@ -2321,7 +2321,7 @@ void PF::RawImage::CA_correct_RT()
 for (; cc < ccmax; cc++, col++) {
   int c = FC(rr, cc);
   int indx1 = rr * ts + cc;
-  rgb[c][indx1 >> ((c & 1) ^ 1)] = rawData[row][col] / 65535.f;
+  rgb[c][indx1 >> ((c & 1) ^ 1)] = rawData[row][col]; // / 65535.f;
   if( verbose && row < 4 && col < 4) {
     printf("row=%d col=%d  rgb[%d][%d >> ((c & 1) ^ 1)]=%f / 65535.f\n",
         row, col, c, indx1, rawData[row][col]);
@@ -2343,7 +2343,7 @@ for (; cc < ccmax; cc++, col++) {
             for (int rr = 0; rr < border; rr++)
               for (int cc = ccmin; cc < ccmax; cc++) {
                 int c = FC(rr, cc);
-                rgb[c][((rrmax + rr)*ts + cc) >> ((c & 1) ^ 1)] = rawData[(height - rr - 2)][left + cc] / 65535.f;
+                rgb[c][((rrmax + rr)*ts + cc) >> ((c & 1) ^ 1)] = rawData[(height - rr - 2)][left + cc]; // / 65535.f;
               }
           }
 
@@ -2359,7 +2359,7 @@ for (; cc < ccmax; cc++, col++) {
             for (int rr = rrmin; rr < rrmax; rr++)
               for (int cc = 0; cc < border; cc++) {
                 int c = FC(rr, cc);
-                rgb[c][(rr * ts + ccmax + cc) >> ((c & 1) ^ 1)] = rawData[(top + rr)][(width - cc - 2)] / 65535.f;
+                rgb[c][(rr * ts + ccmax + cc) >> ((c & 1) ^ 1)] = rawData[(top + rr)][(width - cc - 2)]; // / 65535.f;
               }
           }
 
@@ -2368,7 +2368,7 @@ for (; cc < ccmax; cc++, col++) {
             for (int rr = 0; rr < border; rr++)
               for (int cc = 0; cc < border; cc++) {
                 int c = FC(rr, cc);
-                rgb[c][(rr * ts + cc) >> ((c & 1) ^ 1)] = rawData[border2 - rr][border2 - cc] / 65535.f;
+                rgb[c][(rr * ts + cc) >> ((c & 1) ^ 1)] = rawData[border2 - rr][border2 - cc]; // / 65535.f;
               }
           }
 
@@ -2376,7 +2376,7 @@ for (; cc < ccmax; cc++, col++) {
             for (int rr = 0; rr < border; rr++)
               for (int cc = 0; cc < border; cc++) {
                 int c = FC(rr, cc);
-                rgb[c][((rrmax + rr)*ts + ccmax + cc) >> ((c & 1) ^ 1)] = rawData[(height - rr - 2)][(width - cc - 2)] / 65535.f;
+                rgb[c][((rrmax + rr)*ts + ccmax + cc) >> ((c & 1) ^ 1)] = rawData[(height - rr - 2)][(width - cc - 2)]; // / 65535.f;
               }
           }
 
@@ -2384,7 +2384,7 @@ for (; cc < ccmax; cc++, col++) {
             for (int rr = 0; rr < border; rr++)
               for (int cc = 0; cc < border; cc++) {
                 int c = FC(rr, cc);
-                rgb[c][(rr * ts + ccmax + cc) >> ((c & 1) ^ 1)] = rawData[(border2 - rr)][(width - cc - 2)] / 65535.f;
+                rgb[c][(rr * ts + ccmax + cc) >> ((c & 1) ^ 1)] = rawData[(border2 - rr)][(width - cc - 2)]; // / 65535.f;
               }
           }
 
@@ -2392,7 +2392,7 @@ for (; cc < ccmax; cc++, col++) {
             for (int rr = 0; rr < border; rr++)
               for (int cc = 0; cc < border; cc++) {
                 int c = FC(rr, cc);
-                rgb[c][((rrmax + rr)*ts + cc) >> ((c & 1) ^ 1)] = rawData[(height - rr - 2)][(border2 - cc)] / 65535.f;
+                rgb[c][((rrmax + rr)*ts + cc) >> ((c & 1) ^ 1)] = rawData[(height - rr - 2)][(border2 - cc)]; // / 65535.f;
               }
           }
 

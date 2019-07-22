@@ -455,6 +455,15 @@ add_library (pfgui STATIC
 )
 
 
+file(GLOB_RECURSE LIBRTPROCESS_INCLUDES "external/librtprocess/src/*.h")
+file(GLOB_RECURSE LIBRTPROCESS_SOURCES "external/librtprocess/src/*.cc")
+include_directories(external/librtprocess/src/include)
+add_library (pfrtprocess STATIC
+  ${LIBRTPROCESS_INCLUDES}
+  ${LIBRTPROCESS_SOURCES}
+)
+
+
 IF(MINGW)
   #IF(HAVE_REGEX_H)
   #  list(APPEND ADDITIONAL_LIBS ws2_32 shlwapi psapi)
@@ -494,6 +503,7 @@ target_link_libraries(photoflow ${LIBS}
   pfbase 
   pfgmic
   pfdt
+  pfrtprocess
   ${STATIC_LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}

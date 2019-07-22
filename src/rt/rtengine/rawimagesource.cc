@@ -29,7 +29,7 @@
 
 #include "rawimagesource.hh"
 
-#define RT_EMU
+//#define RT_EMU
 
 rtengine::RawImageSource::RawImageSource(): FC_roffset(0), FC_coffset(0), image_data(NULL), plistener(NULL)
 {
@@ -174,6 +174,16 @@ void rtengine::RawImageSource::amaze_demosaic(VipsRegion* ir, VipsRegion* oreg)
 #ifndef NDEBUG
   std::cout<<"rawData.init( "<<ir->valid.width<<", "<<ir->valid.height<<", "
            <<ir->valid.top<<", "<<ir->valid.left<<" )"<<std::endl;
+
+  {
+  float* p = (float*)VIPS_REGION_ADDR( ir, ir->valid.top, ir->valid.left );
+  std::cout<<"top= "<<ir->valid.top<<std::endl;
+  std::cout<<"left="<<ir->valid.left<<std::endl;
+  std::cout<<"p[0]="<<p[0]<<std::endl;
+  std::cout<<"p[1]="<<p[1]<<std::endl;
+  std::cout<<"p[2]="<<p[2]<<std::endl;
+  std::cout<<"p[3]="<<p[3]<<std::endl;
+  }
 #endif
 
   // Initialization of pixel matrices

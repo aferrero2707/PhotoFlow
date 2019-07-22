@@ -198,7 +198,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
 #ifdef __SSE2___
           int c = FC(rr, cc);
           if(c & 1) {
-            rgb[1][indx1] = rawData[row][col] / 65535.f;
+            rgb[1][indx1] = rawData[row][col]; // / 65535.f;
             indx++;
             indx1++;
             cc++;
@@ -206,8 +206,8 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
             c = FC(rr, cc);
           }
           for (; cc < ccmax - 7; cc += 8, col += 8, indx += 8, indx1 += 8) {
-            vfloat val1v = LVFU(rawData[row][col]) / c65535v;
-            vfloat val2v = LVFU(rawData[row][col + 4]) / c65535v;
+            vfloat val1v = LVFU(rawData[row][col]); // / c65535v;
+            vfloat val2v = LVFU(rawData[row][col + 4]); // / c65535v;
             STVFU(rgb[c][indx1 >> 1], _mm_shuffle_ps(val1v, val2v, _MM_SHUFFLE(2, 0, 2, 0)));
             vfloat gtmpv = LVFU(Gtmp[indx >> 1]);
             STVFU(rgb[1][indx1], vself(gmask, PERMUTEPS(gtmpv, _MM_SHUFFLE(1, 1, 0, 0)), val1v));
@@ -216,7 +216,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
 #endif
           for (; cc < ccmax; cc++, col++, indx++, indx1++) {
             int c = FC(rr, cc);
-            rgb[c][indx1 >> ((c & 1) ^ 1)] = rawData[row][col] / 65535.f;
+            rgb[c][indx1 >> ((c & 1) ^ 1)] = rawData[row][col]; // / 65535.f;
             //??? rgb[c][indx1] = (rawData[row][col]) / 65535.0f;
             //if(row<16 && col<16) printf("rawData[%d][%d](%d) = %f %f\n",row,col,c,(rawData[row][col]));
             /*
@@ -589,13 +589,14 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
           int indx1 = (rr * ts + cc) >> 1;
 #ifdef __SSE2___
           for (; indx < (row * width + cc1 - border - 7 + left) >> 1; indx+=4, indx1 += 4) {
-            STVFU(RawDataTmp[indx], c65535v * LVFU(rgb[c][indx1]));
+            //STVFU(RawDataTmp[indx], c65535v * LVFU(rgb[c][indx1]));
+            STVFU(RawDataTmp[indx], LVFU(rgb[c][indx1]));
           }
 #endif
           for (; indx < indx_max /*(row * width + cc1 - border + left) >> 1*/; indx++, indx1++) {
             //printf("c=%d indx1=%d indx=%d\n", c, indx1, indx);
-            RawDataTmp[indx] =
-                65535.f * rgb[c][indx1];
+            RawDataTmp[indx] = rgb[c][indx1];
+            //    65535.f * rgb[c][indx1];
           }
           /*
           //for (row = rr + top, cc = border + (FC(rr, 2) & 1), indx = (row * width + cc + left) >> 1; cc < cc1 - border; cc += 2, indx++) {
