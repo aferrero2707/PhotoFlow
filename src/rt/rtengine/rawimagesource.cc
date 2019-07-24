@@ -509,6 +509,9 @@ void rtengine::RawImageSource::xtrans_demosaic(VipsRegion* ir, VipsRegion* oreg)
       //ptr[xx] = CLAMP( red[y+r_out.top][x+r_out.left], 0, 1 );
       //ptr[xx+1] = CLAMP( green[y+r_out.top][x+r_out.left], 0, 1 );
       //ptr[xx+2] = CLAMP( blue[y+r_out.top][x+r_out.left], 0, 1 );
+      ptr[xx] = CLAMP( red[y+border][x+border], 0, 1 );
+      ptr[xx+1] = CLAMP( green[y+border][x+border], 0, 1 );
+      ptr[xx+2] = CLAMP( blue[y+border][x+border], 0, 1 );
 #endif
     }
   }
