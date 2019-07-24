@@ -5,6 +5,40 @@
 #include "roi.hh"
 
 
+#ifdef _WIN32
+void pf_free_align(void *mem);
+#define pf_free_align_ptr pf_free_align
+#else
+#define pf_free_align(A) free(A)
+#define pf_free_align_ptr free
+#endif
+
+
+
+
+static void *pf_alloc_align(size_t alignment, size_t size)
+{
+#if defined(__FreeBSD_version) && __FreeBSD_version < 700013
+  return malloc(size);
+#elif defined(_WIN32)
+  return _aligned_malloc(size, alignment);
+#else
+  void *ptr = NULL;
+  if(posix_memalign(&ptr, alignment, size)) return NULL;
+  return ptr;
+#endif
+}
+
+#ifdef _WIN32
+void pf_free_align(void *mem)
+{
+  _aligned_free(mem);
+}
+#endif
+
+
+
+
 //using namespace PF;
 
 PF::rp_roi_t* PF::rp_roi_new(PF::rp_roi_rect_t* rect, int nchannels)
@@ -39,20 +73,30 @@ PF::rp_roi_t* PF::rp_roi_new(PF::rp_roi_rect_t* rect, int nchannels)
 
   for( ch = 0; ch < nchannels; ch+=1 ) {
     /* roi->data[ch] = (float**)malloc( sizeof(float*) * height ); */
-    if( posix_memalign( (void**)(&(roi->data[ch])), alignment, sizeof(float*) * height ) != 0 ) {
+    roi->data[ch] = (float**)pf_alloc_align( alignment, sizeof(float*) * height );
+    if( !roi->data[ch] ) {
       rp_roi_free(roi);
       return NULL;
     }
+    //if( posix_memalign( (void**)(&(roi->data[ch])), alignment, sizeof(float*) * height ) != 0 ) {
+    //  rp_roi_free(roi);
+    //  return NULL;
+    //}
     memset(roi->data[ch], 0, sizeof(float*) * height);
     roi->data[ch] = roi->data[ch] - top;
   }
 
   /* We need a buffer to store the pixel values */
   /* roi->buf = (float*)malloc( sizeof(float) * aligned_width * height * nchannels ); */
-  if( posix_memalign( (void**)(&(roi->buf)), alignment, sizeof(float*) * aligned_width * height * nchannels ) != 0 ) {
+  roi->buf = (float*)pf_alloc_align( alignment, sizeof(float) * aligned_width * height * nchannels );
+  if( !roi->buf ) {
     rp_roi_free(roi);
     return NULL;
   }
+  //if( posix_memalign( (void**)(&(roi->buf)), alignment, sizeof(float) * aligned_width * height * nchannels ) != 0 ) {
+  //  rp_roi_free(roi);
+  //  return NULL;
+  //}
 
   /* init row pointers */
   for( ch = 0; ch < nchannels; ch+=1 ) {
@@ -102,10 +146,15 @@ PF::rp_roi_t* PF::rp_roi_new_from_data(PF::rp_roi_rect_t* rect, PF::rp_roi_rect_
 
   for( ch = 0; ch < nchannels; ch+=1 ) {
     /* roi->data[ch] = (float**)malloc( sizeof(float*) * height ); */
-    if( posix_memalign( (void**)(&(roi->data[ch])), alignment, sizeof(float*) * height ) != 0 ) {
+    roi->data[ch] = (float**)pf_alloc_align( alignment, sizeof(float*) * height );
+    if( !roi->data[ch] ) {
       rp_roi_free(roi);
       return NULL;
     }
+    //if( posix_memalign( (void**)(&(roi->data[ch])), alignment, sizeof(float*) * height ) != 0 ) {
+    //  rp_roi_free(roi);
+    //  return NULL;
+    //}
     memset(roi->data[ch], 0, sizeof(float*) * height);
     roi->data[ch] = roi->data[ch] - top;
   }
@@ -113,10 +162,15 @@ PF::rp_roi_t* PF::rp_roi_new_from_data(PF::rp_roi_rect_t* rect, PF::rp_roi_rect_
   if(interleaved > 0) {
     /* If the input data is interleaved, we need a buffer to store the non-interleaved pixel values */
     /* roi->buf = (float*)malloc( sizeof(float) * aligned_width * height * nchannels ); */
-    if( posix_memalign( (void**)(&(roi->buf)), alignment, sizeof(float*) * aligned_width * height * nchannels ) != 0 ) {
+    roi->buf = (float*)pf_alloc_align( alignment, sizeof(float) * aligned_width * height * nchannels );
+    if( !roi->buf ) {
       rp_roi_free(roi);
       return NULL;
     }
+    //if( posix_memalign( (void**)(&(roi->buf)), alignment, sizeof(float) * aligned_width * height * nchannels ) != 0 ) {
+    //  rp_roi_free(roi);
+    //  return NULL;
+    //}
 
     /* init row pointers */
     for( ch = 0; ch < nchannels; ch+=1 ) {
