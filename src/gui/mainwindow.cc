@@ -181,12 +181,12 @@ buttonSavePreset()
   buttonOpen.signal_clicked().connect( sigc::mem_fun(*this,
       &MainWindow::on_button_open_clicked) );
 
-  buttonSave.signal_clicked().connect( sigc::mem_fun(*this,
-      &MainWindow::on_button_save_clicked) );
+  buttonSave.signal_clicked().connect( sigc::hide_return( sigc::mem_fun(*this,
+      &MainWindow::on_button_save_clicked) ) );
 
   buttonSaveAs.signal_clicked().
-      connect( sigc::mem_fun(*this,
-          &MainWindow::on_button_saveas_clicked) );
+      connect( sigc::hide_return( sigc::mem_fun(*this,
+          &MainWindow::on_button_saveas_clicked) ) );
 
   buttonExport.signal_clicked().connect( sigc::mem_fun(*this,
       &MainWindow::on_button_export_clicked) );
@@ -363,9 +363,9 @@ void PF::MainWindow::make_menus()
   m_refActionGroup->add( Gtk::Action::create("FileOpen", Gtk::Stock::OPEN),
       sigc::mem_fun(*this, &PF::MainWindow::on_button_open_clicked) );
   m_refActionGroup->add( Gtk::Action::create("FileSave", Gtk::Stock::SAVE),
-      sigc::mem_fun(*this, &PF::MainWindow::on_button_save_clicked) );
+      sigc::hide_return( sigc::mem_fun(*this, &PF::MainWindow::on_button_save_clicked) ) );
   m_refActionGroup->add( Gtk::Action::create("FileSaveAs", Gtk::Stock::SAVE_AS),
-      sigc::mem_fun(*this, &PF::MainWindow::on_button_saveas_clicked) );
+      sigc::hide_return( sigc::mem_fun(*this, &PF::MainWindow::on_button_saveas_clicked) ) );
   m_refActionGroup->add( Gtk::Action::create("FileExport", _("Export")),
       sigc::mem_fun(*this, &PF::MainWindow::on_button_export_clicked) );
   m_refActionGroup->add( Gtk::Action::create("FilePrefs", Gtk::Stock::PREFERENCES),
@@ -1016,7 +1016,7 @@ void PF::MainWindow::on_button_open_clicked()
 }
 
 
-void PF::MainWindow::on_button_save_clicked()
+bool PF::MainWindow::on_button_save_clicked()
 {
   int page = viewerNotebook.get_current_page();
   Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
@@ -1040,23 +1040,25 @@ void PF::MainWindow::on_button_save_clicked()
         }
       }
       if( !saved )
-        on_button_saveas_clicked();
+        return on_button_saveas_clicked();
     }
   }
+  return true;
 }
 
 
-void PF::MainWindow::on_button_saveas_clicked()
+bool PF::MainWindow::on_button_saveas_clicked()
 {
+  bool ret = false;
   Gtk::FileChooserDialog dialog( _("Save image as..."),
       Gtk::FILE_CHOOSER_ACTION_SAVE);
   dialog.set_transient_for(*this);
 
   int page = viewerNotebook.get_current_page();
   Gtk::Widget* widget = viewerNotebook.get_nth_page( page );
-  if( !widget ) return;
+  if( !widget ) return ret;
   PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
-  if( !editor || !(editor->get_image()) ) return;
+  if( !editor || !(editor->get_image()) ) return ret;
 
   //Add response buttons the the dialog:
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
@@ -1136,6 +1138,7 @@ void PF::MainWindow::on_button_saveas_clicked()
         free( fullpath );
       }
     }
+    ret = true;
     break;
       }
   case(Gtk::RESPONSE_CANCEL): 
@@ -1149,6 +1152,8 @@ void PF::MainWindow::on_button_saveas_clicked()
     break;
   }
   }
+
+  return ret;
 }
 
 
@@ -1238,7 +1243,10 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
     snprintf( tstr, 500, _("Image \"%s\" contains unsaved data. Do you want to save it before closing?"),
         fname);
     Gtk::MessageDialog dialog(tstr,
-        false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO, true);
+        false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_NONE, true);
+    dialog.add_button(GTK_STOCK_NO, Gtk::RESPONSE_NO);
+    dialog.add_button(GTK_STOCK_YES, Gtk::RESPONSE_YES);
+    dialog.add_button(GTK_STOCK_CANCEL, Gtk::RESPONSE_CANCEL);
     dialog.set_transient_for(*this);
     dialog.set_default_response( Gtk::RESPONSE_YES );
 
@@ -1249,10 +1257,14 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
     switch(result) {
     case Gtk::RESPONSE_YES:
       std::cout<<"PF::MainWindow::remove_tab(): response=YES"<<std::endl;
-      on_button_save_clicked();
+      if( !on_button_save_clicked() ) return;
       break;
     case Gtk::RESPONSE_NO:
       std::cout<<"PF::MainWindow::remove_tab(): response=NO"<<std::endl;
+      break;
+    case Gtk::RESPONSE_CANCEL:
+      std::cout<<"PF::MainWindow::remove_tab(): response=CANCEL"<<std::endl;
+      return;
       break;
     default:
       break;

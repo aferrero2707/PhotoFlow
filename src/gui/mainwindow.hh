@@ -98,8 +98,8 @@ public:
 
   void on_button_open_clicked();
 
-  void on_button_save_clicked();
-  void on_button_saveas_clicked();
+  bool on_button_save_clicked();
+  bool on_button_saveas_clicked();
 
   void on_button_export_clicked();
 
