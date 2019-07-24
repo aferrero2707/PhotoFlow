@@ -715,7 +715,8 @@ TagDirectoryTable::TagDirectoryTable (TagDirectory* p, FILE* f, int memsize, int
     : TagDirectory(p, ta, border), zeroOffset(offs), valuesSize(memsize), defaultType( type )
 {
     values = new unsigned char[valuesSize];
-    fread (values, 1, valuesSize, f);
+    size_t bread = fread (values, 1, valuesSize, f);
+    if( bread != valuesSize ) return;
 
     // Security ; will avoid to read above the buffer limit if the RT's tagDirectoryTable is longer that what's in the file
     int count = valuesSize / getTypeSize(type);
@@ -810,7 +811,8 @@ Tag::Tag (TagDirectory* p, FILE* f, int base)
         *p = 0;
 
         if( !strncmp(buffer, "Adobe", 5) ) {
-            fread (buffer, 1, 14, f );
+            size_t bread = fread (buffer, 1, 14, f );
+            if( bread != 14 ) return;
 
             if( !strncmp( buffer, "MakN", 4) ) {
                 ByteOrder bom = ((buffer[8] == 'M' && buffer[9] == 'M') ? MOTOROLA : INTEL) ;
@@ -825,7 +827,8 @@ Tag::Tag (TagDirectory* p, FILE* f, int base)
             }
         } else if( !strncmp(buffer, "PENTAX", 6) ) {
             makerNoteKind = HEADERIFD;
-            fread (buffer, 1, 2, f);
+            size_t bread = fread (buffer, 1, 2, f);
+            if( bread != 2 ) return;
             directory = new TagDirectory*[2];
             directory[0] = new TagDirectory (parent, f, currPos, pentaxAttribs, strncmp(buffer, "MM", 2) ? INTEL : MOTOROLA);
             directory[1] = NULL;
@@ -1055,7 +1058,11 @@ Tag::Tag (TagDirectory* p, FILE* f, int base)
     } else {
         // read value
         value = new unsigned char [valuesize + 1];
-        fread (value, 1, valuesize, f);
+        size_t bread = fread (value, 1, valuesize, f);
+        if( bread != valuesize ) {
+          value[0] = '\0';
+          return;
+        }
         value[valuesize] = '\0';
     }
 
@@ -1066,7 +1073,11 @@ Tag::Tag (TagDirectory* p, FILE* f, int base)
 defsubdirs:
     // read value
     value = new unsigned char [valuesize];
-    fread (value, 1, valuesize, f);
+    size_t bread = fread (value, 1, valuesize, f);
+    if( bread != valuesize ) {
+      value[0] = '\0';
+      return;
+    }
     int pos = ftell (f);
     // count the number of valid subdirs
     int sdcount = count;
@@ -1118,7 +1129,7 @@ bool Tag::parseMakerNote(FILE* f, int base, ByteOrder bom )
             makerNoteKind = HEADERIFD;
             valuesize = 8;
             value = new unsigned char[8];
-            fread (value, 1, 8, f);
+            if( fread (value, 1, 8, f) < 8 ) return false;
             directory = new TagDirectory*[2];
             directory[0] = new TagDirectory (parent, f, base, nikon2Attribs, bom);
             directory[1] = NULL;
@@ -1134,7 +1145,7 @@ bool Tag::parseMakerNote(FILE* f, int base, ByteOrder bom )
             valuesize = 18;
             value = new unsigned char[18];
             int basepos = ftell (f);
-            fread (value, 1, 18, f);
+            if( fread (value, 1, 18, f) < 18 ) return false;
             directory = new TagDirectory*[2];
             // byte order for makernotes can be different from exif byte order. We have to get it from makernotes header
             ByteOrder MakerNoteOrder;
@@ -1154,7 +1165,7 @@ bool Tag::parseMakerNote(FILE* f, int base, ByteOrder bom )
         makerNoteKind = HEADERIFD;
         valuesize = 6;
         value = new unsigned char[6];
-        fread (value, 1, 6, f);
+        if( fread (value, 1, 6, f) < 6 ) return false;
         directory = new TagDirectory*[2];
         directory[0] = new TagDirectory (parent, f, base, pentaxAttribs, bom);
         directory[1] = NULL;
@@ -1162,7 +1173,7 @@ bool Tag::parseMakerNote(FILE* f, int base, ByteOrder bom )
         makerNoteKind = HEADERIFD;
         valuesize = 10;
         value = new unsigned char[10];
-        fread (value, 1, 10, f);
+        if( fread (value, 1, 10, f) < 10 ) return false;
         directory = new TagDirectory*[2];
         directory[0] = new TagDirectory (parent, f, ftell (f) - 10, pentaxAttribs, bom);
         directory[1] = NULL;
@@ -1170,7 +1181,7 @@ bool Tag::parseMakerNote(FILE* f, int base, ByteOrder bom )
         makerNoteKind = FUJI;
         valuesize = 12;
         value = new unsigned char[12];
-        fread (value, 1, 12, f);
+        if( fread (value, 1, 12, f) < 12 ) return false;
         directory = new TagDirectory*[2];
         directory[0] = new TagDirectory (parent, f, ftell(f) - 12, fujiAttribs, INTEL);
         directory[1] = NULL;
@@ -1182,7 +1193,7 @@ bool Tag::parseMakerNote(FILE* f, int base, ByteOrder bom )
     } else if ( make.find( "SONY" ) != std::string::npos ) {
         valuesize = 12;
         value = new unsigned char[12];
-        fread (value, 1, 12, f);
+        if( fread (value, 1, 12, f) < 12 ) return false;
 
         if (!strncmp((char*)value, "SONY DSC", 8)) {
             makerNoteKind = HEADERIFD;
@@ -1198,13 +1209,13 @@ bool Tag::parseMakerNote(FILE* f, int base, ByteOrder bom )
         makerNoteKind = HEADERIFD;
         valuesize = 8;
         value = new unsigned char[12];
-        fread (value, 1, 8, f);
+        if( fread (value, 1, 8, f) < 8 ) return false;
         directory = new TagDirectory*[2];
         directory[1] = NULL;
 
         if (!strncmp((char*)value, "OLYMPUS", 7)) {
             makerNoteKind = OLYMPUS2;
-            fread (value + 8, 1, 4, f);
+            if( fread (value + 8, 1, 4, f) < 4 ) return false;
             valuesize = 12;
             directory[0] = new TagDirectory (parent, f, ftell(f) - 12, olympusAttribs, value[8] == 'I' ? INTEL : MOTOROLA);
         } else {
@@ -1887,7 +1898,7 @@ Tag* ExifManager::saveCIFFMNTag (FILE* f, TagDirectory* root, int len, const cha
 {
     int s = ftell (f);
     char* data = new char [len];
-    fread (data, len, 1, f);
+    if( fread (data, len, 1, f) < len ) {delete[] data; return NULL;}
     TagDirectory* mn = root->getTag ("Exif")->getDirectory()->getTag("MakerNote")->getDirectory();
     Tag* cs = new Tag (mn, lookupAttrib(canonAttribs, name));
     cs->initUndefArray (data, len);
@@ -1936,19 +1947,19 @@ void ExifManager::parseCIFF (FILE* f, int base, int length, TagDirectory* root)
         }
 
         if (type == 0x0810) {
-            fread (buffer, 64, 1, f);
+            if( fread (buffer, 64, 1, f) < 64 ) return;
             t = new Tag (root, lookupAttrib(ifdAttribs, "Artist"));
             t->initString (buffer);
             root->addTag (t);
         }
 
         if (type == 0x080a) {
-            fread (buffer, 64, 1, f);
+            if( fread (buffer, 64, 1, f) < 64 ) return;
             t = new Tag (root, lookupAttrib(ifdAttribs, "Make"));
             t->initString (buffer);
             root->addTag (t);
             fseek (f, strlen(buffer) - 63, SEEK_CUR);
-            fread (buffer, 64, 1, f);
+            if( fread (buffer, 64, 1, f) < 64 ) return;
             t = new Tag (root, lookupAttrib(ifdAttribs, "Model"));
             t->initString (buffer);
             root->addTag (t);
@@ -2503,7 +2514,7 @@ TagDirectory* ExifManager::parse (FILE* f, int base, bool skipIgnored)
     // read tiff header
     fseek (f, base, SEEK_SET);
     unsigned short bo;
-    fread (&bo, 1, 2, f);
+    if( fread (&bo, 1, 2, f) < 2 ) return NULL;
     ByteOrder order = (ByteOrder)((int)bo);
     get2 (f, order);
     int firstifd = get4 (f, order);
@@ -2755,7 +2766,7 @@ TagDirectory* ExifManager::parseJPEG (FILE* f)
     fseek (f, 0, SEEK_SET);
     unsigned char markerl = 0xff;
     unsigned char c;
-    fread (&c, 1, 1, f);
+    if( fread (&c, 1, 1, f) < 1 ) return NULL;
     const char exifid[] = "Exif\0\0";
     char idbuff[8];
     int tiffbase = -1;
@@ -2989,7 +3000,8 @@ inline unsigned short get2 (FILE* f, rtexif::ByteOrder order)
 {
 
     unsigned char str[2] = { 0xff, 0xff };
-    fread (str, 1, 2, f);
+    size_t bread = fread (str, 1, 2, f);
+    if( bread != 2 ) return 0;
     return rtexif::sget2 (str, order);
 }
 
@@ -2997,7 +3009,8 @@ int get4 (FILE* f, rtexif::ByteOrder order)
 {
 
     unsigned char str[4] = { 0xff, 0xff, 0xff, 0xff };
-    fread (str, 1, 4, f);
+    size_t bread = fread (str, 1, 4, f);
+    if( bread != 4 ) return 0;
     return rtexif::sget4 (str, order);
 }
 

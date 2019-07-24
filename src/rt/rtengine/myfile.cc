@@ -219,8 +219,12 @@ IMFILE* fopen (const char* fname)
     mf->size = ftell (f);
     mf->data = new char [mf->size];
     fseek (f, 0, SEEK_SET);
-    fread (mf->data, 1, mf->size, f);
+    size_t bread = fread (mf->data, 1, mf->size, f);
     fclose (f);
+    if( bread != mf->size ) {
+      delete mf;
+      return NULL;
+    }
     mf->pos = 0;
     mf->eof = false;
 
@@ -242,8 +246,12 @@ IMFILE* gfopen (const char* fname)
     mf->size = ftell (f);
     mf->data = new char [mf->size];
     fseek (f, 0, SEEK_SET);
-    fread (mf->data, 1, mf->size, f);
+    size_t bread = fread (mf->data, 1, mf->size, f);
     fclose (f);
+    if( bread != mf->size ) {
+      delete mf;
+      return NULL;
+    }
     mf->pos = 0;
     mf->eof = false;
 
