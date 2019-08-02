@@ -295,7 +295,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 
   switch( event->type ) {
 
-  case Gdk::BUTTON_PRESS: 
+  case GDK_BUTTON_PRESS:
   {
     //#ifndef NDEBUG
     std::cout<<"PF::CurveArea::handle_events(): button pressed @ "
@@ -412,7 +412,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
     }
     break;
   }
-  case Gdk::BUTTON_RELEASE: 
+  case GDK_BUTTON_RELEASE:
   {
     if( (event->button.button==1) && (grabbed_point>=0) ) {
       changed();
@@ -423,7 +423,7 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
 #endif
     grabbed_point = -1;
   }
-  case (Gdk::MOTION_NOTIFY) : 
+  case (GDK_MOTION_NOTIFY) :
       {
     //std::cout<<"grabbed point: "<<grabbed_point<<std::endl;
     if( /*!curve ||*/ (grabbed_point<0) ) break;
