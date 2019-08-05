@@ -84,8 +84,9 @@ class ControlsDialog: public Gtk::Dialog
 {
   ImageEditor* editor;
   PF::OperationConfigGUI* gui;
-  Gtk::HBox close_button_box;
+  Gtk::HBox* top_box;
   Gtk::Button close_button;
+  Gtk::Notebook notebook;
   bool visible;
   int x, y;
 public:
@@ -134,6 +135,8 @@ class LayerWidget : public Gtk::VBox
   Gtk::Dialog layersDialog;
   OperationsTreeDialog operationsDialog;
 
+  Gtk::Menu tools_menu;
+
   std::map<PF::OperationConfigGUI*,PF::ControlsDialog*> controls_dialogs;
   bool controls_dialog_visible;
   int controls_dialog_x, controls_dialog_y;
@@ -180,6 +183,7 @@ public:
   ControlsGroup& get_controls_group() { return controls_group; }
   Gtk::VBox& get_tool_buttons_box() { return tool_buttons_box; }
 
+  void add_tool( std::string tool_name );
   void add_layer( Layer* layer, bool do_update=true  );
   void insert_image( std::string filename );
   void insert_preset( std::string filename );
