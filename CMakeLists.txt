@@ -155,7 +155,8 @@ MESSAGE( STATUS "OCIO_LIBRARY: " ${OCIO_LIBRARY} )
 endif(OCIO_ENABLED)
 
 if (APPLE)
-    find_package (MacIntegration REQUIRED)
+    #find_package (MacIntegration REQUIRED)
+    pkg_check_modules(MacIntegration REQUIRED gtk-mac-integration-gtk2)
 endif (APPLE)
 
 
