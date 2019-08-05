@@ -128,6 +128,8 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::Frame controls_frame;
   Gtk::EventBox controls_evbox;
   Gtk::VBox controls_box;
+  Gtk::VBox blend_controls_box;
+  Gtk::VBox input_controls_box;
   Gtk::HSeparator hline, hline2;
 
   Gtk::Expander expert_ctrls_expander;
@@ -170,6 +172,9 @@ public:
   OpParBase* get_par();
 
   Gtk::VBox& get_main_box() { return controls_box; }
+  Gtk::VBox& get_blend_box() { return blend_controls_box; }
+  Gtk::VBox& get_input_box() { return input_controls_box; }
+  Gtk::HBox& get_top_box() { return frame_top_box_1; }
   Gtk::Frame* get_frame() { return frame; }
 
   void set_editor( ImageEditor* e) { editor = e; }
