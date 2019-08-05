@@ -63,6 +63,15 @@ PF::HSLMaskPar::HSLMaskPar():
 }
 
 
+bool PF::HSLMaskPar::accepts_colorspace(PF::colorspace_t cs)
+{
+  if( cs == PF::PF_COLORSPACE_RGB ) return true;
+  if( cs == PF::PF_COLORSPACE_LAB ) return true;
+  if( cs == PF::PF_COLORSPACE_CMYK ) return true;
+  return false;
+}
+
+
 
 void PF::HSLMaskPar::update_curve( PF::Property<PF::SplineCurve>* curve, float* vec )
 {

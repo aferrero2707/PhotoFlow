@@ -244,9 +244,9 @@ bool PF::HSLMaskConfigGUI::pointer_release_event( int button, double x, double y
 
   PF::Layer* lin = NULL;
   PF::PipelineNode* nodein = NULL;
-  std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& extra_inputs = layer->get_extra_inputs();
-  if( extra_inputs.size() > 0 ) {
-    lin = image->get_layer_manager().get_layer( extra_inputs[0].first.first );
+  std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& inputs = layer->get_inputs();
+  if( inputs.size() > 0 ) {
+    lin = image->get_layer_manager().get_layer( inputs[0].first.first );
     if( lin ) {
       nodein = pipeline->get_node( lin->get_id() );
     }

@@ -32,9 +32,10 @@
 #include "../operation_config_gui.hh"
 
 
-PF::LayerList::LayerList( OperationConfigGUI* d, std::string l ):
+PF::LayerList::LayerList( OperationConfigGUI* d, std::string l, int iid ):
   Gtk::HBox(),
   dialog( d ),
+  input_id(iid),
   inhibit( false )
 {
   label.set_text( l.c_str() );
@@ -87,6 +88,7 @@ void PF::LayerList::update_model()
   if( !image ) return;
   std::list< std::pair<std::string,Layer*> > list;
   image->get_layer_manager().get_parent_layers( layer, list );
+  PF::Layer* ldef = image->get_layer_manager().get_default_input_layer( layer );
 
   int lid_prev = -1;
   Gtk::TreeModel::iterator active_iter = cbox.get_active();
@@ -105,19 +107,30 @@ void PF::LayerList::update_model()
   int lid = -1;
   int imgid = 0;
   bool blended = false;
-  if( layer->get_extra_inputs().size() > 0 ) {
-    lid = layer->get_extra_inputs()[0].first.first;
-    imgid = layer->get_extra_inputs()[0].first.second;
-    blended = layer->get_extra_inputs()[0].second;
+  if( layer->get_inputs().size() > input_id ) {
+    lid = layer->get_inputs()[input_id].first.first;
+    imgid = layer->get_inputs()[input_id].first.second;
+    blended = layer->get_inputs()[input_id].second;
   }
 
   int active_lid = -1;
   int first_lid = -1;
   int last_lid = -1;
+  Gtk::TreeModel::iterator ri = model->append();
+  Gtk::TreeModel::Row row = *(ri);
+  std::string defname = "default";
+  if( ldef ) {
+    defname += " (";
+    defname += ldef->get_name();
+    defname += ")";
+  }
+  row[columns.col_name] = defname;
+  row[columns.col_layer] = NULL;
+  row[columns.col_blended] = true;
   std::list< std::pair<std::string,Layer*> >::reverse_iterator iter;
   for( iter = list.rbegin(); iter != list.rend(); iter++ ) {
-    Gtk::TreeModel::iterator ri = model->append();
-    Gtk::TreeModel::Row row = *(ri);
+    ri = model->append();
+    row = *(ri);
     row[columns.col_name] = (*iter).first + " (blended)";
     row[columns.col_layer] = (*iter).second;
     row[columns.col_blended] = true;
@@ -150,7 +163,7 @@ void PF::LayerList::update_model()
   if( active_lid < 0 ) {
     // No layer matching any of the extra inputs has been found.
     // Either there are no extra inputs yet defined, or the list of layers has changed
-    cbox.set_active( -1 );
+    cbox.set_active( 0 );
     if( false && first_lid >= 0 ) {
       // There are however some layers that have been inserted in the list of potential
       // sources, therefore we pick the first one
@@ -161,9 +174,9 @@ void PF::LayerList::update_model()
     }
   }
 
-  Gtk::TreeModel::iterator ri = cbox.get_active();
+  ri = cbox.get_active();
   if( ri ) {
-    Gtk::TreeModel::Row row = *ri;
+    row = *ri;
     if( row ) {
       std::string cname = row[columns.col_name];
       cbox.set_tooltip_text(cname);
@@ -197,29 +210,37 @@ void PF::LayerList::changed()
       //model:
       PF::Layer* l = row[columns.col_layer];
 
-      std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& inputs = layer->get_extra_inputs();
-      if( (inputs.size() > 0) && (inputs[0].first.first == (int)(l->get_id()))
-          && (inputs[0].first.second == image_num.get_value()) ) {
-        //std::cout<<"LayerList::changed(): extra input of layer \""<<layer->get_name()
-        // <<"\" is unmodified."<<std::endl;
+      if( l ) {
+        std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& inputs = layer->get_inputs();
+        if( (inputs.size() > 0) && (inputs[0].first.first == (int)(l->get_id()))
+            && (inputs[0].first.second == image_num.get_value()) ) {
+          //std::cout<<"LayerList::changed(): extra input of layer \""<<layer->get_name()
+          // <<"\" is unmodified."<<std::endl;
+          std::string cname = row[columns.col_name];
+          cbox.set_tooltip_text(cname);
+          label.set_tooltip_text(cname);
+          return;
+        }
+
+        //#ifndef NDEBUG
+        std::cout<<"LayerList::changed(): setting extra input of layer \""<<layer->get_name()
+	           <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
+        //#endif
         std::string cname = row[columns.col_name];
         cbox.set_tooltip_text(cname);
         label.set_tooltip_text(cname);
-        return;
+        layer->set_input( input_id, l->get_id(), image_num.get_value(), row[columns.col_blended] );
+        //#ifndef NDEBUG
+        std::cout<<"LayerList::changed(): setting dirty flag of layer \""<<layer->get_name()
+             <<"\" to true"<<std::endl;
+        //#endif
+      } else {
+        std::string cname = row[columns.col_name];
+        cbox.set_tooltip_text(cname);
+        label.set_tooltip_text(cname);
+        layer->set_input( input_id, -1, image_num.get_value(), row[columns.col_blended] );
       }
 
-//#ifndef NDEBUG
-      std::cout<<"LayerList::changed(): setting extra input of layer \""<<layer->get_name()
-	       <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
-//#endif
-      std::string cname = row[columns.col_name];
-      cbox.set_tooltip_text(cname);
-      label.set_tooltip_text(cname);
-      layer->set_input( 0, l->get_id(), image_num.get_value(), row[columns.col_blended] );
-//#ifndef NDEBUG
-      std::cout<<"LayerList::changed(): setting dirty flag of layer \""<<layer->get_name()
-         <<"\" to true"<<std::endl;
-//#endif
       layer->set_dirty( true );
 			if( !inhibit ) {
 				std::cout<<"LayerList::changed(): updating image"<<std::endl;

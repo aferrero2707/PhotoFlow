@@ -79,6 +79,8 @@ namespace PF
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
     bool needs_input() { return false; }
+    bool accepts_colorspace(colorspace_t);
+    bool convert_inputs_on_map_build() { return false; }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first,
                      VipsImage* imap, VipsImage* omap,

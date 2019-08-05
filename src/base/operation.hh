@@ -294,7 +294,6 @@ class OpParBase: public sigc::trackable
 
   int file_format_version;
 
-  Property<bool> previous_layer_is_input;
   Property<bool> enable_padding;
   int test_padding;
 
@@ -372,7 +371,7 @@ public:
   bool get_mask_enabled() { return mask_enabled.get(); }
   void set_mask_enabled( bool val ) { mask_enabled.update(val); }
 
-  virtual bool convert_inputs_on_load() { return true; }
+  virtual bool convert_inputs_on_map_build() { return true; }
 
   bool is_modified() { return modified_flag; }
   void set_modified() { modified_flag = true; }
@@ -416,8 +415,6 @@ public:
     else
       return -1;
   }
-
-  bool get_previous_layer_is_input() { return previous_layer_is_input.get(); }
 
   /* Function to derive the output area from the input area
    */
@@ -530,6 +527,7 @@ public:
   void set_nbands( int n ) { bands = n; }
   VipsInterpretation get_interpretation() { return interpretation; }
   colorspace_t get_colorspace() { return( PF::convert_colorspace( get_interpretation() ) ); }
+  virtual bool accepts_colorspace(colorspace_t) { return true; }
   VipsBandFormat get_format() { return format; }
   virtual void set_format( VipsBandFormat fmt ) { format = fmt; }
   VipsCoding get_coding() { return coding; }

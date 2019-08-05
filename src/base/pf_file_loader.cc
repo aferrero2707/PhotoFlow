@@ -165,7 +165,9 @@ static void start_element (GMarkupParseContext *context,
         expanded = atoi( *value_cursor );
       } else if (strcmp (*name_cursor, "normal") == 0) {
         normal = atoi( *value_cursor );
-      } else if (strcmp (*name_cursor, "extra_inputs") == 0) {
+      } else if (
+          (strcmp (*name_cursor, "extra_inputs") == 0) ||
+          (strcmp (*name_cursor, "inputs") == 0) ) {
         std::string idstr = *value_cursor;
         std::istringstream idstream( idstr );
         int ninput = 0;

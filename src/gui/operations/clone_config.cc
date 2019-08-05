@@ -32,10 +32,8 @@
 
 PF::CloneConfigGUI::CloneConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Clone layer" ),
-  layer_list( this, "Layer name:"),
   sourceSelector( this, "source_channel", _("Source channel: "), 1 )
 {
-  add_widget( layer_list );
   add_widget( sourceSelector );
 
   hide_input_controls();
@@ -57,13 +55,11 @@ void PF::CloneConfigGUI::on_layer_changed()
 
 void PF::CloneConfigGUI::do_update()
 {
-  layer_list.update_model();
   OperationConfigGUI::do_update();
 }
 
 
 void PF::CloneConfigGUI::init()
 {
-  layer_list.update_model();
   OperationConfigGUI::init();
 }

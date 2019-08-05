@@ -67,7 +67,6 @@ PF::OpParBase::OpParBase():
   cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
   mask_enabled("mask_enabled",this,true),
   file_format_version( PF_FILE_VERSION ),
-  previous_layer_is_input("previous_layer_is_input",this,true),
   enable_padding( "enable_padding", this, false ), test_padding(64)
 {
   //blend_mode.set_internal(true);
@@ -101,7 +100,7 @@ PF::OpParBase::OpParBase():
   cmyk_target_channel.add_enum_value(2,"Y","Y");
   cmyk_target_channel.add_enum_value(3,"K","K");
 
-  to_map = NULL; //new_image_to_map();
+  to_map = NULL;
 
   //PF::PropertyBase* prop;
   //prop = new PF::Property<float>("intensity",&intensity);
@@ -354,29 +353,28 @@ std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage
         VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
   std::vector<VipsImage*> in_temp;
-  if( !(previous_layer_is_input.get()) && in.size() > 1 && in[1] ) {
-    for(unsigned int i = 1; i < in.size(); i++) {
-      in_temp.push_back(in[i]);
-    }
-  }
 
-  if( false && convert_inputs_on_load() && is_map() && interpretation == VIPS_INTERPRETATION_B_W ) {
+  if( true && convert_inputs_on_map_build() && is_map() && interpretation == VIPS_INTERPRETATION_B_W ) {
+    if( !to_map ) to_map = new_image_to_map();
     std::vector<VipsImage*> in_temp2;
     std::vector<VipsImage*>* in_ptr = in_temp.empty() ? &in : &in_temp;
     for(unsigned int i = 0; i < in_ptr->size(); i++) {
       VipsImage* img = (*in_ptr)[i];
       if( img == NULL || img->Type == interpretation ) {
         in_temp2.push_back(img);
+        std::cout<<"OpParBase::build_many_internal: op_type="<<get_type()<<"  in_temp2.push_back("<<img<<")"<<std::endl;
+        PF_REF( img, "build_many_internal: img ref" );
       } else {
-        if( interpretation == VIPS_INTERPRETATION_B_W ) {
-          std::vector<VipsImage*> in2; in2.push_back(img);
-          PF::OpParBase* to_map_op = to_map->get_par();
-          to_map_op->set_format(get_format());
-          to_map_op->set_image_hints(img);
-          to_map_op->grayscale_image( img->Xsize, img->Ysize );
-          VipsImage* bwimg = to_map_op->build(in2, 0, NULL, NULL, level);
-          in_temp2.push_back(bwimg);
-        }
+        std::vector<VipsImage*> in2; in2.push_back(img);
+        std::cout<<"OpParBase::build_many_internal: to_map="<<to_map<<std::endl;
+        PF::OpParBase* to_map_op = to_map->get_par();
+        to_map_op->set_format(get_format());
+        //to_map_op->set_image_hints(img);
+        //to_map_op->grayscale_image( img->Xsize, img->Ysize );
+        VipsImage* bwimg = to_map_op->build(in2, 0, NULL, NULL, level);
+        std::cout<<"OpParBase::build_many_internal: bwimg built"<<std::endl;
+        in_temp2.push_back(bwimg);
+        //PF_UNREF( img, "build_many_internal: img unref" );
       }
     }
     in_temp = in_temp2;
@@ -397,55 +395,66 @@ std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage
     fill_image_hierarchy( in_temp, imap, omap, result );
 
   // add output caching if needed
-  if( !output_caching_enabled ) return result;
+  if( output_caching_enabled ) {
 
-  std::vector<VipsImage*> result_cached;
-  for( unsigned int i = 0; i < result.size(); i++ ) {
-    bool is_dup = false;
-    VipsImage* out = result[i];
-    for( unsigned int j = 0; j < in.size(); j++ ) {
-      if( out == in[j] ) {
-        is_dup = true;
-        break;
+    std::vector<VipsImage*> result_cached;
+    for( unsigned int i = 0; i < result.size(); i++ ) {
+      bool is_dup = false;
+      VipsImage* out = result[i];
+      for( unsigned int j = 0; j < in.size(); j++ ) {
+        if( out == in[j] ) {
+          is_dup = true;
+          break;
+        }
       }
-    }
-    if( is_dup ) {
-      result_cached.push_back( out );
-      continue;
-    }
+      if( is_dup ) {
+        result_cached.push_back( out );
+        continue;
+      }
 
-    int p = get_output_padding( i );
-    if( p > 0 ) {
-      int nt = out->Xsize*(p/PF_OUPUT_CACHE_TS + 3)/PF_OUPUT_CACHE_TS;
-      //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
-      VipsAccess acc = VIPS_ACCESS_RANDOM; // gives worst performances
-      int threaded = 1, persistent = 0;
-      VipsImage* cached;
-      if( !vips_tilecache(out, &cached,
-          "tile_width", PF_OUPUT_CACHE_TS,
-          "tile_height", PF_OUPUT_CACHE_TS,
-          "max_tiles", nt,
-          "access", acc, "threaded", threaded,
-          "persistent", persistent, NULL) ) {
-        result_cached.push_back( cached );
-        PF_UNREF( out, "OpParBase::build_many_internal(): out unref" );
-        std::cout<<"OpParBase::build_many_internal(): added tilecache for output image #"
-            <<i<<", padding="<<p<<", nt="<<nt<<std::endl;
+      int p = get_output_padding( i );
+      if( p > 0 ) {
+        int nt = out->Xsize*(p/PF_OUPUT_CACHE_TS + 3)/PF_OUPUT_CACHE_TS;
+        //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
+        VipsAccess acc = VIPS_ACCESS_RANDOM; // gives worst performances
+        int threaded = 1, persistent = 0;
+        VipsImage* cached;
+        if( !vips_tilecache(out, &cached,
+            "tile_width", PF_OUPUT_CACHE_TS,
+            "tile_height", PF_OUPUT_CACHE_TS,
+            "max_tiles", nt,
+            "access", acc, "threaded", threaded,
+            "persistent", persistent, NULL) ) {
+          result_cached.push_back( cached );
+          PF_UNREF( out, "OpParBase::build_many_internal(): out unref" );
+          std::cout<<"OpParBase::build_many_internal(): added tilecache for output image #"
+              <<i<<", padding="<<p<<", nt="<<nt<<std::endl;
+        } else {
+          std::cout<<"OpParBase::build_many_internal(): vips_tilecache() failed."<<std::endl;
+          result_cached.push_back( out );
+        }
       } else {
-        std::cout<<"OpParBase::build_many_internal(): vips_tilecache() failed."<<std::endl;
         result_cached.push_back( out );
       }
-    } else {
-      result_cached.push_back( out );
+    }
+    result = result_cached;
+  }
+
+  if( true && convert_inputs_on_map_build() && is_map() && interpretation == VIPS_INTERPRETATION_B_W ) {
+    std::vector<VipsImage*>* in_ptr = in_temp.empty() ? &in : &in_temp;
+    for(unsigned int i = 0; i < in_ptr->size(); i++) {
+      VipsImage* img = (*in_ptr)[i];
+      PF_UNREF( img, "build_many_internal: img unref" );
+      std::cout<<"OpParBase::build_many_internal: op_type="<<get_type()<<"  "<<img<<" unref"<<std::endl;
     }
   }
 
-    //for(unsigned int i = 0; i < outvec.size(); i++ ) {
+  //for(unsigned int i = 0; i < outvec.size(); i++ ) {
   //  PF_UNREF( outvec[i], "OpParBase::build_many_internal(): previous outputs unref" );
   //}
   //outvec = result;
 
-  return result_cached;
+  return result;
 }
 
 

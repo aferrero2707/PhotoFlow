@@ -115,7 +115,16 @@ PF::ClonePar::ClonePar():
 
   set_type( "clone" );
 
-  set_default_name( _("layer clone") );
+  set_default_name( _("channel selector") );
+}
+
+
+bool PF::ClonePar::accepts_colorspace(PF::colorspace_t cs)
+{
+  if( cs == PF::PF_COLORSPACE_RGB ) return true;
+  if( cs == PF::PF_COLORSPACE_LAB ) return true;
+  if( cs == PF::PF_COLORSPACE_CMYK ) return true;
+  return false;
 }
 
 
@@ -572,8 +581,7 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
                                unsigned int& level)
 {
   if( in.empty() ) return NULL;
-  VipsImage* srcimg = NULL;
-  if( in.size() > 1 ) srcimg = in[1];
+  VipsImage* srcimg = in[0];
   VipsImage* out = NULL;
 
   colorspace_t cs = get_colorspace();

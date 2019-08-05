@@ -114,6 +114,8 @@ namespace PF
 
     void get_parent_layers(Layer* layer, std::list< std::pair<std::string,Layer*> >& plist);
 
+    Layer* get_default_input_layer(Layer* layer);
+
     Layer* get_container_layer( Layer* layer );
     Layer* get_container_layer( int id );
 

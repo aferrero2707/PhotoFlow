@@ -42,7 +42,6 @@ namespace PF {
 
 class CloneConfigGUI: public OperationConfigGUI
 {
-  LayerList layer_list;
   Selector sourceSelector;
 
 public:

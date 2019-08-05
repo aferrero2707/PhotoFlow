@@ -184,9 +184,9 @@ void PF::Layer::remove_input(int32_t lid)
   bool done = true;
   do {
     done = true;
-    for( unsigned int i = 0; i < extra_inputs.size(); i++) {
-      if( extra_inputs[i].first.first == lid ) {
-        extra_inputs.erase( extra_inputs.begin()+i );
+    for( unsigned int i = 0; i < inputs.size(); i++) {
+      if( inputs[i].first.first == lid ) {
+        inputs.erase( inputs.begin()+i );
         done = false;
         break;
       }
@@ -202,16 +202,16 @@ bool PF::Layer::save( std::ostream& ostr, int level )
 
   for(int i = 0; i < level; i++) ostr<<"  ";
   ostr<<"<layer name=\""<<PF::pf_escape_xml(name)<<"\" id=\""<<id<<"\" visible=\""<<enabled<<"\" expanded=\""<<expanded
-      <<"\" normal=\""<<normal<<"\" extra_inputs=\"";
+      <<"\" normal=\""<<normal<<"\" inputs=\"";
   int n;
-  for( size_t i=0, n=0; i < extra_inputs.size(); i++ ) {
-    int32_t id = extra_inputs[i].first.first;
-    int32_t imgid = extra_inputs[i].first.second;
+  for( size_t i=0, n=0; i < inputs.size(); i++ ) {
+    int32_t id = inputs[i].first.first;
+    int32_t imgid = inputs[i].first.second;
     if( id < 0 ) continue;
     PF::Layer* l = image->get_layer_manager().get_layer( id );
     if( !l ) continue;
     if( n>0 ) ostr<<" ";
-    ostr<<l->get_id()<<" "<<imgid<<" "<<extra_inputs[i].second;
+    ostr<<l->get_id()<<" "<<imgid<<" "<<inputs[i].second;
     n++;
   }
   ostr<<"\">"<<std::endl;

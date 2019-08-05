@@ -58,6 +58,7 @@ VipsImage* PF::ImageToMapPar::build(std::vector<VipsImage*>& in, int first,
   }
 
   set_image_hints( srcimg );
+  grayscale_image( srcimg->Xsize, srcimg->Ysize );
   out = PF::OpParBase::build( in, first, imap, omap, level );
   return out;
 }
