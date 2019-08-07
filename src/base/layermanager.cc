@@ -274,7 +274,7 @@ bool PF::LayerManager::get_parent_layers(Layer* layer,
     if( get_parent_layers( layer, plist, name+"/IMap/", l->imap_layers ) )
       return true;
 
-    if( get_parent_layers( layer, plist, name+"/OMap/", l->omap_layers ) )
+    if( get_parent_layers( layer, plist, name+"/", l->omap_layers ) )
       return true;
 
     if( l->get_id() != layer->get_id() ) {
@@ -295,9 +295,13 @@ void PF::LayerManager::get_parent_layers(PF::Layer* layer,
 }
 
 
-PF::Layer* PF::LayerManager::get_default_input_layer(PF::Layer* layer)
+std::pair< std::pair<int32_t,int32_t>,bool> PF::LayerManager::get_default_input_layer(PF::Layer* layer)
 {
-  PF::Layer* result = NULL;
+  std::pair< std::pair<int32_t,int32_t>,bool> result;
+  result.first.first = -1;
+  result.first.second = 0;
+  result.second = false;
+
   if( !image ) return result;
   PF::Pipeline* pipeline = image->get_pipeline(0);
   if( !pipeline ) return result;
@@ -311,9 +315,16 @@ PF::Layer* PF::LayerManager::get_default_input_layer(PF::Layer* layer)
   std::list< std::pair<std::string,PF::Layer*> > plist;
   get_parent_layers( layer, plist );
 
+  PF::Layer* container = get_container_layer(layer);
+  bool is_map = false;
+  if( layer && layer->get_processor() &&
+      layer->get_processor()->get_par() )
+    is_map = layer->get_processor()->get_par()->is_map();
+
   std::list< std::pair<std::string,Layer*> >::reverse_iterator iter;
   for( iter = plist.rbegin(); iter != plist.rend(); iter++ ) {
     PF::Layer* l = iter->second;
+    if( l == NULL ) continue;
     if( ! l->is_visible() ) continue;
     PF::PipelineNode* pnode = pipeline->get_node(l);
     if( !pnode ) continue;
@@ -325,7 +336,40 @@ PF::Layer* PF::LayerManager::get_default_input_layer(PF::Layer* layer)
 
     if( ! par->accepts_colorspace(cs) ) continue;
 
-    result = l;
+    bool is_map2 = false;
+    if( l->get_processor() &&
+        l->get_processor()->get_par() )
+      is_map2 = l->get_processor()->get_par()->is_map();
+
+    if( is_map ) {
+      std::cout<<"get_default_input_layer: l->get_name()="<<l->get_name()<<"  is_map2="<<is_map2;
+      if( container ) std::cout<<"  container->get_name()="<<container->get_name();
+      else std::cout<<"  container=NULL";
+      std::cout<<std::endl;
+    }
+
+    if( (container != NULL) && is_map && (!is_map2) ) {
+      // the target is a map layer, while the current layer is not.
+      // if the container layer has a user-defined input, we take it as default input for the mask.
+      // Otherwise the default input of the container is taken instead.
+      std::cout<<"get_default_input_layer: container->get_inputs().empty()="<<container->get_inputs().empty()<<std::endl;
+      if( !container->get_inputs().empty() )
+        std::cout<<"get_default_input_layer: container->get_inputs()[0].first.first="<<container->get_inputs()[0].first.first<<std::endl;
+      if( container->get_inputs().empty() || (container->get_inputs()[0].first.first < 0) ) {
+        result = get_default_input_layer( container );
+        PF::Layer* rl = get_layer(result.first.first);
+        std::cout<<"get_default_input_layer: result->get_name()="<<(rl?rl->get_name():"")<<std::endl;
+      } else {
+        result = container->get_inputs()[0];
+        PF::Layer* rl = get_layer(result.first.first);
+        std::cout<<"get_default_input_layer: result->get_name()="<<(rl?rl->get_name():"")<<"  blended="<<result.second<<std::endl;
+      }
+      break;
+    }
+
+    result.first.first = l->get_id();
+    result.first.second = 0;
+    result.second = true;
     break;
   }
 
@@ -1238,7 +1282,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
           <<"  l->inputs.size()="<<l->inputs.size()
           <<std::endl;
 #endif
-      if( par->needs_input() && !previous && l->inputs.empty() ) {
+      if( false && par->needs_input() && !previous && l->inputs.empty() ) {
         // Here we have a problem: the operation we are trying to insert in the chain requires
         // a primary input image, but there is no previous image available... we give up
         std::cout<<"LayerManager::rebuild_chain(): missing input data for layer \""<<l->get_name()<<"\""<<std::endl;
@@ -1268,18 +1312,27 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       std::cout<<"Layer \""<<l->get_name()<<"\": inputs size: "<<l->inputs.size()<<std::endl;
       if( l->inputs.empty() || l->inputs[0].first.first < 0 ) {
         // input layer is not specified, we grab the default input
-        PF::Layer* ldef = get_default_input_layer(l);
-        VipsImage* idef = NULL;
+        std::pair< std::pair<int32_t,int32_t>,bool> input = get_default_input_layer(l);
+        PF::Layer* ldef = get_layer(input.first.first);
+        VipsImage* imdef = NULL;
+        int imgid = input.first.second;
         PF::PipelineNode* ndef = pipeline->get_node(ldef);
         if( ndef ) {
-          idef = ndef->blended;
+          if( input.second == true ) {
+            imdef = ndef->blended;
+          } else {
+            if( (imgid>=0) && (imgid<(int)ndef->images.size()) ) {
+              imdef = ndef->images[imgid];
+              //std::cout<<"  extra_node->images[imgid]="<<extra_node->images[imgid]<<std::endl;
+            }
+          }
         }
-        in.push_back(idef);
-//#ifndef NDEBUG
-        if( ldef && idef )
-          std::cout<<"Layer \""<<l->get_name()<<"\": added \""<<ldef->get_name()<<"\"("<<idef<<") as default input"<<std::endl;
+        in.push_back(imdef);
+        //#ifndef NDEBUG
+        if( ldef && imdef )
+          std::cout<<"Layer \""<<l->get_name()<<"\": added \""<<ldef->get_name()<<"\"("<<imdef<<") as default input"<<std::endl;
         else
-          std::cout<<"Layer \""<<l->get_name()<<"\": added "<<idef<<" as default input"<<std::endl;
+          std::cout<<"Layer \""<<l->get_name()<<"\": added "<<imdef<<" as default input"<<std::endl;
 //#endif
         iextra_min = 1;
       }

@@ -88,16 +88,20 @@ void PF::LayerList::update_model()
   if( !image ) return;
   std::list< std::pair<std::string,Layer*> > list;
   image->get_layer_manager().get_parent_layers( layer, list );
-  PF::Layer* ldef = image->get_layer_manager().get_default_input_layer( layer );
+  std::pair< std::pair<int32_t,int32_t>,bool> iddef = image->get_layer_manager().get_default_input_layer( layer );
+  PF::Layer* ldef = image->get_layer_manager().get_layer( iddef.first.first );
 
   int lid_prev = -1;
+  bool blended_prev = true;
   Gtk::TreeModel::iterator active_iter = cbox.get_active();
   if( active_iter ) {
     Gtk::TreeModel::Row row = *active_iter;
     if( row ) {
       PF::Layer* active_layer = row[columns.col_layer];
-      if( active_layer )
+      if( active_layer ) {
         lid_prev = active_layer->get_id();
+        blended_prev = row[columns.col_blended];
+      }
     }
   }
 
@@ -114,6 +118,7 @@ void PF::LayerList::update_model()
   }
 
   int active_lid = -1;
+  int active_blended = true;
   int first_lid = -1;
   int last_lid = -1;
   Gtk::TreeModel::iterator ri = model->append();
@@ -122,11 +127,12 @@ void PF::LayerList::update_model()
   if( ldef ) {
     defname += " (";
     defname += ldef->get_name();
+    if( iddef.second ) defname += " - blended";
     defname += ")";
   }
   row[columns.col_name] = defname;
   row[columns.col_layer] = NULL;
-  row[columns.col_blended] = true;
+  row[columns.col_blended] = iddef.second;
   std::list< std::pair<std::string,Layer*> >::reverse_iterator iter;
   for( iter = list.rbegin(); iter != list.rend(); iter++ ) {
     ri = model->append();
@@ -139,6 +145,7 @@ void PF::LayerList::update_model()
 				cbox.set_active( model->children().size()-1 );
 				image_num.set_value( imgid );
 				active_lid = (*iter).second->get_id();
+				active_blended = true;
       }
       last_lid = (*iter).second->get_id();
 			if( first_lid < 0 )
@@ -154,6 +161,7 @@ void PF::LayerList::update_model()
 				cbox.set_active( model->children().size()-1 );
         image_num.set_value( imgid );
 				active_lid = (*iter).second->get_id();
+        active_blended = false;
       }
       last_lid = (*iter).second->get_id();
 			if( first_lid < 0 )
@@ -184,7 +192,9 @@ void PF::LayerList::update_model()
     }
   }
 
-  if( lid_prev != active_lid ){
+  std::cout<<"LayerList: lid_prev="<<lid_prev<<"  active_lid="<<active_lid<<"  blended_prev="<<blended_prev
+      <<"  active_blended="<<active_blended<<std::endl;
+  if( lid_prev != active_lid || blended_prev != active_blended ){
     changed();
   }
   inhibit = false;
@@ -209,13 +219,15 @@ void PF::LayerList::changed()
       //Get the data for the selected row, using our knowledge of the tree
       //model:
       PF::Layer* l = row[columns.col_layer];
+      bool blended = row[columns.col_blended];
 
       if( l ) {
         std::vector< std::pair< std::pair<int32_t,int32_t>,bool> >& inputs = layer->get_inputs();
-        if( (inputs.size() > 0) && (inputs[0].first.first == (int)(l->get_id()))
-            && (inputs[0].first.second == image_num.get_value()) ) {
-          //std::cout<<"LayerList::changed(): extra input of layer \""<<layer->get_name()
-          // <<"\" is unmodified."<<std::endl;
+        if( (inputs.size() > input_id) && (inputs[input_id].first.first == (int)(l->get_id()))
+            && (inputs[input_id].first.second == image_num.get_value())
+            && (inputs[input_id].second == blended) ) {
+          std::cout<<"LayerList::changed(): extra input of layer \""<<layer->get_name()
+           <<"\" is unmodified."<<std::endl;
           std::string cname = row[columns.col_name];
           cbox.set_tooltip_text(cname);
           label.set_tooltip_text(cname);
