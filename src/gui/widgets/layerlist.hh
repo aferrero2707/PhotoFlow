@@ -69,9 +69,11 @@ namespace PF {
     bool inhibit;
 
   public:
-    LayerList(OperationConfigGUI* dialog, std::string label, int input_id = 0);
+    LayerList(OperationConfigGUI* dialog, std::string label, int input_id = 0, bool compact=false);
 
     ~LayerList() {}
+
+    void set_size(int w, int h) { cbox.set_size_request(w, h); }
 
     void set_inhibit( bool val ) { inhibit = val; }
     void update_model();

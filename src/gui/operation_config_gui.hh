@@ -76,12 +76,9 @@ class OperationConfigGUI: public OperationConfigUI
   bool has_ch_sel;
   Selector greychSelector, rgbchSelector, labchSelector, cmykchSelector;
 
-  bool input_source_visible;
-  Gtk::Expander input_source_expander;
-  CheckBox input_source_checkbox;
-  Gtk::VBox layer_selector_box;
-  LayerList layer_list;
-  Selector sourceSelector;
+  //Gtk::VBox layer_selector_box;
+  LayerList layer_list, layer_list2;
+  //Selector sourceSelector;
 
 
   Gtk::CheckButton previewButton;
@@ -139,7 +136,7 @@ class OperationConfigGUI: public OperationConfigUI
   Gtk::HBox aux_top_buttons_hbox;
   Gtk::HBox aux_opacity_box;
   Gtk::VBox aux_controls_box;
-  Gtk::HBox aux_controls_hbox_1, aux_controls_hbox_2;
+  Gtk::HBox aux_controls_hbox_1, aux_controls_hbox_2, aux_controls_hbox_3;
   Gtk::Alignment aux_top_buttons_alignment;
 
   VipsSemaphore update_done_sem;
@@ -214,7 +211,6 @@ public:
   virtual void close_config();
 
   void hide_expert_controls() {expert_ctrls_expander.hide();}
-  void hide_input_controls() {input_source_visible = false;}
 
   virtual bool has_editing_mode() { return false; }
 

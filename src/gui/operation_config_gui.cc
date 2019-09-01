@@ -105,14 +105,14 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   PF::OperationConfigUI(layer),
   editor( NULL ),
   blendSelector( this, layer->get_blender(), "blend_mode", _("blend mode: "), PF_BLEND_PASSTHROUGH, 100 ),
-  blendSelector2( this, layer->get_blender(), "blend_mode", _("mode: "), PF_BLEND_PASSTHROUGH, 55 ),
+  blendSelector2( this, layer->get_blender(), "blend_mode", _("blend: "), PF_BLEND_PASSTHROUGH, 55 ),
   blendSelectorMask( this, layer->get_blender(), "mask_blend_mode", _("mode: "), PF_BLEND_NORMAL, 55 ),
-  blendSelectorMask2( this, layer->get_blender(), "mask_blend_mode", _("mode: "), PF_BLEND_NORMAL, 55 ),
+  blendSelectorMask2( this, layer->get_blender(), "mask_blend_mode", _("blend: "), PF_BLEND_NORMAL, 55 ),
   intensitySlider( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   intensitySlider2( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   opacitySlider( this, layer->get_blender(), "opacity", _("opacity: "), 100, 0, 100, 1, 10, 100, 250, 3),
   //    ( (PF::PhotoFlow::Instance().is_single_win_mode() == true) ? 4 : 3 ) ),
-  opacitySlider2( this, layer->get_blender(), "opacity", _("opacity: "), 100, 0, 100, 1, 10, 100, 100, 4),
+  opacitySlider2( this, layer->get_blender(), "opacity", _(""), 100, 0, 100, 1, 10, 100, 100, 4),
   imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
   omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
   test_padding_enable_box( this, "enable_padding", _("enable padding"), false),
@@ -123,11 +123,9 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   rgbchSelector( this, "rgb_target_channel", _("Target channel: "), -1 ),
   labchSelector( this, "lab_target_channel", _("Target channel: "), -1 ),
   cmykchSelector( this, "cmyk_target_channel", _("Target channel:"), -1 ),
-  input_source_visible(true),
-  input_source_expander( _("input source") ),
-  input_source_checkbox( this, "previous_layer_is_input", _("process previous layer"), true),
-  layer_list( this, _("input source:")),
-  sourceSelector( this, "source_channel", "Source channel: ", 1 ),
+  layer_list( this, _("input source:"), 0, false),
+  layer_list2( this, _("input:"), 0, true),
+  //sourceSelector( this, "source_channel", "Source channel: ", 1 ),
   previewButton(_("preview")),
   dialog( NULL ),
   frame( NULL ),
@@ -257,10 +255,13 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
       //frame_top_box_2.pack_start( opacitySlider, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_2.pack_start( blendSelector, Gtk::PACK_SHRINK );
 
-    aux_opacity_box.pack_end( opacitySlider2, Gtk::PACK_EXPAND_WIDGET, 0 );
-    aux_opacity_box.pack_end( blendSelectorMask2, Gtk::PACK_SHRINK, 0 );
+    aux_opacity_box.pack_start( blendSelectorMask2, Gtk::PACK_SHRINK, 0 );
     aux_opacity_box.pack_start( blendSelector2, Gtk::PACK_SHRINK, 0 );
-    aux_controls_hbox_2.pack_start( aux_opacity_box, Gtk::PACK_EXPAND_WIDGET );
+    aux_opacity_box.pack_start( opacitySlider2, Gtk::PACK_SHRINK, 0 );
+    aux_controls_hbox_2.pack_end( aux_opacity_box, Gtk::PACK_SHRINK );
+
+    layer_list2.set_size(160, -1);
+    aux_controls_hbox_3.pack_start( layer_list2, Gtk::PACK_EXPAND_WIDGET );
 
     blend_controls_box.pack_start( frame_top_box_2, Gtk::PACK_SHRINK, 10 );
     blend_controls_box.pack_start( opacitySlider, Gtk::PACK_SHRINK, 10 );
@@ -298,7 +299,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //controls_box.pack_start( hline, Gtk::PACK_SHRINK, 5 );
 
   //layer_selector_box.pack_start( input_source_checkbox, Gtk::PACK_SHRINK, 5 );
-  layer_selector_box.pack_start( layer_list, Gtk::PACK_SHRINK, 5 );
+  //layer_selector_box.pack_start( layer_list, Gtk::PACK_SHRINK, 5 );
   //layer_selector_box.pack_start( sourceSelector, Gtk::PACK_SHRINK, 5 );
   //input_source_expander.add( layer_selector_box );
   //input_source_expander.set_expanded( false );
@@ -306,7 +307,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //input_controls_box.pack_start( layer_selector_box, Gtk::PACK_SHRINK, 5 );
   //input_controls_box.show_all();
   blend_controls_box.pack_start( hline, Gtk::PACK_SHRINK, 10 );
-  blend_controls_box.pack_start( layer_selector_box, Gtk::PACK_SHRINK, 10 );
+  blend_controls_box.pack_start( layer_list, Gtk::PACK_SHRINK, 10 );
 
   blend_controls_box.show_all();
 
@@ -330,11 +331,12 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   aux_controls_box.pack_start( aux_controls_hbox_1, Gtk::PACK_SHRINK, 5 );
   aux_controls_box.pack_start( aux_controls_hbox_2, Gtk::PACK_SHRINK, 5 );
+  aux_controls_box.pack_start( aux_controls_hbox_3, Gtk::PACK_SHRINK, 5 );
 
   if(false && par && par->has_intensity() ) {
     //aux_controls_box.pack_start( intensitySlider2, Gtk::PACK_SHRINK );
   }
-  aux_controls_box.set_size_request(0,80);
+  //aux_controls_box.set_size_request(0,180);
 
   frame_visible.set_tooltip_text( _("toggle layer visibility on/off") );
   frame_mask.set_tooltip_text( _("enable/disable layer mask(s)") );
@@ -985,6 +987,7 @@ void PF::OperationConfigGUI::do_update()
   update_buttons();
 
   layer_list.update_model();
+  layer_list2.update_model();
 
   bool old_inhibit;
   PF::PFWidget* w;
@@ -1036,9 +1039,6 @@ void PF::OperationConfigGUI::do_update()
       frame_edit2.set_active( false );
     }
   }
-
-  if( input_source_visible ) input_source_expander.show();
-  else input_source_expander.hide();
 
   // Update target channel selector
   if( get_layer() && get_layer()->get_image() &&

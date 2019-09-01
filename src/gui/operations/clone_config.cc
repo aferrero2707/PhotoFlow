@@ -35,12 +35,6 @@ PF::CloneConfigGUI::CloneConfigGUI( PF::Layer* layer ):
   sourceSelector( this, "source_channel", _("Source channel: "), 1 )
 {
   add_widget( sourceSelector );
-
-  hide_input_controls();
-
-  //fileEntry.signal_activate().
-  //  connect(sigc::mem_fun(*this,
-  //			  &CloneConfigGUI::on_filename_changed));
 }
 
 

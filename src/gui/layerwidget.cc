@@ -271,7 +271,7 @@ void PF::ControlsGroup::collapse_all()
 PF::AuxControlsGroup::AuxControlsGroup( ImageEditor* e ): editor(e), controls(NULL), gui(NULL)
 {
   //set_spacing(10);
-  set_size_request(-1,60);
+  //set_size_request(-1,60);
 }
 
 
@@ -528,7 +528,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   clone_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/clone.png", "clone_stamp", image, this),
   scale_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/scale.png", "scale", image, this),
   perspective_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/perspective.png", "perspective", image, this),
-relight_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/flash.png", "relight", image, this)
+  relight_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/flash.png", "relight", image, this)
 {
   floating_tool_dialogs = PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs();
 
@@ -573,6 +573,7 @@ relight_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/flash.png", "re
 
 
   //LayerTree* view = new LayerTree( editor );
+  hbox.set_spacing(4);
   if( floating_tool_dialogs ) {
     vbox.pack_start( aux_controls_group, Gtk::PACK_SHRINK );
     hbox.pack_start( tool_buttons_box, Gtk::PACK_SHRINK );

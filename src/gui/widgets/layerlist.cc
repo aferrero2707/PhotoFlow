@@ -32,7 +32,7 @@
 #include "../operation_config_gui.hh"
 
 
-PF::LayerList::LayerList( OperationConfigGUI* d, std::string l, int iid ):
+PF::LayerList::LayerList( OperationConfigGUI* d, std::string l, int iid, bool compact ):
   Gtk::HBox(),
   dialog( d ),
   input_id(iid),
@@ -52,14 +52,15 @@ PF::LayerList::LayerList( OperationConfigGUI* d, std::string l, int iid ):
 
   cbox.set_size_request( 150, -1 );
 
-  vbox.pack_start( label, Gtk::PACK_SHRINK );
+  if(!compact) vbox.pack_start( label, Gtk::PACK_SHRINK );
   vbox.pack_start( cbox, Gtk::PACK_SHRINK );
 
-  vbox2.pack_start( label2, Gtk::PACK_SHRINK );
-  vbox2.pack_start( image_num, Gtk::PACK_SHRINK );
+  if(!compact) vbox2.pack_start( label2, Gtk::PACK_SHRINK );
+  if(!compact) vbox2.pack_start( image_num, Gtk::PACK_SHRINK );
 
-  pack_end( vbox2, Gtk::PACK_SHRINK );
+  if(!compact) pack_end( vbox2, Gtk::PACK_SHRINK );
   pack_end( vbox, Gtk::PACK_SHRINK );
+  if(compact) pack_end( label, Gtk::PACK_SHRINK );
 
   //image_num.signal_changed().
   image_num.signal_activate().
