@@ -349,6 +349,15 @@ std::pair< std::pair<int32_t,int32_t>,bool> PF::LayerManager::get_default_input_
     }
 
     if( (container != NULL) && is_map && (!is_map2) ) {
+      // new behavior:
+      // the target is a map layer, while the current layer is not.
+      // In this case we take the output of the container layer before blending as the
+      // input for the mask layer
+      result.first.first = container->get_id();
+      result.first.second = 0;
+      result.second = false;
+      break;
+
       // the target is a map layer, while the current layer is not.
       // if the container layer has a user-defined input, we take it as default input for the mask.
       // Otherwise the default input of the container is taken instead.
