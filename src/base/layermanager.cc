@@ -271,18 +271,18 @@ bool PF::LayerManager::get_parent_layers(Layer* layer,
     if( get_parent_layers( layer, plist, name, l->sublayers ) )
       return true;
 
-    if( get_parent_layers( layer, plist, name+"/IMap/", l->imap_layers ) )
-      return true;
-
-    if( get_parent_layers( layer, plist, name+"/", l->omap_layers ) )
-      return true;
-
     if( l->get_id() != layer->get_id() ) {
       plist.push_back( make_pair( name, l ) );
 #ifndef NDEBUG
       std::cout<<"    added."<<std::endl;
 #endif
     }
+
+    if( get_parent_layers( layer, plist, name+"/IMap/", l->imap_layers ) )
+      return true;
+
+    if( get_parent_layers( layer, plist, name+"/", l->omap_layers ) )
+      return true;
   }
   return false;
 }
@@ -353,10 +353,10 @@ std::pair< std::pair<int32_t,int32_t>,bool> PF::LayerManager::get_default_input_
       // the target is a map layer, while the current layer is not.
       // In this case we take the output of the container layer before blending as the
       // input for the mask layer
-      result.first.first = container->get_id();
-      result.first.second = 0;
-      result.second = false;
-      break;
+      //result.first.first = container->get_id();
+      //result.first.second = 0;
+      //result.second = false;
+      //break;
 
       // the target is a map layer, while the current layer is not.
       // if the container layer has a user-defined input, we take it as default input for the mask.

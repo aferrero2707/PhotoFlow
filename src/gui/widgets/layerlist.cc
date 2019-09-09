@@ -91,6 +91,7 @@ void PF::LayerList::update_model()
   image->get_layer_manager().get_parent_layers( layer, list );
   std::pair< std::pair<int32_t,int32_t>,bool> iddef = image->get_layer_manager().get_default_input_layer( layer );
   PF::Layer* ldef = image->get_layer_manager().get_layer( iddef.first.first );
+  PF::Layer* container = image->get_layer_manager().get_container_layer( layer );
 
   int lid_prev = -1;
   bool blended_prev = true;
@@ -128,30 +129,35 @@ void PF::LayerList::update_model()
   if( ldef ) {
     defname += " (";
     defname += ldef->get_name();
-    if( iddef.second ) defname += " - blended";
+    if( iddef.second ) defname += ", blended";
     defname += ")";
   }
   row[columns.col_name] = defname;
   row[columns.col_layer] = NULL;
   row[columns.col_blended] = iddef.second;
+
   std::list< std::pair<std::string,Layer*> >::reverse_iterator iter;
   for( iter = list.rbegin(); iter != list.rend(); iter++ ) {
-    ri = model->append();
-    row = *(ri);
-    row[columns.col_name] = (*iter).first + " (blended)";
-    row[columns.col_layer] = (*iter).second;
-    row[columns.col_blended] = true;
-    if( (*iter).second ) {
-      if( ((int)((*iter).second->get_id()) == lid) && (blended == true) ) {
-				cbox.set_active( model->children().size()-1 );
-				image_num.set_value( imgid );
-				active_lid = (*iter).second->get_id();
-				active_blended = true;
+
+    if( (*iter).second != container ) {
+      ri = model->append();
+      row = *(ri);
+      row[columns.col_name] = (*iter).first + ", blended";
+      row[columns.col_layer] = (*iter).second;
+      row[columns.col_blended] = true;
+      if( (*iter).second ) {
+        if( ((int)((*iter).second->get_id()) == lid) && (blended == true) ) {
+          cbox.set_active( model->children().size()-1 );
+          image_num.set_value( imgid );
+          active_lid = (*iter).second->get_id();
+          active_blended = true;
+        }
+        last_lid = (*iter).second->get_id();
+        if( first_lid < 0 )
+          first_lid = (*iter).second->get_id();
       }
-      last_lid = (*iter).second->get_id();
-			if( first_lid < 0 )
-				first_lid = (*iter).second->get_id();
     }
+
     ri = model->append();
     row = *(ri);
     row[columns.col_name] = (*iter).first;
