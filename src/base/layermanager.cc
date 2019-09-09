@@ -278,11 +278,13 @@ bool PF::LayerManager::get_parent_layers(Layer* layer,
 #endif
     }
 
-    if( get_parent_layers( layer, plist, name+"/IMap/", l->imap_layers ) )
-      return true;
+    if( layer->is_map() ) {
+      if( get_parent_layers( layer, plist, name+"/IMap/", l->imap_layers ) )
+        return true;
 
-    if( get_parent_layers( layer, plist, name+"/", l->omap_layers ) )
-      return true;
+      if( get_parent_layers( layer, plist, name+"/", l->omap_layers ) )
+        return true;
+    }
   }
   return false;
 }
