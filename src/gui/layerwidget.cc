@@ -271,7 +271,7 @@ void PF::ControlsGroup::collapse_all()
 PF::AuxControlsGroup::AuxControlsGroup( ImageEditor* e ): editor(e), controls(NULL), gui(NULL)
 {
   //set_spacing(10);
-  //set_size_request(-1,60);
+  set_size_request(-1,100);
 }
 
 

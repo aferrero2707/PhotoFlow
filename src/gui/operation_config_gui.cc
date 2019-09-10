@@ -244,6 +244,9 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_top_box_1.pack_start( frame_top_vbox_1, Gtk::PACK_EXPAND_WIDGET );
 
 
+  layer_list2.set_size(160, -1);
+  aux_controls_hbox_2.pack_start( layer_list2, Gtk::PACK_EXPAND_WIDGET );
+
   if(par && par->has_opacity() ) {
     //opacitySlider.set_width( 200 );
     //if( (PF::PhotoFlow::Instance().is_single_win_mode() == true) )
@@ -258,10 +261,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
     aux_opacity_box.pack_start( blendSelectorMask2, Gtk::PACK_SHRINK, 0 );
     aux_opacity_box.pack_start( blendSelector2, Gtk::PACK_SHRINK, 0 );
     aux_opacity_box.pack_start( opacitySlider2, Gtk::PACK_SHRINK, 0 );
-    aux_controls_hbox_2.pack_end( aux_opacity_box, Gtk::PACK_SHRINK );
-
-    layer_list2.set_size(160, -1);
-    aux_controls_hbox_3.pack_start( layer_list2, Gtk::PACK_EXPAND_WIDGET );
+    aux_controls_hbox_3.pack_end( aux_opacity_box, Gtk::PACK_SHRINK );
 
     blend_controls_box.pack_start( frame_top_box_2, Gtk::PACK_SHRINK, 10 );
     blend_controls_box.pack_start( opacitySlider, Gtk::PACK_SHRINK, 10 );
