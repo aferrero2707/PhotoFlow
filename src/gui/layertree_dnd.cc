@@ -101,14 +101,18 @@ static bool check_inputs( std::list<PF::Layer*> layers, std::list<PF::Layer*> pl
     if( (*li) == NULL ) continue;
     for( unsigned int i = 0; i < (*li)->get_inputs().size(); i++ ) {
       int32_t id = (*li)->get_inputs()[i].first.first;
-      bool found = false;
+      // if the input id is negative, it corresponds to the default input of the layer,
+      // so this will be changed according to the new location of the dragged layer
+      bool found = (id < 0);
       std::cout<<"check_inputs(): checking extra input \""<<(*li)->get_name()<<"\"["<<i<<"]="<<id<<std::endl;
-      for( std::list<PF::Layer*>::iterator lj = plist.begin();
-           lj != plist.end(); lj++ ) {
-        if( ((*lj) != NULL) && ((int)((*lj)->get_id()) == id) ) {
-          std::cout<<"check_inputs(): found."<<std::endl;
-          found = true;
-          break;
+      if( !found ) {
+        for( std::list<PF::Layer*>::iterator lj = plist.begin();
+            lj != plist.end(); lj++ ) {
+          if( ((*lj) != NULL) && ((int)((*lj)->get_id()) == id) ) {
+            std::cout<<"check_inputs(): found."<<std::endl;
+            found = true;
+            break;
+          }
         }
       }
       if( !found ) return false;
