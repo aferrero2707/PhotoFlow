@@ -191,6 +191,7 @@ namespace PF
         for(int col = 2; col < owidth - 2; col++)
         {
           float mid = in[col] * multiplier;
+          //printf("in[%d]=%f, threshold=%f\n", col, in[col], threshold);
           if(in[col] > threshold)
           {
             int count = 0;
