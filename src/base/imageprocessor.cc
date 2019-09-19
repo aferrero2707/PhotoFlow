@@ -36,6 +36,7 @@
 static void complete_caching( PF::Image* image )
 {
   if( !image ) return;
+  return;
   while( true ) {
     PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer();
     if( buf ) {
@@ -175,12 +176,14 @@ void PF::ImageProcessor::run()
       g_mutex_unlock( requests_mutex );
       std::cout<<"ImageProcessor::run(): requests_mutex unlocked"<<std::endl;
     */
+    // Process cache buffers.
+    // This is obsolete and disabled for now on
     if( g_async_queue_length( requests ) == 0 ) {
       PF::Image* image = PF::PhotoFlow::Instance().get_active_image();
       //std::cout<<"ImageProcessor::run(): image="<<image<<std::endl;
       if( image ) {
         // Only cache buffers for PREVIEW pipelines are updated automatically
-        PF::CacheBuffer* buf = image->get_layer_manager().get_cache_buffer();
+        PF::CacheBuffer* buf = NULL; //image->get_layer_manager().get_cache_buffer();
         //std::cout<<"ImageProcessor::run(): buf="<<buf<<std::endl;
         if( buf ) {
           signal_status_caching.emit();
