@@ -477,16 +477,10 @@ VipsImage* PF::DynamicRangeCompressorV2Par::build_old(std::vector<VipsImage*>& i
 
 
 
-  int ts = 128;
-  int nt = (logimg->Xsize/ts) * 5 + 1;
-  //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
   VipsAccess acc = VIPS_ACCESS_RANDOM;
   int threaded = 1, persistent = 0;
   VipsImage* cached;
   if( phf_tilecache(logimg, &cached,
-      "tile_width", ts,
-      "tile_height", ts,
-      "max_tiles", nt,
       "access", acc, "threaded", threaded,
       "persistent", persistent, NULL) ) {
     std::cout<<"DynamicRangeCompressorV2Par::build(): vips_tilecache() failed."<<std::endl;
@@ -579,16 +573,10 @@ VipsImage* PF::DynamicRangeCompressorV2Par::build_new(std::vector<VipsImage*>& i
 
 
 
-  int ts = 128;
-  int nt = (logimg->Xsize/ts) * 5 + 1;
-  //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
   VipsAccess acc = VIPS_ACCESS_RANDOM;
   int threaded = 1, persistent = 0;
   VipsImage* cached;
   if( phf_tilecache(logimg, &cached,
-      "tile_width", ts,
-      "tile_height", ts,
-      "max_tiles", nt,
       "access", acc, "threaded", threaded,
       "persistent", persistent, NULL) ) {
     std::cout<<"DynamicRangeCompressorV2Par::build(): vips_tilecache() failed."<<std::endl;

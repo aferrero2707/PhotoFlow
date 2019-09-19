@@ -202,7 +202,9 @@ void PF::LocalContrastV2Par::compute_padding( VipsImage* full_res, unsigned int 
   for(int gi = 0; gi < 10; gi++) {
     PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
     if( !guidedpar ) break;
-    std::cout<<"ShadowsHighlightsV2Par::compute_padding: rv["<<gi<<"]="<<rv[gi]<<std::endl;
+#ifndef NDEBUG
+    std::cout<<"LocalContrastV2Par::compute_padding: rv["<<gi<<"]="<<rv[gi]<<std::endl;
+#endif
     if(rv[gi] == 0) break;
     guidedpar->set_radius( rv[gi] );
     guidedpar->set_threshold( threshold.get() / threshold_scale[gi] );
@@ -242,10 +244,12 @@ VipsImage* PF::LocalContrastV2Par::build(std::vector<VipsImage*>& in, int first,
     logimg = logpar->build( in2, 0, NULL, NULL, level );
   } else {
     logimg = in[0];
-    PF_REF(logimg, "ShadowsHighlightsV2Par::build: in[0] ref");
+    PF_REF(logimg, "LocalContrastV2Par::build: in[0] ref");
   }
 
-  std::cout<<"ShadowsHighlightsV2Par::build(): logimg="<<logimg<<std::endl;
+#ifndef NDEBUG
+  std::cout<<"LocalContrastV2Par::build(): logimg="<<logimg<<std::endl;
+#endif
 
   if( !logimg ) return NULL;
 
@@ -259,7 +263,9 @@ VipsImage* PF::LocalContrastV2Par::build(std::vector<VipsImage*>& in, int first,
 
   VipsImage* timg = logimg;
   VipsImage* smoothed = logimg;
-  std::cout<<"ShadowsHighlightsV2Par::build(): radius="<<radius.get()<<std::endl;
+#ifndef NDEBUG
+  std::cout<<"LocalContrastV2Par::build(): radius="<<radius.get()<<std::endl;
+#endif
 
   for(int gi = 0; gi < 10; gi++) {
     PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
@@ -267,7 +273,7 @@ VipsImage* PF::LocalContrastV2Par::build(std::vector<VipsImage*>& in, int first,
     if( rv[gi] == 0 ) break;
     guidedpar->set_image_hints( timg );
     guidedpar->set_format( get_format() );
-    //std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="<<rv[gi]<<std::endl;
+    //std::cout<<"LocalContrastV2Par::build(): gi="<<gi<<"  radius="<<rv[gi]<<std::endl;
     guidedpar->set_radius( rv[gi] );
     guidedpar->set_threshold(threshold.get() / tv[gi]);
     int subsampling = 1;
@@ -280,48 +286,46 @@ VipsImage* PF::LocalContrastV2Par::build(std::vector<VipsImage*>& in, int first,
     guidedpar->propagate_settings();
     guidedpar->compute_padding(timg, 0, level);
 
-    std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="
+#ifndef NDEBUG
+    std::cout<<"LocalContrastV2Par::build(): gi="<<gi<<"  radius="
         <<rv[gi]<<"  padding="<<guidedpar->get_padding(0)
         <<"  logimg="<<logimg<<"  smoothed="<<smoothed<<std::endl;
+#endif
     if( guidedpar->get_padding(0) > 64 ) {
-      int ts = 128;
-      int tr = guidedpar->get_padding(0) / ts + 1;
-      int nt = (timg->Xsize/ts) * tr + 1;
       VipsAccess acc = VIPS_ACCESS_RANDOM;
       int threaded = 1, persistent = 0;
       VipsImage* cached = NULL;
       if( phf_tilecache(timg, &cached,
-          "tile_width", ts,
-          "tile_height", ts,
-          "max_tiles", nt,
           "access", acc, "threaded", threaded,
           "persistent", persistent, NULL) ) {
-        std::cout<<"ShadowsHighlightsV2Par::build(): vips_tilecache() failed."<<std::endl;
+        std::cout<<"LocalContrastV2Par::build(): vips_tilecache() failed."<<std::endl;
         return NULL;
       }
-      PF_UNREF( timg, "ShadowsHighlightsV2Par::build(): cropped unref" );
+      PF_UNREF( timg, "LocalContrastV2Par::build(): cropped unref" );
       timg = cached;
     }
 
     in2.clear();
     in2.push_back( timg );
     if( gi==0 && smoothed != logimg ) {
-      std::cout<<"ShadowsHighlightsV2Par::build(): adding smoothed guide image"<<std::endl;
+#ifndef NDEBUG
+      std::cout<<"LocalContrastV2Par::build(): adding smoothed guide image"<<std::endl;
+#endif
       in2.push_back( smoothed );
     }
     smoothed = guidedpar->build( in2, first, NULL, NULL, level );
     if( !smoothed ) {
-      std::cout<<"ShadowsHighlightsV2Par::build(): NULL local contrast enhanced image"<<std::endl;
+      std::cout<<"LocalContrastV2Par::build(): NULL local contrast enhanced image"<<std::endl;
       return NULL;
     }
-    PF_UNREF(timg, "ShadowsHighlightsV2Par::build(): timg unref");
+    PF_UNREF(timg, "LocalContrastV2Par::build(): timg unref");
     timg = smoothed;
   }
 
 
   if( !smoothed ) {
-    std::cout<<"ShadowsHighlightsV2Par::build(): null Lab image"<<std::endl;
-    PF_REF( in[0], "ShadowsHighlightsV2Par::build(): null Lab image" );
+    std::cout<<"LocalContrastV2Par::build(): null Lab image"<<std::endl;
+    PF_REF( in[0], "LocalContrastV2Par::build(): null Lab image" );
     return in[0];
   }
 
@@ -331,7 +335,7 @@ VipsImage* PF::LocalContrastV2Par::build(std::vector<VipsImage*>& in, int first,
   in2.push_back(logimg);
   in2.push_back(in[0]);
   VipsImage* out = OpParBase::build( in2, 0, imap, omap, level );
-  PF_UNREF( smoothed, "ShadowsHighlightsV2Par::build() smoothed unref" );
+  PF_UNREF( smoothed, "LocalContrastV2Par::build() smoothed unref" );
   set_image_hints( in[0] );
 
   return out;
