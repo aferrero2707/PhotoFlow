@@ -110,6 +110,7 @@ namespace PF
 
     void set_level( unsigned int l )
     {
+      //std::cout<<"Pipeline::setlevel: l="<<l<<"  level="<<level<<std::endl;
       if( level != l ) {
         //Glib::Threads::Mutex::Lock lock(mutex);
         set_force_rebuild();
@@ -135,7 +136,11 @@ namespace PF
     int get_auto_zoom_height() { return auto_zoom_height; }
 
     bool get_force_rebuild() { return force_rebuild; }
-    void set_force_rebuild() { force_rebuild = true; }
+    void set_force_rebuild()
+    {
+      force_rebuild = true;
+      std::cout<<"Pipeline: force_rebuild set to true"<<std::endl;
+    }
     void clear_force_rebuild() { force_rebuild = false; }
 
     bool get_op_caching_enabled() { return op_caching_enabled; }

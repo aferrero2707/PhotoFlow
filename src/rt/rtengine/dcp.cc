@@ -740,7 +740,9 @@ DCPProfile::DCPProfile(const Glib::ustring& filename) :
     temperature_1 = calibrationIlluminantToTemperature(light_source_1);
     temperature_2 = calibrationIlluminantToTemperature(light_source_2);
 
+#ifndef NDEBUG
     std::cout<<"DCPProfile(): light_source_1="<<light_source_1<<"  light_source_2="<<light_source_2<<std::endl;
+#endif
 
     const bool has_second_hue_sat = tagDir->getTag(toUnderlying(TagKey::PROFILE_HUE_SAT_MAP_DATA_2)); // Some profiles have two matrices, but just one huesat
 
@@ -792,9 +794,11 @@ DCPProfile::DCPProfile(const Glib::ustring& filename) :
         look_info.sat_divisions = tag->toInt(4);
         look_info.val_divisions = tag->toInt(8);
 
+#ifndef NDEBUG
         std::cout<<"DCPProfile(): look_info.hue_divisions="<<look_info.hue_divisions<<std::endl;
         std::cout<<"DCPProfile(): look_info.sat_divisions="<<look_info.sat_divisions<<std::endl;
         std::cout<<"DCPProfile(): look_info.val_divisions="<<look_info.val_divisions<<std::endl;
+#endif
 
         tag = tagDir->getTag(toUnderlying(TagKey::PROFILE_LOOK_TABLE_ENCODING));
         look_info.srgb_gamma = tag && tag->toInt(0);
