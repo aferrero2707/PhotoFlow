@@ -76,7 +76,8 @@ namespace PF
     // Walk through the given layer chain and set the "dirty" flag of all layers starting from "layer_id" to "true"
     void update_dirty( std::list<Layer*>& list, bool& dirty );
 
-    void reset_dirty( std::list<Layer*>& list );
+    void set_layers_dirty_flag( std::list<Layer*>& list );
+    void reset_layers_dirty_flag( std::list<Layer*>& list );
 
     void reset_op_caching( PF::Pipeline* pipeline, std::list<Layer*>& list );
     void reset_op_caching(PF::Pipeline* pipeline );
