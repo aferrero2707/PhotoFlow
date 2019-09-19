@@ -91,6 +91,7 @@ extern void vips_cimg_operation_init( void );
 extern GType vips_clone_stamp_get_type( void ); 
 extern GType vips_lensfun_get_type( void );
 extern GType vips_perspective_get_type( void );
+extern GType phf_tile_cache_get_type( void );
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
@@ -162,6 +163,7 @@ int main (int argc, char *argv[])
 
   //vips_profile_set( TRUE );
   //vips_profile_set(true);
+  //vips_cache_set_trace(TRUE);
   //vips_concurrency_set( 1 );
 #ifndef NDEBUG
   vips_cache_set_trace( true );
@@ -169,7 +171,7 @@ int main (int argc, char *argv[])
 
   rtengine::Color::init();
 
-  //vips__leak = 1;
+  vips__leak = 1;
 
   bool is_plugin = false;
 
