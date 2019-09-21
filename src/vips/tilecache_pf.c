@@ -469,10 +469,12 @@ phf_tile_assign( PhFTile *tile, PhFBlockCache *cache, int x, int y )
   */
 
   //time = phf_get_time();
+  //printf("phf_tile_assign: before phf_tile_move()\n");
   if( phf_tile_move( tile, x, y ) ) {
     g_hash_table_remove( cache->tiles, &tile->pos );
     return( -1 );
   }
+  //printf("phf_tile_assign: after phf_tile_move()\n");
   //time2 = phf_get_time();
   //printf("phf_tile_new(): phf_tile_move took %d\n", (int)(time2 - time));
 
@@ -973,6 +975,9 @@ phf_tile_cache_gen( VipsRegion *or,
 				"pasting %p\n", tile ); 
 			//printf("phf_tile_cache_gen: pasting %p\n", tile );
 
+			if(tile->ref_count < 1) {printf("tile %p wrong ref_count %d\n", tile, tile->ref_count); fflush(stdout);}
+			g_assert( tile->ref_count > 0 );
+
       /*printf("visp_tile_cache_gen(): before phf_tile_paste()\n");*/
 			//gint64 time_ = phf_get_time();
       //gint64 tstop = phf_get_time();
@@ -1017,6 +1022,8 @@ phf_tile_cache_gen( VipsRegion *or,
 				VIPS_DEBUG_MSG_RED( "phf_tile_cache_gen: "
 					"calc of %p\n", tile ); 
 
+	      g_assert( tile->ref_count > 0 );
+
 				/* In threaded mode, we let other threads run
 				 * while we calc this tile. In non-threaded
 				 * mode, we keep the lock and make 'em wait.
@@ -1036,7 +1043,9 @@ phf_tile_cache_gen( VipsRegion *or,
           //printf("phf_tile_cache_gen(): phf_tile_init_region() finished\n");
 			  }
 
-				result = vips_region_prepare_to( in, 
+	      g_assert( tile->ref_count > 0 );
+
+	      result = vips_region_prepare_to( in,
 					tile->region, 
 					&tile->pos, 
 					tile->pos.left, tile->pos.top );
@@ -1064,6 +1073,8 @@ phf_tile_cache_gen( VipsRegion *or,
 						"wait2" );
 					//printf("phf_tile_cache_gen(): lock 2 took %d\n", (int)(time2 - time));
 				}
+
+	      g_assert( tile->ref_count > 0 );
         //tstart = phf_get_time();
         //printf("phf_tile_cache_gen: thread=%p, iter=%d, tstart set after vips_region_prepare_to\n",
         //            g_thread_self(), iter);
