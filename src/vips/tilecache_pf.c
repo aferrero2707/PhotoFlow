@@ -975,7 +975,11 @@ phf_tile_cache_gen( VipsRegion *or,
 				"pasting %p\n", tile ); 
 			//printf("phf_tile_cache_gen: pasting %p\n", tile );
 
-			if(tile->ref_count < 1) {printf("tile %p wrong ref_count %d\n", tile, tile->ref_count); fflush(stdout);}
+			if(tile->ref_count < 1) {
+			  printf("tile %p wrong ref_count %d, state=%d, region=%p, cache=%p\n",
+			    tile, tile->ref_count, tile->state, tile->region, tile->cache);
+			  fflush(stdout);
+			}
 			g_assert( tile->ref_count > 0 );
 
       /*printf("visp_tile_cache_gen(): before phf_tile_paste()\n");*/
