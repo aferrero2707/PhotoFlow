@@ -90,6 +90,9 @@ namespace PF {
     Gtk::Entry profile_entry;
     Gtk::HBox profile_box;
 
+    Gtk::HBox close_button_box;
+    Gtk::Button close_button;
+
     std::string custom_profile_name;
 
     ImageEditor* editor;
@@ -100,6 +103,7 @@ namespace PF {
     void on_button_clicked(int id);
 
     void open();
+    void close();
 
     void on_show();
     void on_hide();
