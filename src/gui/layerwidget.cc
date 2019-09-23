@@ -502,7 +502,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   clone_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/clone.png", "clone_stamp", image, this),
   scale_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/scale.png", "scale", image, this),
   perspective_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/perspective.png", "perspective", image, this),
-relight_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/flash.png", "relight", image, this)
+  relight_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/flash.png", "relight", image, this)
 {
   floating_tool_dialogs = PF::PhotoFlow::Instance().get_options().get_ui_floating_tool_dialogs();
 
@@ -526,6 +526,7 @@ relight_button(PF::PhotoFlow::Instance().get_icons_dir()+"/tools/flash.png", "re
   perspective_button.set_tooltip_text( _("perspective correction") );
   scale_button.set_tooltip_text( _("scale/rotate tool") );
   path_mask_button.set_tooltip_text( _("path tool") );
+  relight_button.set_tooltip_text( _("relight tool") );
 
   tool_buttons_box.pack_start( add_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( group_button, Gtk::PACK_SHRINK, 2 );
