@@ -852,7 +852,7 @@ phf_tile_cache_ref( PhFBlockCache *cache, VipsRect *r )
 		  tile = phf_tile_find( cache, x, y );
 			if( !tile ) {
 	      printf("phf_tile_cache_ref(): phf_tile_find: %p\n", tile);
-			  getchar();
+			  g_assert(tile);
 				phf_tile_cache_unref( work );
 	      phf_tile_pool_unlock();
 				return( NULL );
@@ -912,7 +912,8 @@ phf_tile_cache_gen( VipsRegion *or,
 	VipsRect *r = &or->valid;
 
 	PhFTile *tile;
-	GSList *work;
+  GSList *work;
+  GSList *work2;
 	GSList *p;
 	int result;
   gint64 locked_tot;
@@ -950,7 +951,17 @@ phf_tile_cache_gen( VipsRegion *or,
   //printf("phf_tile_cache_gen: thread=%p, tstart set at beginning\n",
   //            g_thread_self());
 
-  int iter = 0;
+	for( p = work; p; p = p->next ) {
+    tile = (PhFTile *) p->data;
+    if(tile->ref_count < 1) {
+      printf("phf_tile_cache_gen: tile %p wrong ref_count %d, state=%d, region=%p, cache=%p\n",
+        tile, tile->ref_count, tile->state, tile->region, tile->cache);
+      fflush(stdout);
+    }
+    g_assert( tile->ref_count > 0 );
+	}
+
+	int iter = 0;
   int nprocessed = 0;
   int npasted = 0;
 	while( work ) {
@@ -975,16 +986,20 @@ phf_tile_cache_gen( VipsRegion *or,
 				"pasting %p\n", tile ); 
 			//printf("phf_tile_cache_gen: pasting %p\n", tile );
 
-			if(tile->ref_count < 1) {printf("tile %p wrong ref_count %d\n", tile, tile->ref_count); fflush(stdout);}
+			if(tile->ref_count < 1) {
+			  printf("tile %p wrong ref_count %d, state=%d, region=%p, cache=%p\n",
+			    tile, tile->ref_count, tile->state, tile->region, tile->cache);
+			  fflush(stdout);
+			}
 			g_assert( tile->ref_count > 0 );
 
       /*printf("visp_tile_cache_gen(): before phf_tile_paste()\n");*/
 			//gint64 time_ = phf_get_time();
       //gint64 tstop = phf_get_time();
       //locked_tot += tstop - tstart;
-      g_mutex_unlock(cache->lock);
+      //g_mutex_unlock(cache->lock);
 			phf_tile_paste( tile, or );
-      g_mutex_lock(cache->lock);
+      //g_mutex_lock(cache->lock);
       //tstart = phf_get_time();
 			npasted += 1;
       //printf("visp_tile_cache_gen: thread=%p, iter=%d, phf_tile_paste called\n"
