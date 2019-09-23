@@ -293,7 +293,7 @@ VipsImage* PF::LocalContrastV2Par::build(std::vector<VipsImage*>& in, int first,
 #endif
     if( guidedpar->get_padding(0) > 64 ) {
       VipsAccess acc = VIPS_ACCESS_RANDOM;
-      int threaded = 1, persistent = 0;
+      int threaded = 1, persistent = 1;
       VipsImage* cached = NULL;
       if( phf_tilecache(timg, &cached,
           "access", acc, "threaded", threaded,
