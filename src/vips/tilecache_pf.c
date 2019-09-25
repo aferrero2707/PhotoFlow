@@ -805,7 +805,7 @@ static void
 phf_tile_unref( PhFTile *tile )
 {
   if(phf_tile_pool.debug) {
-    printf("phf_tile_unref: tile: %p  ref_count: %d\n", tile, tile->ref_count);
+    printf("phf_tile_unref: tile: %p  tile->cache: %p  ref_count: %d\n", tile, tile->cache, tile->ref_count);
     fflush(stdout);
   }
 	g_assert( tile->ref_count > 0 );
@@ -818,7 +818,7 @@ phf_tile_ref( PhFTile *tile )
 {
 	tile->ref_count += 1;
 	if(phf_tile_pool.debug) {
-	  printf("phf_tile_ref: tile: %p  ref_count: %d\n", tile, tile->ref_count);
+	  printf("phf_tile_ref:   tile: %p  tile->cache: %p  ref_count: %d\n", tile, tile->cache, tile->ref_count);
 	  fflush(stdout);
 	}
 
@@ -830,8 +830,18 @@ phf_tile_cache_unref( GSList *work )
 {
 	GSList *p;
 
-	for( p = work; p; p = p->next ) 
+	for( p = work; p; p = p->next ) {
+	  PhFTile * tile = (PhFTile *) p->data;
+	  if(phf_tile_pool.debug) {
+	    printf("phf_tile_cache_unref: tile: %p  tile->cache: %p  ref_count: %d\n", tile, tile->cache, tile->ref_count);
+	    fflush(stdout);
+	  }
 		phf_tile_unref( (PhFTile *) p->data );
+    if(phf_tile_pool.debug) {
+      printf("phf_tile_cache_unref: tile: %p unreferenced\n", tile);
+      fflush(stdout);
+    }
+	}
 
 	g_slist_free( work );
 }
@@ -882,8 +892,16 @@ phf_tile_cache_ref( PhFBlockCache *cache, VipsRect *r )
 			phf_tile_touch( tile );
       //printf("phf_tile_cache_ref(): after phf_tile_touch()\n");
 
-			phf_tile_ref( tile );
-      //printf("phf_tile_cache_ref(): after phf_tile_ref()\n");
+	    if(phf_tile_pool.debug) {
+	      printf("phf_tile_cache_ref: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+	      fflush(stdout);
+	    }
+	    phf_tile_ref( tile );
+	    if(phf_tile_pool.debug) {
+	      printf("phf_tile_cache_ref: tile: %p  referenced\n", tile);
+	      fflush(stdout);
+	    }
+	    //printf("phf_tile_cache_ref(): after phf_tile_ref()\n");
 
 			/* We must append, since we want to keep tile ordering
 			 * for sequential sources.
@@ -1014,6 +1032,10 @@ phf_tile_cache_gen( VipsRegion *or,
 			if( !p )
 				break;
 
+      if(phf_tile_pool.debug) {
+        printf("phf_tile_cache_gen: start of tile pasting: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+        fflush(stdout);
+      }
 			VIPS_DEBUG_MSG_RED( "phf_tile_cache_gen: "
 				"pasting %p\n", tile ); 
 			//printf("phf_tile_cache_gen: pasting %p\n", tile );
@@ -1046,7 +1068,15 @@ phf_tile_cache_gen( VipsRegion *or,
 			work = g_slist_remove( work, tile );
       //time2_ = phf_get_time();
       //printf("phf_tile_cache_gen: phf_tile_paste + remove took %d\n", (int)(time2_ - time_));
+      if(phf_tile_pool.debug) {
+        printf("phf_tile_cache_gen: before phf_tile_unref: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+        fflush(stdout);
+      }
 			phf_tile_unref( tile );
+      if(phf_tile_pool.debug) {
+        printf("phf_tile_cache_gen: tile: %p unreferenced\n", tile);
+        fflush(stdout);
+      }
       //time2_ = phf_get_time();
       //printf("phf_tile_cache_gen: phf_tile_paste + remove + unref took %d\n", (int)(time2_ - time_));
 		}
@@ -1063,12 +1093,20 @@ phf_tile_cache_gen( VipsRegion *or,
 
 			//printf("phf_tile_cache_gen(): tile->state=%d\n", tile->state);
 
+      if(phf_tile_pool.debug) {
+        printf("phf_tile_cache_gen: checking tile before preparation: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+        fflush(stdout);
+      }
 			if( tile->state == VIPS_TILE_STATE_PEND ) {
 				tile->state = VIPS_TILE_STATE_CALC;
 
 				VIPS_DEBUG_MSG_RED( "phf_tile_cache_gen: "
 					"calc of %p\n", tile ); 
 
+	      if(phf_tile_pool.debug) {
+	        printf("phf_tile_cache_gen: start of tile preparation: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+	        fflush(stdout);
+	      }
 	      g_assert( tile->ref_count > 0 );
 
 				/* In threaded mode, we let other threads run
@@ -1090,7 +1128,8 @@ phf_tile_cache_gen( VipsRegion *or,
           //printf("phf_tile_cache_gen(): phf_tile_init_region() finished\n");
 			  }
 
-	      g_assert( tile->ref_count > 0 );
+        g_assert( tile->ref_count > 0 );
+        g_assert( tile->region );
 
 	      result = vips_region_prepare_to( in,
 					tile->region, 
@@ -1121,6 +1160,10 @@ phf_tile_cache_gen( VipsRegion *or,
 					//printf("phf_tile_cache_gen(): lock 2 took %d\n", (int)(time2 - time));
 				}
 
+        if(phf_tile_pool.debug) {
+          printf("phf_tile_cache_gen: end of tile preparation: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+          fflush(stdout);
+        }
 	      g_assert( tile->ref_count > 0 );
         //tstart = phf_get_time();
         //printf("phf_tile_cache_gen: thread=%p, iter=%d, tstart set after vips_region_prepare_to\n",
