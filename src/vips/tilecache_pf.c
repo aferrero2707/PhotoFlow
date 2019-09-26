@@ -135,8 +135,10 @@ typedef struct _PhFTilePool {
 } PhFTilePool;
 
 
-PhFTilePool phf_tile_pool;
+static PhFTilePool phf_tile_pool;
 static int phf_tile_pool_initialised = 0;
+
+static GMutex *phf_tile_ref_lock = NULL;     /* Lock tiles referencing/unreferencing */
 
 static void phf_tile_pool_init()
 {
@@ -154,9 +156,12 @@ static void phf_tile_pool_init()
   }
   phf_tile_pool.lock = vips_g_mutex_new();
 
+  phf_tile_ref_lock = vips_g_mutex_new();
+
   phf_tile_pool.debug = 0;
   const gchar* tilecache_debug = g_getenv("PHF_TILECACHE_DEBUG");
   if( tilecache_debug && !strcmp(tilecache_debug,"1") ) phf_tile_pool.debug = 1;
+  if( tilecache_debug && !strcmp(tilecache_debug,"2") ) phf_tile_pool.debug = 2;
 
   phf_tile_pool_initialised = 1;
 }
@@ -208,7 +213,7 @@ phf_tile_dispose( PhFTile *tile )
 
   VIPS_DEBUG_MSG_RED( "phf_tile_dispose: tile %d, %d (%p)\n",
     tile->pos.left, tile->pos.top, tile );
-  if(phf_tile_pool.debug) {
+  if(phf_tile_pool.debug > 1) {
     printf("phf_tile_dispose: tile %d, %d (%p), cache: %p  ref_count: %d  state: %d\n",
       tile->pos.left, tile->pos.top, tile, cache, tile->ref_count, tile->state );
     //fflush(stdout);
@@ -447,7 +452,7 @@ phf_tile_new( PhFBlockCache *cache, int x, int y )
 static int
 phf_tile_assign( PhFTile *tile, PhFBlockCache *cache, int x, int y )
 {
-  if(phf_tile_pool.debug) {
+  if(phf_tile_pool.debug > 1) {
     printf("phf_tile_assign: tile %d, %d (%p), cache: %p  ref_count: %d  state: %d\n",
       tile->pos.left, tile->pos.top, tile, cache, tile->ref_count, tile->state );
     //fflush(stdout);
@@ -678,11 +683,13 @@ phf_block_cache_build( VipsObject *object )
 		 	VIPS_IMAGE_SIZEOF_PEL( cache->in )) / (1024 * 1024.0) );
 
   g_object_set( cache, "out", vips_image_new(), NULL );
-  printf("phf_block_cache_build(): out ref count: %p->%d\n",
+  if(phf_tile_pool.debug>1)
+    printf("phf_block_cache_build(): out ref count: %p->%d\n",
       G_OBJECT(cache->out), G_OBJECT(cache->out)->ref_count);
 
   if( !cache->persistent ) {
-    printf("phf_block_cache_build: connecting \"minimise\" signal from cache->out(%p)\n", cache->out);
+    if(phf_tile_pool.debug>1)
+      printf("phf_block_cache_build: connecting \"minimise\" signal from cache->out(%p)\n", cache->out);
     g_signal_connect( cache->out, "minimise",
         G_CALLBACK( phf_block_cache_minimise ), cache );
   }
@@ -804,6 +811,7 @@ G_DEFINE_TYPE( PhFTileCache, phf_tile_cache, PHF_TYPE_BLOCK_CACHE );
 static void
 phf_tile_unref( PhFTile *tile )
 {
+  g_mutex_lock(phf_tile_ref_lock);
   if(phf_tile_pool.debug) {
     printf("phf_tile_unref: tile: %p  tile->cache: %p  ref_count: %d\n", tile, tile->cache, tile->ref_count);
     //fflush(stdout);
@@ -811,11 +819,13 @@ phf_tile_unref( PhFTile *tile )
 	g_assert( tile->ref_count > 0 );
 
 	tile->ref_count -= 1;
+  g_mutex_unlock(phf_tile_ref_lock);
 }
 
 static void
 phf_tile_ref( PhFTile *tile )
 {
+  g_mutex_lock(phf_tile_ref_lock);
 	tile->ref_count += 1;
 	if(phf_tile_pool.debug) {
 	  printf("phf_tile_ref:   tile: %p  tile->cache: %p  ref_count: %d\n", tile, tile->cache, tile->ref_count);
@@ -823,6 +833,7 @@ phf_tile_ref( PhFTile *tile )
 	}
 
 	g_assert( tile->ref_count > 0 );
+  g_mutex_unlock(phf_tile_ref_lock);
 }
 
 static void
@@ -832,12 +843,12 @@ phf_tile_cache_unref( GSList *work )
 
 	for( p = work; p; p = p->next ) {
 	  PhFTile * tile = (PhFTile *) p->data;
-	  if(phf_tile_pool.debug) {
+	  if(phf_tile_pool.debug > 1) {
 	    printf("phf_tile_cache_unref: tile: %p  tile->cache: %p  ref_count: %d\n", tile, tile->cache, tile->ref_count);
 	    //fflush(stdout);
 	  }
 		phf_tile_unref( (PhFTile *) p->data );
-    if(phf_tile_pool.debug) {
+    if(phf_tile_pool.debug > 1) {
       printf("phf_tile_cache_unref: tile: %p unreferenced\n", tile);
       //fflush(stdout);
     }
@@ -892,12 +903,12 @@ phf_tile_cache_ref( PhFBlockCache *cache, VipsRect *r )
 			phf_tile_touch( tile );
       //printf("phf_tile_cache_ref(): after phf_tile_touch()\n");
 
-	    if(phf_tile_pool.debug) {
+	    if(phf_tile_pool.debug > 1) {
 	      printf("phf_tile_cache_ref: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
 	      //fflush(stdout);
 	    }
 	    phf_tile_ref( tile );
-	    if(phf_tile_pool.debug) {
+	    if(phf_tile_pool.debug > 1) {
 	      printf("phf_tile_cache_ref: tile: %p  referenced\n", tile);
 	      //fflush(stdout);
 	    }
@@ -1032,7 +1043,7 @@ phf_tile_cache_gen( VipsRegion *or,
 			if( !p )
 				break;
 
-      if(phf_tile_pool.debug) {
+      if(phf_tile_pool.debug > 1) {
         printf("phf_tile_cache_gen: start of tile pasting: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
         //fflush(stdout);
       }
@@ -1068,12 +1079,12 @@ phf_tile_cache_gen( VipsRegion *or,
 			work = g_slist_remove( work, tile );
       //time2_ = phf_get_time();
       //printf("phf_tile_cache_gen: phf_tile_paste + remove took %d\n", (int)(time2_ - time_));
-      if(phf_tile_pool.debug) {
+      if(phf_tile_pool.debug > 1) {
         printf("phf_tile_cache_gen: before phf_tile_unref: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
         //fflush(stdout);
       }
 			phf_tile_unref( tile );
-      if(phf_tile_pool.debug) {
+      if(phf_tile_pool.debug > 1) {
         printf("phf_tile_cache_gen: tile: %p unreferenced\n", tile);
         //fflush(stdout);
       }
@@ -1093,7 +1104,7 @@ phf_tile_cache_gen( VipsRegion *or,
 
 			//printf("phf_tile_cache_gen(): tile->state=%d\n", tile->state);
 
-      if(phf_tile_pool.debug) {
+      if(phf_tile_pool.debug > 1) {
         printf("phf_tile_cache_gen: checking tile before preparation: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
         //fflush(stdout);
       }
@@ -1103,7 +1114,7 @@ phf_tile_cache_gen( VipsRegion *or,
 				VIPS_DEBUG_MSG_RED( "phf_tile_cache_gen: "
 					"calc of %p\n", tile ); 
 
-	      if(phf_tile_pool.debug) {
+	      if(phf_tile_pool.debug > 1) {
 	        printf("phf_tile_cache_gen: start of tile preparation: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
 	        //fflush(stdout);
 	      }
@@ -1160,7 +1171,7 @@ phf_tile_cache_gen( VipsRegion *or,
 					//printf("phf_tile_cache_gen(): lock 2 took %d\n", (int)(time2 - time));
 				}
 
-        if(phf_tile_pool.debug) {
+        if(phf_tile_pool.debug > 1) {
           printf("phf_tile_cache_gen: end of tile preparation: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
           //fflush(stdout);
         }
@@ -1292,7 +1303,6 @@ phf_tile_cache_class_init( PhFTileCacheClass *class )
 	VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( class );
 
 	VIPS_DEBUG_MSG( "phf_tile_cache_class_init\n" );
-	printf( "phf_tile_cache_class_init\n" );
 
 	gobject_class->set_property = vips_object_set_property;
 	gobject_class->get_property = vips_object_get_property;
@@ -1320,7 +1330,6 @@ phf_tile_cache_class_init( PhFTileCacheClass *class )
 static void
 phf_tile_cache_init( PhFTileCache *cache )
 {
-  printf( "phf_tile_cache_init\n" );
   phf_tile_pool_init();
   cache->parent_instance.tile_width = PHF_TILE_SIZE;
 }
