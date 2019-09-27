@@ -75,12 +75,15 @@ PF::ConvertColorspacePar::ConvertColorspacePar():
           transform( NULL ),
           gw_transform_in( NULL ),
           gw_transform_out( NULL ),
-          softproof( false ),
-          gamut_warning( false ),
+          softproof("softproof", this, false),
+          gamut_warning("gamut_warning", this, false),
           iccprof(NULL),
           input_cs_type( cmsSigRgbData ),
           output_cs_type( cmsSigRgbData )
 {
+  softproof.set_persistent(false);
+  gamut_warning.set_persistent(false);
+
   do_Lab = true; do_LCh = do_LSh = false;
   //convert2lab = PF::new_convert2lab();
 
@@ -345,7 +348,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     if( iccprof ) PF::set_icc_profile( out, iccprof );
 
     //std::cout<<"ConvertColorspacePar::build(): gamut_warning="<<gamut_warning<<"  get_render_mode()="<<get_render_mode()<<std::endl;
-    if( gamut_warning && (get_render_mode() == PF_RENDER_PREVIEW) ) {
+    if( gamut_warning.get() && (get_render_mode() == PF_RENDER_PREVIEW) ) {
       PF::ICCProfile* aces_prof =
           PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_ACES, PF::PF_TRC_LINEAR );
       PF::ICCProfile* Lab_prof =
