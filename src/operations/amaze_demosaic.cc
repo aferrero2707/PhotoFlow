@@ -112,7 +112,7 @@ void PF::amaze_demosaic_PF(VipsRegion* ir, VipsRegion* out, PF::AmazeDemosaicPar
   PF::PixelBuffer green(pg, rw, rh, rowstride, offsy, offsx);
   PF::PixelBuffer blue(pb, rw, rh, rowstride, offsy, offsx);
 
-  if( true && offsx < 20 && offsy < 20 ) {
+  if( false && offsx < 20 && offsy < 20 ) {
     std::cout<<"amaze_demosaic_PF: output image = "<<out->im<<std::endl;
     std::cout<<"amaze_demosaic_PF: output size = "<<w<<" x "<<h<<std::endl;
     std::cout<<"amaze_demosaic_PF: output region = "<<rw<<" x "<<rh<<" + "<<offsx<<" + "<<offsy<<std::endl;
