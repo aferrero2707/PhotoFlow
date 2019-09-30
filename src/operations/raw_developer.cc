@@ -429,7 +429,24 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   out2 = convert_format->get_par()->build( in3, 0, NULL, NULL, level );
   g_object_unref( gamma );
 
-  set_image_hints( out2 );
+
+  std::cout<<"RawDeveloperPar::build(): before vips_resize()"<<std::endl;
+  VipsImage* scaled = out2;
+  if( true && level > 0 ) {
+    float scale = 1;
+    for(unsigned int l = 0; l < level; l++) scale /= 2;
+    VipsKernel kernel = VIPS_KERNEL_CUBIC;
+    if( vips_resize(out2, &scaled, scale, "kernel", kernel, NULL) ) {
+      std::cout<<"RawDeveloperPar::build(): vips_resize() failed."<<std::endl;
+      //PF_UNREF( interpolate, "ScalePar::build(): interpolate unref" );
+      return NULL;
+    }
+    PF_UNREF(out2, "RawDeveloperPar::build(): out2 unref after vips_resize()");
+  }
+  std::cout<<"RawDeveloperPar::build(): after vips_resize()"<<std::endl;
+
+
+  set_image_hints( scaled );
   /*
   if( out2 ) {
     if( !vips_image_get_blob( out2, VIPS_META_ICC_NAME, 
@@ -447,5 +464,5 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   */
 
 //std::cout<<"RawDeveloper::build(): output image: "<<out2<<std::endl;
-  return out2;
+  return scaled;
 }
