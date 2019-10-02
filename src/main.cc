@@ -74,6 +74,7 @@
 #include "base/pf_file_loader.hh"
 #include "rt/rtengine/color.h"
 
+//#include "external/DeathHandler/death_handler.h"
 
 extern int vips__leak;
 
@@ -120,6 +121,13 @@ int main (int argc, char *argv[])
     return 0;
   }
 
+
+//#ifndef WIN32
+//  signal(SIGSEGV, handler);   // install our handler
+//#endif
+  //Debug::DeathHandler dh;
+
+
 #if defined(WIN32)
   std::string mimePath = (std::string)(PF::PhotoFlow::Instance().get_base_dir()) + "\\..\\share";
   std::string mimeVar = "XDG_DATA_HOME";
@@ -142,10 +150,6 @@ int main (int argc, char *argv[])
     exit(1);
   }
    */
-
-#ifndef WIN32
-  signal(SIGSEGV, handler);   // install our handler
-#endif
 
   if (vips_init (argv[0]))
     //vips::verror ();
