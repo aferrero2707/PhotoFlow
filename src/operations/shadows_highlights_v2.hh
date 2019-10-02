@@ -82,6 +82,11 @@ public:
   void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
   void propagate_settings();
 
+  void print()
+  {
+    std::cout<<"ShadowsHighlightsV2Par: shadows_range="<<shadows_range.get()<<std::endl;
+  }
+
   VipsImage* build(std::vector<VipsImage*>& in, int first,
       VipsImage* imap, VipsImage* omap,
       unsigned int& level);
@@ -146,7 +151,8 @@ public:
     float sh_range = opar->get_shadows_range();
     float hl_range = opar->get_highlights_range();
 
-    //std::cout<<"sh_scale="<<sh_scale<<"  hl_scale="<<hl_scale<<std::endl;
+    if(false && r->top==0 && r->left==0)
+    std::cout<<"anchor="<<opar->get_anchor()<<"  sh_range="<<sh_range<<"  hl_range="<<hl_range<<"  sh_scale="<<sh_scale<<"  hl_scale="<<hl_scale<<"  contrast="<<opar->get_contrast()<<"  show_residual="<<opar->get_show_residual()<<std::endl;
 
     for( y = 0; y < height; y++ ) {
       // original image
@@ -166,8 +172,12 @@ public:
         //l2 = ( l2*SH_LOG_SCALE_RANGE ) + SH_LOG_SCALE_MIN;
         //l2 = xexp10( l2 );
         //out = (l2 > 1) ? pow(l2, hl_scale) : pow(l2, sh_scale);
+        if(false && r->top==0 && r->left==0 && x==0 && y==0)
+        std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"  l1: "<<l2<<"  l2: "<<l2<<std::endl;
         if( l2 < 0 ) {
           float sh_slope = (1.0f - sh_scale) / (1.0f + l2*l2/sh_range);
+          if(false && r->top==0 && r->left==0 && x==0 && y==0)
+          std::cout<<"    sh_scale: "<<sh_scale<<"  sh_range: "<<sh_range<<"  sh_slope: "<<sh_slope<<std::endl;
           l2 *= (1.0f - sh_slope);
           //out = l2 * sh_scale;
         } else {
@@ -182,6 +192,8 @@ public:
           float hl_slope = hl_frac * scale_delta + sh_scale;
           l2 *= hl_slope;
         }
+        if(false && r->top==0 && r->left==0 && x==0 && y==0)
+        std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"  l1: "<<l2<<"  l2: "<<l2<<std::endl;
 
         float delta2 = delta;
         if( delta < 0 ) {
@@ -210,7 +222,8 @@ public:
         pout[x+1] = pin0[x+1] * R;
         pout[x+2] = pin0[x+2] * R;
 
-        //std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"  pin0: "<<pin0[x]<<"  pin1: "<<pin1[x]<<"  pin2: "<<pin2[x]<<"  delta: "<<delta<<"  scale: "<<scale<<"  lwhite: "<<lwhite<<"  delta2: "<<delta2<<"  R="<<R<<"  pout="<<pout[x]<<std::endl;
+        if(false && r->top==0 && r->left==0 && x==0 && y==0)
+        std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"  pin0: "<<pin0[x]<<"  pin1: "<<pin1[x]<<"  pin2: "<<pin2[x]<<"  delta: "<<delta<<"  scale: "<<scale<<"  lwhite: "<<lwhite<<"  delta2: "<<delta2<<"  R="<<R<<"  pout="<<pout[x]<<std::endl;
 
         if( opar->get_show_residual() ) pout[x] = pout[x+1] = pout[x+2] = l2 * bias;
 

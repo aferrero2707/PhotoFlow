@@ -591,7 +591,7 @@ public:
     coding = VIPS_CODING_NONE;
   }
 
-
+  virtual void print() {}
   bool save( std::ostream& ostr, int level );
 };
 
