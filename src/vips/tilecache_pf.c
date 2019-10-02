@@ -320,12 +320,12 @@ static void
 phf_block_cache_dispose( GObject *gobject )
 {
 	PhFBlockCache *cache = (PhFBlockCache *) gobject;
-  printf("phf_block_cache_dispose(): called, cache: %p  cache->tiles: %p\n", cache, cache->tiles);
-  if( cache->tiles )
-    printf("  cache hash table size: %d\n", (int)g_hash_table_size(cache->tiles));
+  //printf("phf_block_cache_dispose(): called, cache: %p  cache->tiles: %p\n", cache, cache->tiles);
+  //if( cache->tiles )
+  //  printf("  cache hash table size: %d\n", (int)g_hash_table_size(cache->tiles));
 
 	phf_block_cache_drop_all( cache );
-  printf("phf_block_cache_dispose(): after phf_block_cache_drop_all\n");
+  //printf("phf_block_cache_dispose(): after phf_block_cache_drop_all\n");
 	VIPS_FREEF( vips_g_mutex_free, cache->lock );
 	VIPS_FREEF( vips_g_cond_free, cache->new_tile );
 
@@ -1291,8 +1291,8 @@ phf_tile_cache_build( VipsObject *object )
 		block_cache->in, cache ) )
 		return( -1 );
 
-  printf("phf_tile_cache_build(): out ref count: %p->%d\n",
-      G_OBJECT(block_cache->out), G_OBJECT(block_cache->out)->ref_count);
+  //printf("phf_tile_cache_build(): out ref count: %p->%d\n",
+  //    G_OBJECT(block_cache->out), G_OBJECT(block_cache->out)->ref_count);
 	return( 0 );
 }
 
