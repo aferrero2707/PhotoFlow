@@ -65,6 +65,8 @@ void PF::GaussBlurPar::compute_padding( VipsImage* full_res, unsigned int id, un
 
   //std::cout<<"GaussBlurPar::compute_padding(): radius="<<radius.get()<<" level="<<level<<" radius2="<<radius2<<std::endl;
 
+  if( radius2 < 0.1 ) radius2 = 0.2;
+
   bool do_fast_blur = false;
   if( radius2 > 5 ) do_fast_blur = true;
 
@@ -106,6 +108,8 @@ VipsImage* PF::GaussBlurPar::build(std::vector<VipsImage*>& in, int first,
 	double radius2 = radius.get();
 	for( unsigned int l = 1; l <= level; l++ )
 		radius2 /= 2;
+
+  if( radius2 < 0.1 ) radius2 = 0.2;
 
 	/*
 	if( (get_render_mode() == PF_RENDER_PREVIEW) &&
