@@ -240,12 +240,13 @@ void PF::ImageProcessor::run()
       // Process the request
       switch( request.request ) {
       case IMAGE_PIPELINE_SET_LEVEL:
-        if( !request.pipeline ) continue;
-        if( request.level < 0 ) continue;
+        if( !request.pipeline ) break;
+        if( request.level < 0 ) break;
         request.pipeline->set_level( request.level );
         break;
       case IMAGE_REBUILD:
-        if( !request.image ) continue;
+        if( !request.image ) break;
+        std::cout<<"IMAGE_REBUILD started"<<std::endl;
         signal_status_updating.emit();
         //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
         request.image->lock();
@@ -259,11 +260,13 @@ void PF::ImageProcessor::run()
         request.image->do_update( request.pipeline );
         //std::cout<<"PF::ImageProcessor::run(): unlocking image..."<<std::endl;
         request.image->unlock();
+        //sleep(5);
+        std::cout<<"IMAGE_REBUILD finished"<<std::endl;
         //std::cout<<"PF::ImageProcessor::run(): image unlocked"<<std::endl;
         //request.image->rebuild_done_signal();
         break;
       case IMAGE_EXPORT:
-        if( !request.image ) continue;
+        if( !request.image ) break;
         complete_caching( request.image );
         signal_status_exporting.emit();
         request.image->lock();
@@ -274,7 +277,7 @@ void PF::ImageProcessor::run()
         request.image->export_done_signal();
         break;
       case IMAGE_SAMPLE:
-        if( !request.image ) continue;
+        if( !request.image ) break;
         //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
         //request.image->sample_lock();
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): image locked."<<std::endl;
@@ -285,23 +288,32 @@ void PF::ImageProcessor::run()
         //std::cout<<"PF::ImageProcessor::run(IMAGE_SAMPLE): sampling done."<<std::endl;
         break;
       case IMAGE_UPDATE:
-        if( !request.pipeline ) continue;
+        if( !request.pipeline ) break;
+        std::cout<<"IMAGE_UPDATE started"<<std::endl;
         signal_status_processing.emit();
         //std::cout<<"PF::ImageProcessor::run(): updating area."<<std::endl;
         request.pipeline->sink( request.area );
         //std::cout<<"PF::ImageProcessor::run(): updating area done."<<std::endl;
+        std::cout<<"IMAGE_UPDATE finished"<<std::endl;
         break;
       case IMAGE_REDRAW_START:
+        if( !request.sink ) break;
+        std::cout<<"IMAGE_REDRAW_START started"<<std::endl;
         signal_status_processing.emit();
         request.sink->process_start( request.area );
+        std::cout<<"IMAGE_REDRAW_START finished"<<std::endl;
         break;
       case IMAGE_REDRAW_END:
+        if( !request.sink ) break;
+        std::cout<<"IMAGE_REDRAW_END started"<<std::endl;
         request.sink->process_end( request.area );
+        std::cout<<"IMAGE_REDRAW_END finished"<<std::endl;
         break;
       case IMAGE_REDRAW:
         // Get exclusive access to the request data structure
         //g_mutex_lock( request.mutex );
-        if( !request.sink ) continue;
+        if( !request.sink ) break;
+        std::cout<<"IMAGE_REDRAW started"<<std::endl;
 
         //std::cout<<"PF::ImageProcessor::run(): processing area "
         //	       <<request.area.width<<","<<request.area.height
@@ -314,10 +326,11 @@ void PF::ImageProcessor::run()
         // Notify that the processing is finished
         //g_cond_signal( request.done );
         //g_mutex_unlock( request.mutex );
+        std::cout<<"IMAGE_REDRAW finished"<<std::endl;
         break;
       case IMAGE_MOVE_LAYER: {
-        if( !request.image ) continue;
-        if( !request.layer ) continue;
+        if( !request.image ) break;
+        if( !request.layer ) break;
         if( !request.dnd_dest_layer_list ) break;
         signal_status_processing.emit();
         request.image->lock();
@@ -356,7 +369,7 @@ void PF::ImageProcessor::run()
         request.image->remove_layer_done_signal();
         break;
       case IMAGE_DESTROY:
-        if( !request.image ) continue;
+        if( !request.image ) break;
         //delete request.image;
         request.image->do_destroy();
         //request.image->destroy_done_signal();
