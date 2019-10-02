@@ -67,8 +67,6 @@ void PF::SharpenConfigGUI::do_update()
     PropertyBase* prop = par->get_property( "method" );
     if( !prop )  return;
 
-    //std::cout<<"PF::SharpenConfigGUI::do_update() called."<<std::endl;
-
     if( usmControlsBox.get_parent() == &controlsBox )
       controlsBox.remove( usmControlsBox );
     if( rlControlsBox.get_parent() == &controlsBox )

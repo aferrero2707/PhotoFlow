@@ -430,7 +430,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   g_object_unref( gamma );
 
 
-  std::cout<<"RawDeveloperPar::build(): before vips_resize()"<<std::endl;
+  //std::cout<<"RawDeveloperPar::build(): before vips_resize()"<<std::endl;
   VipsImage* scaled = out2;
   if( true && level > 0 ) {
     float scale = 1;
@@ -443,7 +443,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
     }
     PF_UNREF(out2, "RawDeveloperPar::build(): out2 unref after vips_resize()");
   }
-  std::cout<<"RawDeveloperPar::build(): after vips_resize()"<<std::endl;
+  //std::cout<<"RawDeveloperPar::build(): after vips_resize()"<<std::endl;
 
 
   set_image_hints( scaled );
