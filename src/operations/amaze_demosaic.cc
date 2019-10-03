@@ -65,14 +65,14 @@ void PF::amaze_demosaic_PF(VipsRegion* ir, VipsRegion* out, PF::AmazeDemosaicPar
   float* p = (float*)VIPS_REGION_ADDR( ir, offsx, offsy );
   int rowstride = VIPS_REGION_LSKIP(ir) / sizeof(float);
 
-  // Copy the raw pixel data from the input region
+  /*// Copy the raw pixel data from the input region
   float* rawbuf = new float[rw*rh];
   for( int y = 0; y < ir->valid.height; y++ ) {
     float* ptr = (float*)VIPS_REGION_ADDR( out, out->valid.left, y+out->valid.top );
     for( int x = 0, xx = 0; x < ir->valid.width; x++, xx+=2 ) {
 
     }
-  }
+  }*/
 
   //librtprocess::array2D<float> rawData( w, h, rw, rh, p, rowstride, offsx, offsy, ARRAY2D_BYREFERENCE );
   PF::PixelBuffer rawData(p, rw, rh, rowstride, offsy, offsx);
@@ -80,13 +80,13 @@ void PF::amaze_demosaic_PF(VipsRegion* ir, VipsRegion* out, PF::AmazeDemosaicPar
   PF::rp_roi_rect_t roi_rect_in = { 0, 0, ir->valid.width, ir->valid.height };
   PF::rp_roi_t* roi = PF::rp_roi_new_from_data( &roi_rect, &roi_rect_in, 2, rowstride, 1, p );
   if( false && offsx < 20 && offsy < 20 ) {
-  std::cout<<"top= "<<ir->valid.top<<std::endl;
-  std::cout<<"left="<<ir->valid.left<<std::endl;
-  std::cout<<"roi->data[0]["<<ir->valid.top<<"]["<<ir->valid.left<<"="<<roi->data[0][ir->valid.top][ir->valid.left]<<std::endl;
-  std::cout<<"p[0]="<<p[0]<<std::endl;
-  std::cout<<"p[1]="<<p[1]<<std::endl;
-  std::cout<<"p[2]="<<p[2]<<std::endl;
-  std::cout<<"p[3]="<<p[3]<<std::endl;
+    std::cout<<"top= "<<ir->valid.top<<std::endl;
+    std::cout<<"left="<<ir->valid.left<<std::endl;
+    std::cout<<"roi->data[0]["<<ir->valid.top<<"]["<<ir->valid.left<<"="<<roi->data[0][ir->valid.top][ir->valid.left]<<std::endl;
+    std::cout<<"p[0]="<<p[0]<<std::endl;
+    std::cout<<"p[1]="<<p[1]<<std::endl;
+    std::cout<<"p[2]="<<p[2]<<std::endl;
+    std::cout<<"p[3]="<<p[3]<<std::endl;
 
     std::cout<<"amaze_demosaic_PF: RAW image = "<<ir->im<<std::endl;
     std::cout<<"amaze_demosaic_PF: RAW size = "<<w<<" x "<<h<<std::endl;
@@ -112,7 +112,7 @@ void PF::amaze_demosaic_PF(VipsRegion* ir, VipsRegion* out, PF::AmazeDemosaicPar
   PF::PixelBuffer green(pg, rw, rh, rowstride, offsy, offsx);
   PF::PixelBuffer blue(pb, rw, rh, rowstride, offsy, offsx);
 
-  if( true && offsx < 20 && offsy < 20 ) {
+  if( false && offsx < 20 && offsy < 20 ) {
     std::cout<<"amaze_demosaic_PF: output image = "<<out->im<<std::endl;
     std::cout<<"amaze_demosaic_PF: output size = "<<w<<" x "<<h<<std::endl;
     std::cout<<"amaze_demosaic_PF: output region = "<<rw<<" x "<<rh<<" + "<<offsx<<" + "<<offsy<<std::endl;

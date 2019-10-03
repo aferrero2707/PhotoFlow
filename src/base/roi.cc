@@ -203,5 +203,19 @@ PF::rp_roi_t* PF::rp_roi_new_from_data(PF::rp_roi_rect_t* rect, PF::rp_roi_rect_
 
 void PF::rp_roi_free(PF::rp_roi_t* roi)
 {
+  if( !roi ) return;
+  int ch;
+  int nchannels = roi->nchannels;
+  int top = roi->rect.top;
 
+  if( roi->buf ) pf_free_align( roi->buf );
+
+  if( roi->data ) {
+    for( ch = 0; ch < nchannels; ch+=1 ) {
+      pf_free_align( roi->data[ch] + top );
+    }
+    free( roi->data );
+  }
+
+  free(roi);
 }
