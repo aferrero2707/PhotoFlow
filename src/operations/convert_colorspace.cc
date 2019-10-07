@@ -155,6 +155,9 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   if( iccprof_in )  {
     in_profile = iccprof_in->get_profile();
   }
+#ifndef NDEBUG
+  std::cout<<"ConvertColorspacePar::build(): iccprof_in="<<iccprof_in<<std::endl;
+#endif
 
   /*
   void *data;
@@ -213,12 +216,17 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
     out_profile = iccprof->get_profile();
   }
   //std::cout<<"ConvertColorspacePar::build(): out_mode_changed="<<out_mode_changed
-  //    <<"  out_changed="<<out_changed<<"  out_profile="<<out_profile<<std::endl;
+  //    <<"  out_changed="<<out_changed<<"  iccprof="<<iccprof
+  //    <<"  out_profile="<<out_profile<<std::endl;
   //std::cout<<"  out_profile_mode="<<out_profile_mode.get_enum_value().first<<std::endl;
 
   if( assign.get() ) {
-    VipsImage* out = image;
-    PF_REF( out, "ConvertColorspacePar::build(): out ref for profile assignment" );
+    VipsImage* out = NULL;
+    if( vips_copy(image, &out, NULL) ) {
+      std::cout<<"ConvertColorspacePar::build(): vips_copy() failed on profile assignment."<<std::endl;
+      PF_REF( image, "ConvertColorspacePar::build(): image ref for profile assignment" );
+      return image;
+    }
     PF::set_icc_profile( out, iccprof );
     return out;
   }
@@ -228,6 +236,9 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   if( iccprof_in && iccprof && iccprof_in->equals_to(iccprof) ) {
     matching = true;
   }
+#ifndef NDEBUG
+  std::cout<<"ConvertColorspacePar::build(): matching="<<matching<<std::endl;
+#endif
 
   if( matching ) {
     PF_REF( in[first], "ConvertColorspacePar::build(): input image ref for equal input and output profiles" );
