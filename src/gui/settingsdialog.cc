@@ -44,6 +44,7 @@ PF::SettingsDialog::SettingsDialog():
       cm_display_profile_bpc_selector( _("black point compensation") ),
       apply_default_preset_label(_("apply default processing profile")),
       save_sidecar_files_label(_("save sidecar files")),
+      tile_cache_size_label(_("tile cache size (MB)")),
       ui_frame(_("User interface options")),
       ui_use_system_theme_label(_("Use system theme")),
       ui_use_inverted_icons_label(_("Use inverted icons")),
@@ -214,6 +215,21 @@ PF::SettingsDialog::SettingsDialog():
   save_sidecar_files_label.set_tooltip_text(_("Save sidecar files when exporting to raster formats"));
   general_box.pack_start( save_sidecar_files_hbox, Gtk::PACK_SHRINK, 10 );
 
+  tile_cache_size_hbox1.pack_start( tile_cache_size_num_label, Gtk::PACK_SHRINK, 8 );
+  tile_cache_size_hbox2.pack_start( tile_cache_size_scale, Gtk::PACK_SHRINK );
+  tile_cache_size_hbox2.pack_start( tile_cache_size_label, Gtk::PACK_SHRINK );
+  tile_cache_size_label.set_tooltip_text(_("Size in Megabytes of the tile cache"));
+  tile_cache_size_scale.set_size_request(200,0);
+  tile_cache_size_scale.set_range(500, 10000);
+  tile_cache_size_scale.set_increments(10, 100);
+  tile_cache_size_scale.set_draw_value(false);
+  tile_cache_size_vbox.pack_start( tile_cache_size_hbox1, Gtk::PACK_SHRINK );
+  tile_cache_size_vbox.pack_start( tile_cache_size_hbox2, Gtk::PACK_SHRINK );
+  general_box.pack_start( tile_cache_size_vbox, Gtk::PACK_SHRINK, 10 );
+  tile_cache_size_scale.get_adjustment()->signal_value_changed().connect(
+      sigc::mem_fun(*this, &SettingsDialog::tile_size_value_changed));
+
+
   ui_use_system_theme_hbox.pack_start( ui_use_system_theme_check, Gtk::PACK_SHRINK );
   ui_use_system_theme_hbox.pack_start( ui_use_system_theme_label, Gtk::PACK_SHRINK );
   ui_use_system_theme_hbox.set_tooltip_text(_("Use the system-provided GTK theme (restart needed)"));
@@ -285,6 +301,14 @@ void PF::SettingsDialog::open()
 }
 
 
+void PF::SettingsDialog::tile_size_value_changed()
+{
+  char tstr[501];
+  snprintf(tstr,500,"%d", (int)tile_cache_size_scale.get_value());
+  tile_cache_size_num_label.set_text(tstr);
+}
+
+
 void PF::SettingsDialog::load_settings()
 {
   profile_type_t ptype = PF::PhotoFlow::Instance().get_options().get_working_profile_type();
@@ -331,6 +355,9 @@ void PF::SettingsDialog::load_settings()
 
   std::cout<<"PF::PhotoFlow::Instance().get_options().get_save_sidecar_files(): "<<PF::PhotoFlow::Instance().get_options().get_save_sidecar_files()<<std::endl;
   save_sidecar_files_check.set_active( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 );
+
+  std::cout<<"PF::PhotoFlow::Instance().get_options().get_tile_cache_size(): "<<PF::PhotoFlow::Instance().get_options().get_tile_cache_size()<<std::endl;
+  tile_cache_size_scale.set_value( PF::PhotoFlow::Instance().get_options().get_tile_cache_size() );
 
   std::cout<<"PF::PhotoFlow::Instance().get_options().get_ui_layers_list_placement(): "<<
       PF::PhotoFlow::Instance().get_options().get_ui_layers_list_placement()<<std::endl;
@@ -412,6 +439,8 @@ void PF::SettingsDialog::save_settings()
     PF::PhotoFlow::Instance().get_options().set_save_sidecar_files( 1 );
   else
     PF::PhotoFlow::Instance().get_options().set_save_sidecar_files( 0 );
+
+  PF::PhotoFlow::Instance().get_options().set_tile_cache_size( tile_cache_size_scale.get_value() );
 
   if( ui_layers_list_on_right_check.get_active() )
     PF::PhotoFlow::Instance().get_options().set_ui_layers_list_placement( PF::PF_LAYERS_LIST_PLACEMENT_RIGHT );

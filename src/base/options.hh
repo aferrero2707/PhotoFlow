@@ -64,6 +64,8 @@ enum layers_list_placement_t
     int display_profile_intent;
     bool display_profile_bpc;
 
+    int tile_cache_size;
+
     Glib::ustring last_visited_image_folder;
     Glib::ustring last_visited_preset_folder;
     Glib::ustring last_visited_icc_folder;
@@ -113,6 +115,9 @@ enum layers_list_placement_t
       display_profile_bpc = n;
     }
     bool get_display_profile_bpc() { return display_profile_bpc; }
+
+    int get_tile_cache_size() { return tile_cache_size; }
+    void set_tile_cache_size(int sz){ tile_cache_size = sz; }
 
     // last visited folders
     void set_last_visited_image_folder( std::string f ) { last_visited_image_folder = f; }

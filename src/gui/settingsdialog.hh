@@ -97,6 +97,13 @@ class SettingsDialog : public Gtk::Dialog
   Gtk::Label save_sidecar_files_label;
   Gtk::CheckButton save_sidecar_files_check;
 
+  Gtk::HBox tile_cache_size_hbox1;
+  Gtk::HBox tile_cache_size_hbox2;
+  Gtk::VBox tile_cache_size_vbox;
+  Gtk::Label tile_cache_size_label;
+  Gtk::Label tile_cache_size_num_label;
+  Gtk::HScale tile_cache_size_scale;
+
 
   Gtk::Frame ui_frame;
   Gtk::VBox ui_vbox;
@@ -128,6 +135,8 @@ public:
   virtual ~SettingsDialog();
 
   void open();
+
+  void tile_size_value_changed();
 
   void load_settings();
   void save_settings();

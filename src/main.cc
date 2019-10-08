@@ -93,6 +93,7 @@ extern GType vips_clone_stamp_get_type( void );
 extern GType vips_lensfun_get_type( void );
 extern GType vips_perspective_get_type( void );
 extern GType phf_tile_cache_get_type( void );
+extern void phf_tile_pool_set_size( int );
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
@@ -266,6 +267,8 @@ int main (int argc, char *argv[])
   if(argc>1) std::cout<<"argv[1]"<<argv[1]<<")\n";
 
   vips__leak = 1;
+
+  phf_tile_pool_set_size( PF::PhotoFlow::Instance().get_options().get_tile_cache_size() );
 
 //return 0;
 #ifdef _WIN32

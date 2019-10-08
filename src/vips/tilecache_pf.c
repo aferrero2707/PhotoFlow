@@ -126,13 +126,22 @@ typedef struct _PhFTile {
 
 /* The global pool of tiles available to the different caches
  */
-#define PHF_MAX_NUMBER_OF_TILES 5000
+static int _requested_number_of_tiles = 0;
+static int PHF_MAX_NUMBER_OF_TILES = 0;
 typedef struct _PhFTilePool {
-  PhFTile tiles[PHF_MAX_NUMBER_OF_TILES];
+  PhFTile* tiles;
 
   GMutex *lock;     /* Lock the global pool */
   int debug;
 } PhFTilePool;
+
+void phf_tile_pool_set_size(int s)
+{
+  ssize_t tile_size = sizeof(float) * 3 * PHF_TILE_SIZE * PHF_TILE_SIZE;
+  ssize_t ts = s;
+  _requested_number_of_tiles = (ts * 1024 * 1024) / tile_size;
+  printf("phf_tile_pool_set_size(): number of tiles set to %d\n", _requested_number_of_tiles);
+}
 
 
 static PhFTilePool phf_tile_pool;
@@ -146,6 +155,14 @@ static void phf_tile_pool_init()
   if( phf_tile_pool_initialised == 1 ) return;
 
   printf("phf_tile_pool_init(): called\n");
+
+  g_assert(_requested_number_of_tiles>0);
+
+  phf_tile_pool.tiles = (PhFTile*)malloc(sizeof(PhFTile) * _requested_number_of_tiles);
+  if( !phf_tile_pool.tiles ) return;
+  PHF_MAX_NUMBER_OF_TILES = _requested_number_of_tiles;
+  printf("phf_tile_pool_init(): allocated %d tiles\n", PHF_MAX_NUMBER_OF_TILES);
+
 
   for(i = 0; i < PHF_MAX_NUMBER_OF_TILES; i++) {
     phf_tile_pool.tiles[i].cache = NULL;
