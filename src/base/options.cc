@@ -40,7 +40,7 @@ PF::Options::Options()
   display_profile_type = PF::PF_DISPLAY_PROF_sRGB;
   display_profile_intent = INTENT_RELATIVE_COLORIMETRIC;
 
-  tile_cache_size = 1000 * 1024 * 1024;
+  tile_cache_size = 1000;
 
   save_sidecar_files = 0;
   use_default_preset = 0;
