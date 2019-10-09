@@ -158,7 +158,10 @@ static void phf_tile_pool_init()
 
   g_assert(_requested_number_of_tiles>0);
 
+  printf("phf_tile_pool_init(): requesting %d tiles\n", (int)_requested_number_of_tiles);
+
   phf_tile_pool.tiles = (PhFTile*)malloc(sizeof(PhFTile) * _requested_number_of_tiles);
+  printf("phf_tile_pool_init(): tiles pool: %p\n", (void*)(phf_tile_pool.tiles));
   if( !phf_tile_pool.tiles ) return;
   PHF_MAX_NUMBER_OF_TILES = _requested_number_of_tiles;
   printf("phf_tile_pool_init(): allocated %d tiles\n", PHF_MAX_NUMBER_OF_TILES);
