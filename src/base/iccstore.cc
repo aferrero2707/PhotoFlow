@@ -961,6 +961,9 @@ void PF::ICCTransform::apply(float* in, float* out, int n)
     float* in2 = in; float* out2 = out;
     for(int i = 0; i < n; i++) {
       float r = in2[0], g = in2[1], b = in2[2];
+      if(std::isnan(r)) r = 0;
+      if(std::isnan(g)) g = 0;
+      if(std::isnan(b)) b = 0;
       float outr, outg, outb;
       if(itrc_lut) {
         r = (r>1) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), r ) :
@@ -973,6 +976,9 @@ void PF::ICCTransform::apply(float* in, float* out, int n)
       outr = rgb2rgb[0][0]*r + rgb2rgb[0][1]*g + rgb2rgb[0][2]*b;
       outg = rgb2rgb[1][0]*r + rgb2rgb[1][1]*g + rgb2rgb[1][2]*b;
       outb = rgb2rgb[2][0]*r + rgb2rgb[2][1]*g + rgb2rgb[2][2]*b;
+      if(std::isnan(outr)) outr = 0;
+      if(std::isnan(outg)) outg = 0;
+      if(std::isnan(outb)) outb = 0;
       if(trc_lut) {
         outr = (outr>1) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outr ) :
             ( (outr<0) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outr ) : trc_lut[outr*255] );
