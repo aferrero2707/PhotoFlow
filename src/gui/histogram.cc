@@ -383,7 +383,7 @@ void PF::Histogram::update( VipsRect* area )
   }
 
   //std::cout<<"before vips_sink()"<<std::endl;
-  //vips_sink( image, histogram_start, histogram_scan, histogram_stop, this, NULL );
+  vips_sink( image, histogram_start, histogram_scan, histogram_stop, this, NULL );
   //std::cout<<"after vips_sink()"<<std::endl;
   PF_UNREF( image, "Histogram::update(): image unref after vips_sink()" );
 

@@ -110,6 +110,19 @@ PF::OpParBase::OpParBase():
 }
 
 
+
+PF::OpParBase::~OpParBase()
+{
+  //for(unsigned int i = 0; i < outvec.size(); i++ ) {
+  //  PF_UNREF( outvec[i], "~OpParBase(): previous outputs unref" );
+  //}
+  //#ifndef NDEBUG
+  //std::cout<<"~OpParBase(): deleting operation "<<(void*)this<<" ("<<get_type()<<")"<<std::endl;
+  //#endif
+}
+
+
+
 PF::PropertyBase* PF::OpParBase::get_property(std::string name)
 {
   std::list<PropertyBase*>::iterator pi;

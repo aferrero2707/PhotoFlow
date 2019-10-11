@@ -432,7 +432,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
 
   //std::cout<<"RawDeveloperPar::build(): before vips_resize()"<<std::endl;
   VipsImage* scaled = out2;
-  if( true && level > 0 ) {
+  if( false && level > 0 ) {
     float scale = 1;
     for(unsigned int l = 0; l < level; l++) scale /= 2;
     VipsKernel kernel = VIPS_KERNEL_CUBIC;

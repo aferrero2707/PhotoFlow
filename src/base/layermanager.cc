@@ -1096,10 +1096,10 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         // if the blender was modified we rebuild the blended image using the existing
         // output of the current operation
         if( par->has_opacity() && blender && pipelineblender) {
-//#ifndef NDEBUG
+#ifndef NDEBUG
           std::cout<<"LayerManager::rebuild_chain(): rebuilding blender output for layer \""<<l->get_name()
                   <<"\""<<std::endl;
-//#endif
+#endif
           if( node->blended ) {
             std::cout<<"LayerManager::rebuild_chain(): vips_image_invalidate_all() called on node->blended"<< std::endl;
             vips_image_invalidate_all( node->blended );
@@ -1192,44 +1192,6 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
     //PF::colorspace_t cs = PF::convert_colorspace( pipelinepar->get_interpretation() );
     //std::cout<<"  par: "<<pipelinepar<<std::endl;
     //std::cout<<"  cs after set_image_hints: "<<cs<<std::endl;
-
-    if( false && l->is_cached() &&
-        (l->get_cache_buffer() != NULL) &&
-        l->get_cache_buffer()->is_completed() ) {
-      // The layer is cached, no need to process the underlying layers
-      // We only need to associate the cached image with the blender
-      unsigned int level = pipeline->get_level();
-      PF::PyramidLevel* pl = l->get_cache_buffer()->get_pyramid().get_level( level );
-      if( pl && pl->image ) {
-        pipeline->set_level( level );
-        VipsImage* newimg = pl->image;
-        VipsImage* blendedimg;
-        pipeline->set_image( newimg, l->get_id() );
-        if( par->has_opacity() && blender && pipelineblender) {
-          //pipelineblender->import_settings( blender );
-          VipsImage* omap = NULL;
-          if( previous && !l->omap_layers.empty() ) {
-            omap = rebuild_chain( pipeline, PF_COLORSPACE_GRAYSCALE, 
-                previous->Xsize, previous->Ysize,
-                l->omap_layers, NULL );
-          }
-          std::vector<VipsImage*> in;
-          // we add the previous image to the list of inputs, even if it is NULL
-          in.push_back( previous );
-          in.push_back( newimg );
-          blendedimg = pipelineblender->build( in, 0, NULL, omap, level );
-        } else {
-          blendedimg = newimg;
-          PF_REF(blendedimg,"LayerManager::rebuild_chain(): blendedimg ref");
-        }
-        pipeline->set_blended( blendedimg, l->get_id() );
-        out = blendedimg;
-        //previous = newimg;
-        previous_layer = l;
-        continue;
-      }
-    }
-
 
     /* At this point there are two possibilities:
        1. the layer has no sub-layers, in which case it is combined with the output
@@ -1358,49 +1320,40 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       //if( par->get_config_ui() ) {
       //  par->get_config_ui()->update_properties();
       //}
-//#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
-//#endif
+#endif
 
       // We import the parameters from the "master" operation associated to the layer,
       // and which is directly connected with the GUI controls
       //pipelinepar->import_settings( par );
 
       unsigned int level = pipeline->get_level();
-      newimgvec = pipelinepar->build_many_internal( in, 0, imap, omap, level );
-      newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
+
+      PF::PipelineNode* node_compat =
+          image->get_compatible_node(l, pipeline, par->get_real_level(level));
+
+      if( node_compat ) {
+        newimgvec = node_compat->images;
+        for(unsigned int ii = 0; ii < newimgvec.size(); ii++) {
+          if( newimgvec[ii] ) PF_REF(newimgvec[ii], "rebuild_chain: newimgvec[ii] ref");
+        }
+        newimg = node_compat->image;
+//#ifndef NDEBUG
+      std::cout<<"[rebuild_chain]: reusing existing node for layer \""<<l->get_name()<<"\"."<<std::endl;
+//#endif
+      } else {
+        newimgvec = pipelinepar->build_many_internal( in, 0, imap, omap, level );
+        newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
+      }
       //cs = PF::convert_colorspace( pipelinepar->get_interpretation() );
       //std::cout<<"  par: "<<pipelinepar<<std::endl;
       //std::cout<<"  cs after build: "<<cs<<std::endl;
       //cs = PF::convert_colorspace( newimg->Type );
       //std::cout<<"  cs from newimg: "<<cs<<std::endl;
-//#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"... layer \""<<l->get_name()<<"\" finished"<<std::endl;
-//#endif
-
-      if( false && (newimg != NULL) && (newimgvec.size() == 1) && l->is_cached() &&
-          (l->get_cache_buffer() != NULL) &&
-          (l->get_cache_buffer()->is_initialized() == false) ) {
-        // The image is being loaded, and the current layer needs to be cached
-        // In this case we cache the data immediately and we use the cached
-        // image instead of the newly built one
-        PF::CacheBuffer* buf = l->get_cache_buffer();
-        buf->set_image( newimg );
-        std::cout<<"Writing cache buffer for layer "<<l->get_name()<<std::endl;
-        double time1 = g_get_real_time();
-        buf->write();
-        buf->set_initialized( true );
-        double time2 = g_get_real_time();
-        std::cout<<"Buffer saved in "<<(time2-time1)/1000000<<" seconds."<<std::endl;
-        PF_UNREF( newimg, "rebuild_chain(): newimg unref after cache buffer filling" );
-
-        PF::PyramidLevel* pl = buf->get_pyramid().get_level( level );
-        if( pl && pl->image ) {
-          pipeline->set_level( level );
-          newimg = pl->image;
-          newimgvec[0] = pl->image;
-        }
-      }
+#endif
 
       pipelinepar->clear_modified();
       pipeline->set_level( level );
@@ -1483,16 +1436,16 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
       }
 
       //if( par->get_config_ui() ) par->get_config_ui()->update_properties();
-//#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"Building layer \""<<l->get_name()<<"\"..."<<std::endl;
-//#endif
+#endif
       unsigned int level = pipeline->get_level();
       //pipelinepar->import_settings( par );
       newimgvec = pipelinepar->build_many_internal( in, 0, imap, omap, level );
       newimg = (newimgvec.empty()) ? NULL : newimgvec[0];
-//#ifndef NDEBUG
+#ifndef NDEBUG
       std::cout<<"... layer \""<<l->get_name()<<"\" finished"<<std::endl;
-//#endif
+#endif
 
       if( false && (newimg != NULL) && (newimgvec.size() == 1) && !image->is_loaded() && l->is_cached() &&
           (l->get_cache_buffer() != NULL) &&
@@ -1561,9 +1514,41 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 #ifndef NDEBUG
       std::cout<<"rebuild_chain(): Layer \""<<l->get_name()<<"\" newimgvec.size()="<<newimgvec.size()<<std::endl;
 #endif
-      pipeline->set_images( newimgvec, l->get_id() );
+      unsigned int level = pipeline->get_level();
+      unsigned int level_real = par->get_real_level(level);
+      pipeline->set_images( newimgvec, l->get_id(), level_real );
+
+      bool needs_shrinking = (level_real != level) && par->do_shirnk_on_blend();
+      if( needs_shrinking ) {
+        float scale = 1;
+        for(unsigned int l = 0; l < level; l++) scale /= 2;
+        std::cout<<"rebuild_chain(): scaling layer \""<<l->get_name()<<"\" by "<<scale<<std::endl;
+        VipsKernel kernel = VIPS_KERNEL_CUBIC;
+        VipsImage* scaled;
+        if( vips_resize(newimg, &scaled, scale, "kernel", kernel, NULL) ) {
+          std::cout<<"rebuild_chain(): vips_resize() failed."<<std::endl;
+          //PF_UNREF( interpolate, "ScalePar::build(): interpolate unref" );
+        } else {
+          newimg = scaled;
+        }
+
+        if( scaled && scale < 0.5 ) {
+          VipsAccess acc = VIPS_ACCESS_RANDOM;
+          int threaded = 1, persistent = 1;
+          VipsImage* cached;
+          if( !phf_tilecache(scaled, &cached,
+              "access", acc, "threaded", threaded,
+              "persistent", persistent, NULL) ) {
+            PF_UNREF(scaled, "rebuild_chan: scaled unref");
+            newimg = cached;
+            std::cout<<"rebuild_chain(): added tilecache after scaling layer \""<<l->get_name()<<"\" by "<<scale<<std::endl;
+          }
+        }
+      } else {
+        PF_REF(newimg,"LayerManager::rebuild_chain(): newimg ref");
+      }
+
       if( par->has_opacity() && blender && pipelineblender) {
-        unsigned int level = pipeline->get_level();
         //pipelineblender->import_settings( blender );
 
         //std::cout<<"rebuild_chain(): blending images for layer \""<<l->get_name()<<"\""<<std::endl;
@@ -1572,6 +1557,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
         in.push_back( previous );
         in.push_back( newimg );
         blendedimg = pipelineblender->build( in, 0, NULL, omap, level );
+        PF_UNREF(newimg,"LayerManager::rebuild_chain(): newimg unref");
 #ifndef NDEBUG
         if(blendedimg)
           std::cout<<"rebuild_chain(): Layer \""<<l->get_name()<<"\" level="<<level
@@ -1579,7 +1565,7 @@ VipsImage* PF::LayerManager::rebuild_chain( PF::Pipeline* pipeline, colorspace_t
 #endif
       } else {
         blendedimg = newimg;
-        PF_REF(blendedimg,"LayerManager::rebuild_chain(): blendedimg ref");
+        //PF_REF(blendedimg,"LayerManager::rebuild_chain(): blendedimg ref");
       }
 #ifndef NDEBUG
       std::cout<<"rebuild_chain(): Layer \""<<l->get_name()<<"\"  blended: "<<blendedimg<<std::endl;

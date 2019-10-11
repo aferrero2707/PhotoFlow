@@ -196,6 +196,8 @@ public:
     return(pipelines[n]);
   }
 
+  PipelineNode* get_compatible_node(Layer* layer, Pipeline* pipeline, unsigned int level);
+
   bool is_async() { return async; }
   void set_async( bool flag ) { async = flag; }
 

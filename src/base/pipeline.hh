@@ -57,8 +57,9 @@ namespace PF
     std::vector<VipsImage*> images;
     VipsImage* blended;
     int input_id;
+    unsigned int level_real; // zoom level at which the images were actually built
 
-    PipelineNode(): processor( NULL ), blender( NULL ), image( NULL ), blended( NULL ), input_id( -1 ) {}
+    PipelineNode(): processor(NULL), blender(NULL), image(NULL), blended(NULL), input_id(-1), level_real(0) {}
     ~PipelineNode();
   };
 
@@ -147,8 +148,8 @@ namespace PF
     void set_op_caching_enabled(bool flag) { op_caching_enabled = flag; }
 
     PipelineNode* set_node( Layer* layer, Layer* input_layer );
-    void set_image( VipsImage* img, unsigned int id );
-    void set_images( std::vector<VipsImage*> img, unsigned int id );
+    void set_image( VipsImage* img, unsigned int id, unsigned int level_real );
+    void set_images( std::vector<VipsImage*> img, unsigned int id, unsigned int level_real );
     void set_blended( VipsImage* img, unsigned int id );
     void remove_node( unsigned int id );
 
