@@ -295,12 +295,12 @@ void PF::AuxControlsGroup::update()
 
 void PF::AuxControlsGroup::set_control(PF::Layer* layer, PF::OperationConfigGUI* g)
 {
-  // Make sure the image is not being rebuilt
-  editor->get_image()->lock();
   if( g == gui ) {
-    editor->get_image()->unlock();
     return;
   }
+
+  // Make sure the image is not being rebuilt
+  editor->get_image()->lock();
 
   clear();
 
