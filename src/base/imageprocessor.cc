@@ -246,7 +246,7 @@ void PF::ImageProcessor::run()
         break;
       case IMAGE_REBUILD:
         if( !request.image ) break;
-        std::cout<<"IMAGE_REBUILD started"<<std::endl;
+        //std::cout<<"IMAGE_REBUILD started"<<std::endl;
         signal_status_updating.emit();
         //std::cout<<"PF::ImageProcessor::run(): locking image..."<<std::endl;
         request.image->lock();
@@ -261,7 +261,7 @@ void PF::ImageProcessor::run()
         //std::cout<<"PF::ImageProcessor::run(): unlocking image..."<<std::endl;
         request.image->unlock();
         //sleep(5);
-        std::cout<<"IMAGE_REBUILD finished"<<std::endl;
+        //std::cout<<"IMAGE_REBUILD finished"<<std::endl;
         //std::cout<<"PF::ImageProcessor::run(): image unlocked"<<std::endl;
         //request.image->rebuild_done_signal();
         break;
@@ -289,31 +289,31 @@ void PF::ImageProcessor::run()
         break;
       case IMAGE_UPDATE:
         if( !request.pipeline ) break;
-        std::cout<<"IMAGE_UPDATE started"<<std::endl;
+        //std::cout<<"IMAGE_UPDATE started"<<std::endl;
         signal_status_processing.emit();
         //std::cout<<"PF::ImageProcessor::run(): updating area."<<std::endl;
         request.pipeline->sink( request.area );
         //std::cout<<"PF::ImageProcessor::run(): updating area done."<<std::endl;
-        std::cout<<"IMAGE_UPDATE finished"<<std::endl;
+        //std::cout<<"IMAGE_UPDATE finished"<<std::endl;
         break;
       case IMAGE_REDRAW_START:
         if( !request.sink ) break;
-        std::cout<<"IMAGE_REDRAW_START started"<<std::endl;
+        //std::cout<<"IMAGE_REDRAW_START started"<<std::endl;
         signal_status_processing.emit();
         request.sink->process_start( request.area );
-        std::cout<<"IMAGE_REDRAW_START finished"<<std::endl;
+        //std::cout<<"IMAGE_REDRAW_START finished"<<std::endl;
         break;
       case IMAGE_REDRAW_END:
         if( !request.sink ) break;
-        std::cout<<"IMAGE_REDRAW_END started"<<std::endl;
+        //std::cout<<"IMAGE_REDRAW_END started"<<std::endl;
         request.sink->process_end( request.area );
-        std::cout<<"IMAGE_REDRAW_END finished"<<std::endl;
+        //std::cout<<"IMAGE_REDRAW_END finished"<<std::endl;
         break;
       case IMAGE_REDRAW:
         // Get exclusive access to the request data structure
         //g_mutex_lock( request.mutex );
         if( !request.sink ) break;
-        std::cout<<"IMAGE_REDRAW started"<<std::endl;
+        //std::cout<<"IMAGE_REDRAW started"<<std::endl;
 
         //std::cout<<"PF::ImageProcessor::run(): processing area "
         //	       <<request.area.width<<","<<request.area.height
@@ -326,7 +326,7 @@ void PF::ImageProcessor::run()
         // Notify that the processing is finished
         //g_cond_signal( request.done );
         //g_mutex_unlock( request.mutex );
-        std::cout<<"IMAGE_REDRAW finished"<<std::endl;
+        //std::cout<<"IMAGE_REDRAW finished"<<std::endl;
         break;
       case IMAGE_MOVE_LAYER: {
         if( !request.image ) break;

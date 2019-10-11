@@ -208,7 +208,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
   } else {//if( pmode == PF::PROF_MODE_CUSTOM ) {
     ptype = (profile_type_t)out_profile_type.get_enum_value().first;
     trc_type = (TRC_type)out_trc_type.get_enum_value().first;
-    std::cout<<"ConvertColorspacePar::build(): Getting built-in profile: "<<out_profile_type.get_enum_value().second.first<<std::endl;
+    //std::cout<<"ConvertColorspacePar::build(): Getting built-in profile: "<<out_profile_type.get_enum_value().second.first<<std::endl;
     iccprof = PF::ICCStore::Instance().get_profile( ptype, trc_type );
   }
 
@@ -242,7 +242,7 @@ VipsImage* PF::ConvertColorspacePar::build(std::vector<VipsImage*>& in, int firs
 
   if( matching ) {
     PF_REF( in[first], "ConvertColorspacePar::build(): input image ref for equal input and output profiles" );
-    std::cout<<"ConvertColorspacePar::build(): matching input and output profiles, no transform needed"<<std::endl;
+    //std::cout<<"ConvertColorspacePar::build(): matching input and output profiles, no transform needed"<<std::endl;
     return in[first];
   }
 
