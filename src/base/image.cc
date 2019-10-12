@@ -269,6 +269,24 @@ void PF::Image::set_pipeline_level( PF::Pipeline* target_pipeline, int level )
 }
 
 
+PF::PipelineNode* PF::Image::get_compatible_node(PF::Layer* layer, PF::Pipeline* pipeline, unsigned int level)
+{
+  PF::PipelineNode* node = NULL;
+  for(unsigned int pi = 0; pi < pipelines.size(); pi++) {
+    PF::Pipeline* p = pipelines[pi];
+    if( p == pipeline ) break;
+
+    PF::PipelineNode* n = p->get_node( layer->get_id() );
+    if( n->level_real == level ) {
+      node = n;
+      break;
+    }
+  }
+
+  return node;
+}
+
+
 void PF::Image::update( PF::Pipeline* target_pipeline, bool sync )
 {
 #ifndef NDEBUG
@@ -367,8 +385,12 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
 
   // Loop on pipelines, re-build and update
   for( unsigned int i = 0; i < get_npipelines(); i++ ) {
+    //if( i > 1 ) break;
     PF::Pipeline* pipeline = get_pipeline( i );
     if( !pipeline ) continue;
+//#ifndef NDEBUG
+    std::cout<<"PF::Image::do_update(): preparing pipeline #"<<i<<std::endl;
+//#endif
 
     if( !target_pipeline) {
       // We do not target a specific pipeline
@@ -423,14 +445,14 @@ void PF::Image::do_update( PF::Pipeline* target_pipeline, bool update_gui )
       }
     }
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): updating pipeline #"<<i<<std::endl;
-#endif
+//#endif
     //get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, area );
     get_layer_manager().rebuild( pipeline, PF::PF_COLORSPACE_RGB, 100, 100, NULL );
-#ifndef NDEBUG
+//#ifndef NDEBUG
     std::cout<<"PF::Image::do_update(): pipeline #"<<i<<" updated."<<std::endl;
-#endif
+//#endif
     //pipeline->update();
   }
 
@@ -830,6 +852,10 @@ void PF::Image::do_remove_layer( PF::Layer* layer )
   for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
     if( !(*i) ) continue;
     (*i)->set_dirty( true );
+    PF::ProcessorBase* proc = (*i)->get_processor();
+    if(proc && proc->get_par()) proc->get_par()->set_modified();
+    proc = (*i)->get_blender();
+    if(proc && proc->get_par()) proc->get_par()->set_modified();
   }
 
   remove_from_inputs( layer );

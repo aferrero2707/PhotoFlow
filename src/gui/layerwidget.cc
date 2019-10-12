@@ -295,12 +295,12 @@ void PF::AuxControlsGroup::update()
 
 void PF::AuxControlsGroup::set_control(PF::Layer* layer, PF::OperationConfigGUI* g)
 {
-  // Make sure the image is not being rebuilt
-  editor->get_image()->lock();
   if( g == gui ) {
-    editor->get_image()->unlock();
     return;
   }
+
+  // Make sure the image is not being rebuilt
+  editor->get_image()->lock();
 
   clear();
 
@@ -375,9 +375,9 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
 
   PF::OpParBase* par = gui->get_par();
   if( par ) {
-    par->set_editing_flag( true );
+    //par->set_editing_flag( true );
   }
-  if( gui->has_editing_mode() ) needs_update = true;
+  //if( gui->has_editing_mode() ) needs_update = true;
 
   Gtk::Widget* controls = gui->get_frame();
   //std::cout<<"ControlsDialog::set_controls(\""<<l->get_name()<<"\"): controls="<<controls<<std::endl;
@@ -390,7 +390,8 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
     //controls->show_all();
   }
 
-  if( needs_update || gui->has_editing_mode() )
+  //if( needs_update || gui->has_editing_mode() )
+  if( needs_update )
     editor->get_image()->update();
 }
 

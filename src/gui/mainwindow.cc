@@ -1244,9 +1244,9 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
         fname);
     Gtk::MessageDialog dialog(tstr,
         false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_NONE, true);
+    dialog.add_button(GTK_STOCK_CANCEL, Gtk::RESPONSE_CANCEL);
     dialog.add_button(GTK_STOCK_NO, Gtk::RESPONSE_NO);
     dialog.add_button(GTK_STOCK_YES, Gtk::RESPONSE_YES);
-    dialog.add_button(GTK_STOCK_CANCEL, Gtk::RESPONSE_CANCEL);
     dialog.set_transient_for(*this);
     dialog.set_default_response( Gtk::RESPONSE_YES );
 

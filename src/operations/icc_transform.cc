@@ -83,7 +83,7 @@ VipsImage* PF::ICCTransformPar::build(std::vector<VipsImage*>& in, int first,
 
   if( matching ) {
     PF_REF( in[first], "ICCTransformPar::build(): input image ref for equal input and output profiles" );
-    std::cout<<"ICCTransformPar::build(): matching input and output profiles, no transform needed"<<std::endl;
+    //std::cout<<"ICCTransformPar::build(): matching input and output profiles, no transform needed"<<std::endl;
     return in[first];
   }
 

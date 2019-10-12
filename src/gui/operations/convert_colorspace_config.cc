@@ -46,8 +46,8 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   saturation_intent_slider( this, "saturation_intent", _("saturation"), 1, 0, 100, 0.5, 5, 100 ),
   bpcButton( this, "bpc", _("black point compensation"), false ),
   adaptationStateSlider( this, "adaptation_state", _("adapt. state"), 0, 0, 1, 0.01, 0.05, 1 ),
-  gamutWarningLabel( _("gamut warning") ),
   assignButton( this, "assign", _("assign profile"), false ),
+  gamutWarningButton( this, "gamut_warning", _("gamut warning"), false ),
   outProfOpenButton(Gtk::Stock::OPEN)
 {
 
@@ -93,7 +93,6 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   outputControlsBox.pack_start( assignButtonBox, Gtk::PACK_SHRINK, 2 );
 
   gamutWarningButtonBox.pack_end( gamutWarningButton, Gtk::PACK_SHRINK );
-  gamutWarningButtonBox.pack_end( gamutWarningLabel, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( gamutWarningButtonBox, Gtk::PACK_SHRINK, 2 );
 
   add_widget( outputControlsBox );
@@ -105,8 +104,8 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   outProfOpenButton.signal_clicked().connect(sigc::mem_fun(*this,
                  &ConvertColorspaceConfigGUI::on_out_button_open_clicked) );
 
-  gamutWarningButton.signal_clicked().connect(sigc::mem_fun(*this,
-                 &ConvertColorspaceConfigGUI::on_gamut_warning_toggled) );
+  //gamutWarningButton.signal_clicked().connect(sigc::mem_fun(*this,
+  //               &ConvertColorspaceConfigGUI::on_gamut_warning_toggled) );
 
   get_main_box().show_all_children();
 }

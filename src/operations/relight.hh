@@ -56,6 +56,7 @@ public:
   void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
   void propagate_settings();
 
+  void print() { shahl->get_par()->print(); }
   void pre_build(rendermode_t mode);
   VipsImage* build(std::vector<VipsImage*>& in, int first,
       VipsImage* imap, VipsImage* omap,

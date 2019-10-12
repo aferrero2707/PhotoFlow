@@ -421,7 +421,7 @@ void PF::pf_object_ref(GObject* object, const char* msg)
 }
 
 
-
+//#define PF_VERBOSE_UNREF 1
 
 void PF::pf_object_unref(GObject* object, const char* msg)
 {

@@ -96,7 +96,20 @@ bool PF::RelightPar::needs_caching()
 
 void PF::RelightPar::propagate_settings()
 {
-  if( shahl && shahl->get_par() ) shahl->get_par()->propagate_settings();
+  if( shahl && shahl->get_par() ) {
+      PF::OpParBase* par = shahl->get_par();
+      par->set_property( "amount", pow(10, 0.5) );
+      par->set_property( "shadows", strength.get() );
+      par->set_property( "shadows_range", 5.0f );
+      par->set_property( "highlights", pow(10, 0.0) );
+      par->set_property( "highlights_range", 0.5f );
+      par->set_property( "constrast", 0.0f );
+      par->set_property( "constrast_threshold", 1 );
+      par->set_property( "anchor", range.get() );
+      par->set_property( "sh_radius", 128 );
+      par->set_property( "sh_threshold", 0.1 );
+    shahl->get_par()->propagate_settings();
+  }
   if( tm && tm->get_par() ) {
     PF::OpParBase* par = tm->get_par();
     PF::PropertyBase* p = par->get_property("preset");
@@ -206,7 +219,7 @@ VipsImage* PF::RelightPar::build(std::vector<VipsImage*>& in, int first,
 
   srcimg = outimg;
   if( contrast.get() > 0 && tm && tm->get_par() ) {
-    std::cout<<"RelightPar::build: building the tone mapping module"<<std::endl;
+    //std::cout<<"RelightPar::build: building the tone mapping module"<<std::endl;
     PF::OpParBase* par = tm->get_par();
     PF::PropertyBase* p = par->get_property("preset");
     if( p ) p->set_enum_value(PF::TONE_MAPPING_PRESET_CUSTOM);
@@ -232,6 +245,8 @@ VipsImage* PF::RelightPar::build(std::vector<VipsImage*>& in, int first,
     outimg = par->build( in2, 0, NULL, NULL, level );
     PF_UNREF(srcimg, "RelightPar::build: srcimg unref after tm");
   }
+
+  //std::cout<<"RelightPar::build(): par->shadows_range: "<<shahl->get_par()->get_property("shadows_range")->get_str()<<std::endl;
 
   return outimg;
 }

@@ -153,7 +153,7 @@ VipsImage* PF::BlurBilateralPar::build(std::vector<VipsImage*>& in, int first,
     VipsAccess acc = VIPS_ACCESS_RANDOM;
     int threaded = 1, persistent = 0;
     VipsImage* csplatted;
-    if( phf_tilecache(splatted, &csplatted,
+    if( vips_tilecache(splatted, &csplatted,
         "tile_width", ts,
         "tile_height", ts,
         "max_tiles", nt,
@@ -204,7 +204,7 @@ VipsImage* PF::BlurBilateralPar::build(std::vector<VipsImage*>& in, int first,
     //VipsAccess acc = VIPS_ACCESS_RANDOM;
     //int threaded = 1, persistent = 0;
     VipsImage* cached;
-    if( phf_tilecache(sliced, &cached,
+    if( vips_tilecache(sliced, &cached,
         "tile_width", ts2,
         "tile_height", ts2,
         "max_tiles", nt2,
@@ -330,7 +330,7 @@ VipsImage* PF::BlurBilateralPar::build_(std::vector<VipsImage*>& in, int first,
   VipsAccess acc = VIPS_ACCESS_RANDOM;
   int threaded = 1, persistent = 0;
   VipsImage* csplatted;
-  if( phf_tilecache(splatted, &csplatted,
+  if( vips_tilecache(splatted, &csplatted,
       "tile_width", ts,
       "tile_height", ts,
       "max_tiles", nt,
@@ -389,7 +389,7 @@ VipsImage* PF::BlurBilateralPar::build_(std::vector<VipsImage*>& in, int first,
   //VipsAccess acc = VIPS_ACCESS_RANDOM;
   //int threaded = 1, persistent = 0;
   VipsImage* cached;
-  if( phf_tilecache(cropped, &cached,
+  if( vips_tilecache(cropped, &cached,
       "tile_width", ts2,
       "tile_height", ts2,
       "max_tiles", nt2,

@@ -228,7 +228,9 @@ void PF::ShadowsHighlightsV2Par::compute_padding( VipsImage* full_res, unsigned 
   for(int gi = 0; gi < 10; gi++) {
     PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
     if( !guidedpar ) break;
+#ifndef NDEBUG
     std::cout<<"ShadowsHighlightsV2Par::compute_padding: rv["<<gi<<"]="<<rv[gi]<<std::endl;
+#endif
     if(rv[gi] == 0) break;
     guidedpar->set_radius( rv[gi] );
     guidedpar->set_threshold( threshold.get() / threshold_scale[gi] );
@@ -265,6 +267,7 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
 
   in_profile = PF::get_icc_profile( in[0] );
 
+#ifndef NDEBUG
   std::cout<<"ShadowsHighlightsV2Par::build(): level="<<level
       <<"  amount="<<amount.get()<<"  shadows="<<shadows.get()<<"  shadows_range="<<shadows_range.get()
       <<"  highlights="<<highlights.get()<<"  highlights_range="<<highlights_range.get()
@@ -272,10 +275,13 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
       <<"  anchor="<<anchor.get()<<"  radius="<<radius.get()<<"  threshold="<<threshold.get()
       <<"  show_residual="<<show_residual.get()<<"  single_scale_blur="<<single_scale_blur.get()
       <<std::endl;
+#endif
 
 
   ShaHiLogLumiPar* logpar = dynamic_cast<ShaHiLogLumiPar*>( loglumi->get_par() );
+#ifndef NDEBUG
   std::cout<<"ShadowsHighlightsV2Par::build(): logpar="<<logpar<<std::endl;
+#endif
   VipsImage* logimg = NULL;
   if(logpar) {
     logpar->set_anchor( anchor.get() );
@@ -288,7 +294,9 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     PF_REF(logimg, "ShadowsHighlightsV2Par::build: in[0] ref");
   }
 
+#ifndef NDEBUG
   std::cout<<"ShadowsHighlightsV2Par::build(): logimg="<<logimg<<std::endl;
+#endif
 
   if( !logimg ) return NULL;
 
@@ -306,7 +314,9 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
 
   VipsImage* timg = logimg;
   VipsImage* smoothed = logimg;
+#ifndef NDEBUG
   std::cout<<"ShadowsHighlightsV2Par::build(): radius="<<radius.get()<<std::endl;
+#endif
 
 
   for(int gi = 0; gi < 10; gi++) {
@@ -328,20 +338,16 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     guidedpar->propagate_settings();
     guidedpar->compute_padding(timg, 0, level);
 
+#ifndef NDEBUG
     std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="
         <<rv[gi]<<"  padding="<<guidedpar->get_padding(0)
         <<"  logimg="<<logimg<<"  smoothed="<<smoothed<<std::endl;
+#endif
     if( guidedpar->get_padding(0) > 64 ) {
-      int ts = 128;
-      int tr = guidedpar->get_padding(0) / ts + 1;
-      int nt = (timg->Xsize/ts) * tr + 1;
       VipsAccess acc = VIPS_ACCESS_RANDOM;
-      int threaded = 1, persistent = 0;
+      int threaded = 1, persistent = 1;
       VipsImage* cached = NULL;
       if( phf_tilecache(timg, &cached,
-          "tile_width", ts,
-          "tile_height", ts,
-          "max_tiles", nt,
           "access", acc, "threaded", threaded,
           "persistent", persistent, NULL) ) {
         std::cout<<"ShadowsHighlightsV2Par::build(): vips_tilecache() failed."<<std::endl;
@@ -354,7 +360,9 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     in2.clear();
     in2.push_back( timg );
     if( gi==0 && smoothed != logimg ) {
+#ifndef NDEBUG
       std::cout<<"ShadowsHighlightsV2Par::build(): adding smoothed guide image"<<std::endl;
+#endif
       in2.push_back( smoothed );
     }
     smoothed = guidedpar->build( in2, first, NULL, NULL, level );
@@ -368,8 +376,8 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
 
 
   if( !smoothed ) {
-    std::cout<<"ShadowsHighlightsV2Par::build(): null Lab image"<<std::endl;
-    PF_REF( in[0], "ShadowsHighlightsV2Par::build(): null Lab image" );
+    std::cout<<"ShadowsHighlightsV2Par::build(): null smoothed image"<<std::endl;
+    PF_REF( in[0], "ShadowsHighlightsV2Par::build(): null smoothed image" );
     return in[0];
   }
 

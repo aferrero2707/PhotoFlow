@@ -42,20 +42,22 @@ PF::PipelineNode::~PipelineNode()
     g_assert( G_OBJECT( image )->ref_count > 0 );
   }
 
-  for( size_t j = 0; j < images.size(); j++ ) {
-    snprintf( tstr, 499, "~PipelineNode() unref images[%d]", (int)j );
-    PF_UNREF( images[j], tstr );
-#ifndef NDEBUG
-    std::cout<<"~PipelineNode(): unref of images["<<j<<"]"<<std::endl;
-#endif
-  }
-
   if( blended != NULL ) {
     if( G_OBJECT( blended )->ref_count <= 0 ) {
       std::cout<<"~PipelineNode(): blended refcount <= 0"<<std::endl;
     }
     g_assert( G_OBJECT( blended )->ref_count > 0 );
+    //PF_PRINT_REF(blended, "~PipelineNode() blended before unref: ");
     PF_UNREF( blended, "~PipelineNode() unref blended image" );
+  }
+
+  for( size_t j = 0; j < images.size(); j++ ) {
+    snprintf( tstr, 499, "~PipelineNode() unref images[%d]", (int)j );
+    //PF_PRINT_REF(images[j], tstr);
+    PF_UNREF( images[j], tstr );
+#ifndef NDEBUG
+    std::cout<<"~PipelineNode(): unref of images["<<j<<"]"<<std::endl;
+#endif
   }
 
   if( processor != NULL ) {
@@ -177,7 +179,7 @@ PF::PipelineNode* PF::Pipeline::set_node( Layer* layer, Layer* input_layer )
 }
 
 
-void PF::Pipeline::set_image( VipsImage* img, unsigned int id )
+void PF::Pipeline::set_image( VipsImage* img, unsigned int id, unsigned int level_real )
 {
   if( id >= nodes.size() ) 
     return;
@@ -214,11 +216,12 @@ void PF::Pipeline::set_image( VipsImage* img, unsigned int id )
     }
     nodes[id]->image = img;
     if( img ) nodes[id]->images.push_back( img );
+    nodes[id]->level_real = level_real;
   }
 }
 
 
-void PF::Pipeline::set_images( std::vector<VipsImage*> imgvec, unsigned int id )
+void PF::Pipeline::set_images( std::vector<VipsImage*> imgvec, unsigned int id, unsigned int level_real )
 {
   if( id >= nodes.size() )
     return;
@@ -266,6 +269,7 @@ void PF::Pipeline::set_images( std::vector<VipsImage*> imgvec, unsigned int id )
     //  PF_REF( nodes[id]->images[i], tstr );
     if( !(imgvec.empty()) ) nodes[id]->image = imgvec[0];
     else nodes[id]->image = NULL;
+    nodes[id]->level_real = level_real;
   }
 }
 

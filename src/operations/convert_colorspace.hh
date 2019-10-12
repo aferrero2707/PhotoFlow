@@ -181,8 +181,8 @@ class ConvertColorspacePar: public OpParBase
 
   //ProcessorBase* convert2lab;
 
-  bool softproof;
-  bool gamut_warning;
+  Property<bool> softproof;
+  Property<bool> gamut_warning;
   bool do_LCh, do_LSh, do_Lab;
 
   PF::ICCProfile* iccprof;
@@ -237,11 +237,11 @@ public:
   cmsColorSpaceSignature get_input_cs_type() { return input_cs_type; }
   cmsColorSpaceSignature get_output_cs_type() { return output_cs_type; }
 
-  bool softproof_enabled() { return softproof; }
-  void set_softproof( bool s ) { softproof = s; }
+  bool softproof_enabled() { return softproof.get(); }
+  void set_softproof( bool s ) { softproof.update(s); }
 
-  bool gamut_warning_enabled() { return gamut_warning; }
-  void set_gamut_warning( bool s ) { gamut_warning = s; }
+  bool gamut_warning_enabled() { return gamut_warning.get(); }
+  void set_gamut_warning( bool s ) { gamut_warning.update(s); }
 
   /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 

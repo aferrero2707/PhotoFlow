@@ -302,16 +302,7 @@ public:
   sigc::signal<void> signal_modified;
 
   OpParBase();
-
-  virtual ~OpParBase()
-  {
-    //for(unsigned int i = 0; i < outvec.size(); i++ ) {
-    //  PF_UNREF( outvec[i], "~OpParBase(): previous outputs unref" );
-    //}
-    //#ifndef NDEBUG
-    std::cout<<"~OpParBase(): deleting operation "<<(void*)this<<" ("<<get_type()<<")"<<std::endl;
-    //#endif
-  }
+  virtual ~OpParBase();
 
   std::string get_type() { return type; }
   void set_type( std::string str ) { type = str; }
@@ -377,13 +368,7 @@ public:
   bool is_modified() { return modified_flag; }
   void set_modified() { modified_flag = true; }
   void clear_modified();
-  virtual void modified()
-  {
-    set_modified();
-    //std::cout<<"OpParBase::modified(): emitting signal_modified."<<std::endl;
-    signal_modified.emit();
-    //std::cout<<"OpParBase::modified(): signal_modified emitted."<<std::endl;
-  }
+  virtual void modified();
 
 
   std::string get_default_name() { return default_name; }
@@ -483,6 +468,12 @@ public:
   void set_output_caching(bool flag) { output_caching_enabled = flag; }
   bool get_output_caching() { return output_caching_enabled; }
   virtual int get_test_padding() { return 0; }
+
+  // get the real zoom level for a given requested level
+  virtual unsigned int get_real_level(unsigned int level) { return level; }
+  // when the image is built at a zoom level different from the requested one,
+  // wether the image should be shrunk during the blending phasse or not
+  virtual bool do_shirnk_on_blend() { return false; }
 
   // return the number of output images. Equal to 1 in most cases
   virtual int get_output_num() { return 1; }
@@ -597,7 +588,7 @@ public:
     coding = VIPS_CODING_NONE;
   }
 
-
+  virtual void print() {}
   bool save( std::ostream& ostr, int level );
 };
 

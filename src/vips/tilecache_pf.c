@@ -84,16 +84,20 @@
 
 //#include "tilecache_pf.h"
 
+#define PHF_TILE_SIZE 128
+
 /* A tile in cache can be in one of three states:
  *
  * DATA		- the tile holds valid pixels 
  * CALC		- some thread somewhere is calculating it
- * PEND		- some thread somewhere wants it
+ * PEND   - some thread somewhere wants it
+ * FREE   - the tile is not assigned to any cache
  */
 typedef enum PhFTileState {
 	VIPS_TILE_STATE_DATA,
 	VIPS_TILE_STATE_CALC,
-  VIPS_TILE_STATE_PEND
+  VIPS_TILE_STATE_PEND,
+  VIPS_TILE_STATE_FREE
 } PhFTileState;
 
 /* A tile in our cache.
@@ -119,12 +123,88 @@ typedef struct _PhFTile {
 	int time;			/* Time of last use for flush */
 } PhFTile;
 
+
+/* The global pool of tiles available to the different caches
+ */
+static int _requested_number_of_tiles = 0;
+static int PHF_MAX_NUMBER_OF_TILES = 0;
+typedef struct _PhFTilePool {
+  PhFTile* tiles;
+
+  GMutex *lock;     /* Lock the global pool */
+  int debug;
+} PhFTilePool;
+
+void phf_tile_pool_set_size(int s)
+{
+  ssize_t tile_size = sizeof(float) * 3 * PHF_TILE_SIZE * PHF_TILE_SIZE;
+  ssize_t ts = s;
+  _requested_number_of_tiles = (ts * 1024 * 1024) / tile_size;
+  printf("phf_tile_pool_set_size(): number of tiles set to %d\n", _requested_number_of_tiles);
+}
+
+
+static PhFTilePool phf_tile_pool;
+static int phf_tile_pool_initialised = 0;
+
+static GMutex *phf_tile_ref_lock = NULL;     /* Lock tiles referencing/unreferencing */
+
+static void phf_tile_pool_init()
+{
+  int i;
+  if( phf_tile_pool_initialised == 1 ) return;
+
+  printf("phf_tile_pool_init(): called\n");
+
+  g_assert(_requested_number_of_tiles>0);
+
+  printf("phf_tile_pool_init(): requesting %d tiles\n", (int)_requested_number_of_tiles);
+
+  phf_tile_pool.tiles = (PhFTile*)malloc(sizeof(PhFTile) * _requested_number_of_tiles);
+  printf("phf_tile_pool_init(): tiles pool: %p\n", (void*)(phf_tile_pool.tiles));
+  if( !phf_tile_pool.tiles ) return;
+  PHF_MAX_NUMBER_OF_TILES = _requested_number_of_tiles;
+  printf("phf_tile_pool_init(): allocated %d tiles\n", PHF_MAX_NUMBER_OF_TILES);
+
+
+  for(i = 0; i < PHF_MAX_NUMBER_OF_TILES; i++) {
+    phf_tile_pool.tiles[i].cache = NULL;
+    phf_tile_pool.tiles[i].state = VIPS_TILE_STATE_FREE;
+    phf_tile_pool.tiles[i].region = NULL;
+    phf_tile_pool.tiles[i].ref_count = 0;
+    phf_tile_pool.tiles[i].time = 0;
+  }
+  phf_tile_pool.lock = vips_g_mutex_new();
+
+  phf_tile_ref_lock = vips_g_mutex_new();
+
+  phf_tile_pool.debug = 0;
+  const gchar* tilecache_debug = g_getenv("PHF_TILECACHE_DEBUG");
+  if( tilecache_debug && !strcmp(tilecache_debug,"1") ) phf_tile_pool.debug = 1;
+  if( tilecache_debug && !strcmp(tilecache_debug,"2") ) phf_tile_pool.debug = 2;
+
+  phf_tile_pool_initialised = 1;
+}
+
+
+static void phf_tile_pool_lock()
+{
+  g_mutex_lock( phf_tile_pool.lock );
+}
+
+
+static void phf_tile_pool_unlock()
+{
+  g_mutex_unlock( phf_tile_pool.lock );
+}
+
+
 typedef struct _PhFBlockCache {
   VipsOperation parent_instance;
 
 	VipsImage *in;
   VipsImage *out;
-	int tile_width;	
+	int tile_width, tile_width2;
 	int tile_height;
 	int max_tiles;
 	VipsAccess access;
@@ -146,9 +226,85 @@ G_DEFINE_ABSTRACT_TYPE( PhFBlockCache, phf_block_cache,
 #define PHF_TYPE_BLOCK_CACHE (phf_block_cache_get_type())
 
 
+static void
+phf_tile_dispose( PhFTile *tile )
+{
+  PhFBlockCache *cache = tile->cache;
+
+  VIPS_DEBUG_MSG_RED( "phf_tile_dispose: tile %d, %d (%p)\n",
+    tile->pos.left, tile->pos.top, tile );
+  if(phf_tile_pool.debug > 1) {
+    printf("phf_tile_dispose: tile %d, %d (%p), cache: %p  ref_count: %d  state: %d\n",
+      tile->pos.left, tile->pos.top, tile, cache, tile->ref_count, tile->state );
+    //fflush(stdout);
+  }
+
+  g_assert( cache );
+
+  cache->ntiles -= 1;
+  g_assert( cache->ntiles >= 0 );
+  tile->cache = NULL;
+  tile->ref_count = 0;
+  tile->state = VIPS_TILE_STATE_FREE;
+
+  VIPS_UNREF( tile->region );
+  tile->region = NULL;
+
+  /*vips_free( tile );*/
+}
+
+
+/* Find a free tile or grab one from another cache.
+ */
+static PhFTile *
+phf_tile_pool_get_tile( int now )
+{
+  PhFTile* result = NULL;
+  PhFTile* t = NULL;
+  int i, oldest = now;
+
+  /* We loop on the tile pool twice. In the first pass we look for free tiles.
+   * If no free tile is availabe, in the second pass we look for data tiles
+   * with zero reference counting, and we take the oldet one.
+   */
+  for(i = 0; i < PHF_MAX_NUMBER_OF_TILES; i++) {
+    if( phf_tile_pool.tiles[i].state == VIPS_TILE_STATE_FREE ) {
+      result = &(phf_tile_pool.tiles[i]);
+      //printf("phf_tile_pool_get_tile: grabbed free tile: %p\n", result);
+      break;
+    }
+  }
+
+  if( result == NULL ) {
+    for(i = 0; i < PHF_MAX_NUMBER_OF_TILES; i++) {
+      t = &(phf_tile_pool.tiles[i]);
+      if( t->state == VIPS_TILE_STATE_DATA && t->ref_count == 0 ) {
+        if( (result == NULL) || (t->time < oldest) ) {
+          result = &(phf_tile_pool.tiles[i]);
+          oldest = t->time;
+        }
+      }
+    }
+  }
+
+  if( (result != NULL) && (result->cache != NULL) ) {
+    PhFBlockCache* cache = result->cache;
+    //printf("phf_tile_pool_get_tile: reusing existing tile: %p in cache: %p at %d x %d\n",
+    //    result, cache, result->pos.left, result->pos.top);
+    g_mutex_lock( cache->lock );
+    g_hash_table_remove( cache->tiles, &(result->pos) );
+    //printf("phf_tile_pool_get_tile: after g_hash_table_remove, result->cache: %p\n", result->cache);
+    //phf_tile_dispose( result );
+    //printf("phf_tile_pool_get_tile: after phf_tile_dispose, cache: %d\n", result->cache);
+    g_mutex_unlock( cache->lock );
+  }
+
+  return result;
+}
+
 
 static gint64
-vips_get_time( void )
+phf_get_time( void )
 {
 #ifdef HAVE_MONOTONIC_TIME
   return( g_get_monotonic_time() );
@@ -162,23 +318,34 @@ vips_get_time( void )
 }
 
 
+static void
+phf_tile_dispose_cb( gpointer key, gpointer value, gpointer user_data )
+{
+  PhFTile *tile = (PhFTile *) value;
+  phf_tile_dispose( tile );
+}
 
 static void
-vips_block_cache_drop_all( PhFBlockCache *cache )
+phf_block_cache_drop_all( PhFBlockCache *cache )
 {
 	/* FIXME this is a disaster if active threads are working on tiles. We
 	 * should have something to block new requests, and only dispose once
 	 * all tiles are unreffed.
 	 */
+  //g_hash_table_foreach( cache->tiles, phf_tile_dispose_cb, NULL );
 	g_hash_table_remove_all( cache->tiles ); 
 }
 
 static void
-vips_block_cache_dispose( GObject *gobject )
+phf_block_cache_dispose( GObject *gobject )
 {
 	PhFBlockCache *cache = (PhFBlockCache *) gobject;
+  //printf("phf_block_cache_dispose(): called, cache: %p  cache->tiles: %p\n", cache, cache->tiles);
+  //if( cache->tiles )
+  //  printf("  cache hash table size: %d\n", (int)g_hash_table_size(cache->tiles));
 
-	vips_block_cache_drop_all( cache );
+	phf_block_cache_drop_all( cache );
+  //printf("phf_block_cache_dispose(): after phf_block_cache_drop_all\n");
 	VIPS_FREEF( vips_g_mutex_free, cache->lock );
 	VIPS_FREEF( vips_g_cond_free, cache->new_tile );
 
@@ -190,7 +357,7 @@ vips_block_cache_dispose( GObject *gobject )
 }
 
 static void
-vips_tile_touch( PhFTile *tile )
+phf_tile_touch( PhFTile *tile )
 {
 	g_assert( tile->cache->ntiles >= 0 );
 
@@ -198,7 +365,7 @@ vips_tile_touch( PhFTile *tile )
 }
 
 static int
-vips_tile_init_region( PhFTile *tile )
+phf_tile_init_region( PhFTile *tile )
 {
   if( !(tile->region = vips_region_new( tile->cache->in )) ) {
     g_mutex_lock( tile->cache->lock );
@@ -216,14 +383,14 @@ vips_tile_init_region( PhFTile *tile )
 }
 
 static int
-vips_tile_move( PhFTile *tile, int x, int y )
+phf_tile_move( PhFTile *tile, int x, int y )
 {
   /* We are changing x/y and therefore the hash value. We must unlink
    * from the old hash position and relink at the new place.
    */
-  //gint64 time = vips_get_time();
+  //gint64 time = phf_get_time();
   g_hash_table_steal( tile->cache->tiles, &tile->pos );
-  //gint64 time2 = vips_get_time();
+  //gint64 time2 = phf_get_time();
   //printf("vips_tile_move(): g_hash_table_steal took %d\n", (int)(time2 - time));
 
   tile->pos.left = x;
@@ -231,16 +398,18 @@ vips_tile_move( PhFTile *tile, int x, int y )
   tile->pos.width = tile->cache->tile_width;
   tile->pos.height = tile->cache->tile_height;
 
-  //time = vips_get_time();
+  //time = phf_get_time();
   g_hash_table_insert( tile->cache->tiles, &tile->pos, tile );
-  //time2 = vips_get_time();
+  //time2 = phf_get_time();
   //printf("vips_tile_move(): g_hash_table_insert took %d\n", (int)(time2 - time));
 
+  //printf("phf_tile_move: tile %p added to cache %p at %d x %d\n", tile, tile->cache, tile->pos.left, tile->pos.top);
+
   if(tile->region ) {
-    //time = vips_get_time();
+    //time = phf_get_time();
     if( vips_region_buffer( tile->region, &tile->pos ) )
       return( -1 );
-    //time2 = vips_get_time();
+    //time2 = phf_get_time();
     //printf("vips_tile_move(): vips_region_buffer took %d\n", (int)(time2 - time));
   }
 
@@ -252,56 +421,107 @@ vips_tile_move( PhFTile *tile, int x, int y )
 }
 
 static PhFTile *
-vips_tile_new( PhFBlockCache *cache, int x, int y )
+phf_tile_new( PhFBlockCache *cache, int x, int y )
 {
-	PhFTile *tile;
+  PhFTile *tile;
 
-	if( !(tile = VIPS_NEW( NULL, PhFTile )) )
-		return( NULL );
+  if( !(tile = VIPS_NEW( NULL, PhFTile )) )
+    return( NULL );
 
-	tile->cache = cache;
+  tile->cache = cache;
   tile->state = VIPS_TILE_STATE_PEND;
-	tile->ref_count = 0;
-	tile->region = NULL;
-	tile->time = cache->time;
-	tile->pos.left = x;
-	tile->pos.top = y;
-	tile->pos.width = cache->tile_width;
-	tile->pos.height = cache->tile_height;
-  //gint64 time = vips_get_time();
-	g_hash_table_insert( cache->tiles, &tile->pos, tile );
-  //gint64 time2 = vips_get_time();
-  //printf("vips_tile_new(): g_hash_table_insert took %d\n", (int)(time2 - time));
-	g_assert( cache->ntiles >= 0 );
-	cache->ntiles += 1;
+  tile->ref_count = 0;
+  tile->region = NULL;
+  tile->time = cache->time;
+  tile->pos.left = x;
+  tile->pos.top = y;
+  tile->pos.width = cache->tile_width;
+  tile->pos.height = cache->tile_height;
+  //gint64 time = phf_get_time();
+  g_hash_table_insert( cache->tiles, &tile->pos, tile );
+  //gint64 time2 = phf_get_time();
+  //printf("phf_tile_new(): g_hash_table_insert took %d\n", (int)(time2 - time));
+  g_assert( cache->ntiles >= 0 );
+  cache->ntiles += 1;
 
-	/*
-	time = vips_get_time();
-	if( !(tile->region = vips_region_new( cache->in )) ) {
-		g_hash_table_remove( cache->tiles, &tile->pos );
-		return( NULL );
-	}
-	time2 = vips_get_time();
-  printf("vips_tile_new(): vips_region_new took %d\n", (int)(time2 - time));
+  /*
+  time = phf_get_time();
+  if( !(tile->region = vips_region_new( cache->in )) ) {
+    g_hash_table_remove( cache->tiles, &tile->pos );
+    return( NULL );
+  }
+  time2 = phf_get_time();
+  printf("phf_tile_new(): vips_region_new took %d\n", (int)(time2 - time));
 
-	vips__region_no_ownership( tile->region );
-	*/
+  vips__region_no_ownership( tile->region );
+  */
 
-  //time = vips_get_time();
-	if( vips_tile_move( tile, x, y ) ) {
-		g_hash_table_remove( cache->tiles, &tile->pos );
-		return( NULL );
-	}
-  //time2 = vips_get_time();
-  //printf("vips_tile_new(): vips_tile_move took %d\n", (int)(time2 - time));
+  //time = phf_get_time();
+  if( phf_tile_move( tile, x, y ) ) {
+    g_hash_table_remove( cache->tiles, &tile->pos );
+    return( NULL );
+  }
+  //time2 = phf_get_time();
+  //printf("phf_tile_new(): phf_tile_move took %d\n", (int)(time2 - time));
 
-	return( tile );
+  return( tile );
+}
+
+/* Assign a tile to a given cache
+ */
+static int
+phf_tile_assign( PhFTile *tile, PhFBlockCache *cache, int x, int y )
+{
+  if(phf_tile_pool.debug > 1) {
+    printf("phf_tile_assign: tile %d, %d (%p), cache: %p  ref_count: %d  state: %d\n",
+      tile->pos.left, tile->pos.top, tile, cache, tile->ref_count, tile->state );
+    //fflush(stdout);
+  }
+  tile->cache = cache;
+  tile->state = VIPS_TILE_STATE_PEND;
+  tile->ref_count = 0;
+  tile->region = NULL;
+  tile->time = cache->time;
+  tile->pos.left = x;
+  tile->pos.top = y;
+  tile->pos.width = cache->tile_width;
+  tile->pos.height = cache->tile_height;
+  //gint64 time = phf_get_time();
+  g_hash_table_insert( cache->tiles, &tile->pos, tile );
+  //gint64 time2 = phf_get_time();
+  //printf("phf_tile_new(): g_hash_table_insert took %d\n", (int)(time2 - time));
+  g_assert( cache->ntiles >= 0 );
+  cache->ntiles += 1;
+
+  /*
+  time = phf_get_time();
+  if( !(tile->region = vips_region_new( cache->in )) ) {
+    g_hash_table_remove( cache->tiles, &tile->pos );
+    return( NULL );
+  }
+  time2 = phf_get_time();
+  printf("phf_tile_new(): vips_region_new took %d\n", (int)(time2 - time));
+
+  vips__region_no_ownership( tile->region );
+  */
+
+  //time = phf_get_time();
+  //printf("phf_tile_assign: before phf_tile_move()\n");
+  if( phf_tile_move( tile, x, y ) ) {
+    g_hash_table_remove( cache->tiles, &tile->pos );
+    return( -1 );
+  }
+  //printf("phf_tile_assign: after phf_tile_move()\n");
+  //time2 = phf_get_time();
+  //printf("phf_tile_new(): phf_tile_move took %d\n", (int)(time2 - time));
+
+  return( 0 );
 }
 
 /* Do we have a tile in the cache?
  */
 static PhFTile *
-vips_tile_search( PhFBlockCache *cache, int x, int y )
+phf_tile_search( PhFBlockCache *cache, int x, int y )
 {
 	VipsRect pos;
 	PhFTile *tile;
@@ -323,7 +543,7 @@ typedef struct _PhFTileSearch {
 } PhFTileSearch;
 
 static void 
-vips_tile_search_recycle( gpointer key, gpointer value, gpointer user_data )
+phf_tile_search_recycle( gpointer key, gpointer value, gpointer user_data )
 {
 	PhFTile *tile = (PhFTile *) value;
 	PhFBlockCache *cache = tile->cache;
@@ -358,37 +578,57 @@ vips_tile_search_recycle( gpointer key, gpointer value, gpointer user_data )
  * reuse one.
  */
 static PhFTile *
-vips_tile_find( PhFBlockCache *cache, int x, int y )
+phf_tile_find( PhFBlockCache *cache, int x, int y )
 {
 	PhFTile *tile;
 	PhFTileSearch search;
 
 	/* In cache already?
 	 */
-  //gint64 time = vips_get_time();
-	if( (tile = vips_tile_search( cache, x, y )) ) {
-		VIPS_DEBUG_MSG_RED( "vips_tile_find: "
+  //gint64 time = phf_get_time();
+	if( (tile = phf_tile_search( cache, x, y )) ) {
+		VIPS_DEBUG_MSG_RED( "phf_tile_find: "
 			"tile %d x %d in cache\n", x, y ); 
-		//printf( "vips_tile_find: "
-	  //    "tile %d x %d in cache\n", x, y );
+		//printf( "phf_tile_find: "
+	  //    "tile %p (%d x %d) in cache, state: %d\n", tile, x, y, tile->state );
+	  //gint64 time2 = phf_get_time();
+	  //printf("phf_tile_find(): phf_tile_search took %d\n", (int)(time2 - time));
 		return( tile );
 	}
-  //gint64 time2 = vips_get_time();
-  //printf("vips_tile_find(): vips_tile_search took %d\n", (int)(time2 - time));
+  //gint64 time2 = phf_get_time();
+  //printf("phf_tile_find(): phf_tile_search took %d\n", (int)(time2 - time));
+
+	/* Get a tile from the pool. It can be either a yet-not-assigned tile,
+	 * or an unused data tile from this or another cache. The oldest one is grabbed.
+	 */
+  //printf("phf_tile_find(): before phf_tile_pool_get_tile()\n");
+	if( !(tile = phf_tile_pool_get_tile(cache->time)) ) {
+	  printf("phf_tile_find(): phf_tile_pool_get_tile() failed\n");
+	  return NULL;
+	}
+  //printf("phf_tile_find(): after phf_tile_pool_get_tile()\n");
+  if( phf_tile_assign( tile, cache, x, y ) ) {
+    printf("phf_tile_find(): phf_tile_assign() failed\n");
+    return( NULL );
+  }
+  //gint64 time2 = phf_get_time();
+  //printf("phf_tile_find(): phf_tile_new took %d\n", (int)(time2 - time));
+  //printf("phf_tile_find: tile %p assigned to %d x %d, cache: %p\n", tile, x, y, tile->cache);
+  return( tile );
 
 	/* PhFBlockCache not full?
 	 */
 	if( cache->max_tiles == -1 ||
 		cache->ntiles < cache->max_tiles ) {
-		VIPS_DEBUG_MSG_RED( "vips_tile_find: "
+		VIPS_DEBUG_MSG_RED( "phf_tile_find: "
 			"making new tile at %d x %d\n", x, y ); 
-	  //gint64 time = vips_get_time();
-    //printf( "vips_tile_find: "
+	  //gint64 time = phf_get_time();
+    //printf( "phf_tile_find: "
     //    "making new tile at %d x %d + %d + %d\n", cache->tile_width, cache->tile_height, x, y );
-		if( !(tile = vips_tile_new( cache, x, y )) )
+		if( !(tile = phf_tile_new( cache, x, y )) )
 			return( NULL );
-	  //gint64 time2 = vips_get_time();
-	  //printf("vips_tile_find(): vips_tile_new took %d\n", (int)(time2 - time));
+	  //gint64 time2 = phf_get_time();
+	  //printf("phf_tile_find(): phf_tile_new took %d\n", (int)(time2 - time));
 
 		return( tile );
 	}
@@ -398,32 +638,32 @@ vips_tile_find( PhFBlockCache *cache, int x, int y )
 	search.oldest = cache->time;
 	search.topmost = cache->in->Ysize;
 	search.tile = NULL;
-	g_hash_table_foreach( cache->tiles, vips_tile_search_recycle, &search );
+	g_hash_table_foreach( cache->tiles, phf_tile_search_recycle, &search );
 	tile = search.tile; 
 
 	if( !tile ) {
 		/* There are no tiles we can reuse -- we have to make another
 		 * for now. They will get culled down again next time around.
 		 */
-		if( !(tile = vips_tile_new( cache, x, y )) ) 
+		if( !(tile = phf_tile_new( cache, x, y )) )
 			return( NULL );
 
 		return( tile );
 	}
 
-	VIPS_DEBUG_MSG_RED( "vips_tile_find: reusing tile %d x %d\n", 
+	VIPS_DEBUG_MSG_RED( "phf_tile_find: reusing tile %d x %d\n",
 		tile->pos.left, tile->pos.top );
-	//printf( "vips_tile_find: reusing tile %p -> %d x %d\n",
+	//printf( "phf_tile_find: reusing tile %p -> %d x %d\n",
 	//    tile, tile->pos.left, tile->pos.top );
 
-	if( vips_tile_move( tile, x, y ) )
+	if( phf_tile_move( tile, x, y ) )
 		return( NULL );
 
 	return( tile );
 }
 
 static gboolean            
-vips_tile_unlocked( gpointer key, gpointer value, gpointer user_data )
+phf_tile_unlocked( gpointer key, gpointer value, gpointer user_data )
 {
 	PhFTile *tile = (PhFTile *) value;
 
@@ -431,40 +671,50 @@ vips_tile_unlocked( gpointer key, gpointer value, gpointer user_data )
 }
 
 static void
-vips_block_cache_minimise( VipsImage *image, PhFBlockCache *cache )
+phf_block_cache_minimise( VipsImage *image, PhFBlockCache *cache )
 {
 	/* We can't drop tiles that are in use.
 	 */
 	g_mutex_lock( cache->lock );
 
+	printf("phf_block_cache_minimise() called\n");
+  if( cache->tiles )
+    printf("  cache hash table size: %d\n", (int)g_hash_table_size(cache->tiles));
+
 	g_hash_table_foreach_remove( cache->tiles, 
-		vips_tile_unlocked, NULL );
+		phf_tile_unlocked, NULL );
 
 	g_mutex_unlock( cache->lock );
 }
 
 static int
-vips_block_cache_build( VipsObject *object )
+phf_block_cache_build( VipsObject *object )
 {
 	PhFBlockCache *cache = (PhFBlockCache *) object;
 
-	VIPS_DEBUG_MSG( "vips_block_cache_build:\n" );
+	VIPS_DEBUG_MSG( "phf_block_cache_build:\n" );
 
 	if( VIPS_OBJECT_CLASS( phf_block_cache_parent_class )->
 		build( object ) )
 		return( -1 );
 
-  g_object_set( cache, "out", vips_image_new(), NULL );
-
-	VIPS_DEBUG_MSG( "vips_block_cache_build: max size = %g MB\n",
+	VIPS_DEBUG_MSG( "phf_block_cache_build: max size = %g MB\n",
 		(cache->max_tiles * cache->tile_width * cache->tile_height *
 		 	VIPS_IMAGE_SIZEOF_PEL( cache->in )) / (1024 * 1024.0) );
 
-	if( !cache->persistent )
-		g_signal_connect( cache->out, "minimise",
-			G_CALLBACK( vips_block_cache_minimise ), cache );
+  g_object_set( cache, "out", vips_image_new(), NULL );
+  if(phf_tile_pool.debug>1)
+    printf("phf_block_cache_build(): out ref count: %p->%d\n",
+      G_OBJECT(cache->out), G_OBJECT(cache->out)->ref_count);
 
-	return( 0 );
+  if( !cache->persistent ) {
+    if(phf_tile_pool.debug>1)
+      printf("phf_block_cache_build: connecting \"minimise\" signal from cache->out(%p)\n", cache->out);
+    g_signal_connect( cache->out, "minimise",
+        G_CALLBACK( phf_block_cache_minimise ), cache );
+  }
+
+  return( 0 );
 }
 
 static void
@@ -474,15 +724,15 @@ phf_block_cache_class_init( PhFBlockCacheClass *class )
 	VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( class );
 	VipsOperationClass *operation_class = VIPS_OPERATION_CLASS( class );
 
-	VIPS_DEBUG_MSG( "vips_block_cache_class_init\n" );
+	VIPS_DEBUG_MSG( "phf_block_cache_class_init\n" );
 
-	gobject_class->dispose = vips_block_cache_dispose;
+	gobject_class->dispose = phf_block_cache_dispose;
 	gobject_class->set_property = vips_object_set_property;
 	gobject_class->get_property = vips_object_get_property;
 
 	vobject_class->nickname = "blockcache";
 	vobject_class->description = _( "cache an image" );
-	vobject_class->build = vips_block_cache_build;
+	vobject_class->build = phf_block_cache_build;
 
 	operation_class->flags = VIPS_OPERATION_SEQUENTIAL;
 
@@ -498,13 +748,13 @@ phf_block_cache_class_init( PhFBlockCacheClass *class )
     VIPS_ARGUMENT_REQUIRED_OUTPUT,
     G_STRUCT_OFFSET( PhFBlockCache, out ) );
 
-  VIPS_ARG_INT( class, "tile_height", 4,
+  /*VIPS_ARG_INT( class, "tile_height", 4,
 		_( "Tile height" ), 
 		_( "Tile height in pixels" ),
 		VIPS_ARGUMENT_OPTIONAL_INPUT,
 		G_STRUCT_OFFSET( PhFBlockCache, tile_height ),
 		1, 1000000, 128 );
-
+  */
 	VIPS_ARG_ENUM( class, "access", 6, 
 		_( "Access" ), 
 		_( "Expected access pattern" ),
@@ -519,16 +769,16 @@ phf_block_cache_class_init( PhFBlockCacheClass *class )
 		G_STRUCT_OFFSET( PhFBlockCache, threaded ),
 		TRUE );
 
-	VIPS_ARG_BOOL( class, "persistent", 8, 
+	VIPS_ARG_BOOL( class, "persistent", 8,
 		_( "Persistent" ), 
 		_( "Keep cache between evaluations" ),
 		VIPS_ARGUMENT_OPTIONAL_INPUT,
 		G_STRUCT_OFFSET( PhFBlockCache, persistent ),
-		FALSE );
+		TRUE );
 }
 
 static unsigned int
-vips_rect_hash( VipsRect *pos )
+phf_rect_hash( VipsRect *pos )
 {
 	guint hash;
 
@@ -543,26 +793,9 @@ vips_rect_hash( VipsRect *pos )
 }
 
 static gboolean 
-vips_rect_equal( VipsRect *a, VipsRect *b )
+phf_rect_equal( VipsRect *a, VipsRect *b )
 {
 	return( a->left == b->left && a->top == b->top );
-}
-
-static void
-vips_tile_destroy( PhFTile *tile )
-{
-	PhFBlockCache *cache = tile->cache;
-
-	VIPS_DEBUG_MSG_RED( "vips_tile_destroy: tile %d, %d (%p)\n", 
-		tile->pos.left, tile->pos.top, tile ); 
-
-	cache->ntiles -= 1;
-	g_assert( cache->ntiles >= 0 );
-	tile->cache = NULL;
-
-	VIPS_UNREF( tile->region );
-
-	vips_free( tile );
 }
 
 static void
@@ -580,10 +813,10 @@ phf_block_cache_init( PhFBlockCache *cache )
 	cache->lock = vips_g_mutex_new();
 	cache->new_tile = vips_g_cond_new();
 	cache->tiles = g_hash_table_new_full( 
-		(GHashFunc) vips_rect_hash, 
-		(GEqualFunc) vips_rect_equal,
+		(GHashFunc) phf_rect_hash,
+		(GEqualFunc) phf_rect_equal,
 		NULL,
-		(GDestroyNotify) vips_tile_destroy );
+		(GDestroyNotify) phf_tile_dispose );
 }
 
 typedef struct _PhFTileCache {
@@ -596,28 +829,50 @@ typedef PhFBlockCacheClass PhFTileCacheClass;
 G_DEFINE_TYPE( PhFTileCache, phf_tile_cache, PHF_TYPE_BLOCK_CACHE );
 
 static void
-vips_tile_unref( PhFTile *tile )
+phf_tile_unref( PhFTile *tile )
 {
+  g_mutex_lock(phf_tile_ref_lock);
+  if(phf_tile_pool.debug) {
+    printf("phf_tile_unref: tile: %p  tile->cache: %p  ref_count: %d\n", tile, tile->cache, tile->ref_count);
+    //fflush(stdout);
+  }
 	g_assert( tile->ref_count > 0 );
 
 	tile->ref_count -= 1;
+  g_mutex_unlock(phf_tile_ref_lock);
 }
 
 static void
-vips_tile_ref( PhFTile *tile )
+phf_tile_ref( PhFTile *tile )
 {
+  g_mutex_lock(phf_tile_ref_lock);
 	tile->ref_count += 1;
+	if(phf_tile_pool.debug) {
+	  printf("phf_tile_ref:   tile: %p  tile->cache: %p  ref_count: %d\n", tile, tile->cache, tile->ref_count);
+	  //fflush(stdout);
+	}
 
 	g_assert( tile->ref_count > 0 );
+  g_mutex_unlock(phf_tile_ref_lock);
 }
 
 static void
-vips_tile_cache_unref( GSList *work )
+phf_tile_cache_unref( GSList *work )
 {
 	GSList *p;
 
-	for( p = work; p; p = p->next ) 
-		vips_tile_unref( (PhFTile *) p->data );
+	for( p = work; p; p = p->next ) {
+	  PhFTile * tile = (PhFTile *) p->data;
+	  if(phf_tile_pool.debug > 1) {
+	    printf("phf_tile_cache_unref: tile: %p  tile->cache: %p  ref_count: %d\n", tile, tile->cache, tile->ref_count);
+	    //fflush(stdout);
+	  }
+		phf_tile_unref( (PhFTile *) p->data );
+    if(phf_tile_pool.debug > 1) {
+      printf("phf_tile_cache_unref: tile: %p unreferenced\n", tile);
+      //fflush(stdout);
+    }
+	}
 
 	g_slist_free( work );
 }
@@ -625,7 +880,7 @@ vips_tile_cache_unref( GSList *work )
 /* Make a set of work tiles.
  */
 static GSList *
-vips_tile_cache_ref( PhFBlockCache *cache, VipsRect *r )
+phf_tile_cache_ref( PhFBlockCache *cache, VipsRect *r )
 {
 	const int tw = cache->tile_width;
 	const int th = cache->tile_height;
@@ -639,44 +894,83 @@ vips_tile_cache_ref( PhFBlockCache *cache, VipsRect *r )
 	PhFTile *tile;
 	int x, y, n;
 
+  phf_tile_pool_lock();
 	/* Ref all the tiles we will need.
 	 */
 	work = NULL;
 	n = 0;
-	for( y = ys; y < VIPS_RECT_BOTTOM( r ); y += th )
+	//printf("phf_tile_cache_ref(): start\n");
+	for( y = ys; y < VIPS_RECT_BOTTOM( r ); y += th ) {
 		for( x = xs; x < VIPS_RECT_RIGHT( r ); x += tw ) {
-      //gint64 time = vips_get_time();
-			if( !(tile = vips_tile_find( cache, x, y )) ) {
-				vips_tile_cache_unref( work );
+
+		  //printf("phf_tile_cache_ref(): y=%d x=%d\n", y, x);
+		  /* Lock the global tile pool until the tile is reff'ed,
+		   * so that we do not risk that it gets re-used by another thread as well
+		   */
+		  //phf_tile_pool_lock();
+      //gint64 time = phf_get_time();
+		  tile = phf_tile_find( cache, x, y );
+			if( !tile ) {
+	      printf("phf_tile_cache_ref(): phf_tile_find: %p\n", tile);
+			  g_assert(tile);
+				phf_tile_cache_unref( work );
+	      phf_tile_pool_unlock();
 				return( NULL );
 			}
-      //gint64 time2 = vips_get_time();
-      //printf("vips_tile_cache_ref(): vips_tile_find took %d, tile=%p, tile->cache=%p\n", (int)(time2 - time), tile, tile->cache);
+      //gint64 time2 = phf_get_time();
+      //printf("phf_tile_cache_ref(): phf_tile_find took %d, tile=%p, tile->cache=%p\n", (int)(time2 - time), tile, tile->cache);
 
-			vips_tile_touch( tile );
+			phf_tile_touch( tile );
+      //printf("phf_tile_cache_ref(): after phf_tile_touch()\n");
 
-			vips_tile_ref( tile ); 
+	    if(phf_tile_pool.debug > 1) {
+	      printf("phf_tile_cache_ref: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+	      //fflush(stdout);
+	    }
+	    phf_tile_ref( tile );
+	    if(phf_tile_pool.debug > 1) {
+	      printf("phf_tile_cache_ref: tile: %p  referenced\n", tile);
+	      //fflush(stdout);
+	    }
+	    //printf("phf_tile_cache_ref(): after phf_tile_ref()\n");
 
 			/* We must append, since we want to keep tile ordering
 			 * for sequential sources.
 			 */
-			//time = vips_get_time();
+			//time = phf_get_time();
 			work = g_slist_append( work, tile );
-			//time2 = vips_get_time();
-		  //printf("vips_tile_cache_ref(): g_slist_append took %d\n", (int)(time2 - time));
+			//time2 = phf_get_time();
+			//printf("phf_tile_cache_ref(): g_slist_append took %d\n", (int)(time2 - time));
 
-			VIPS_DEBUG_MSG_RED( "vips_tile_cache_ref: "
+      /* The global tile pool can now be safely unlocked, since we own the tile
+       */
+      //phf_tile_pool_unlock();
+
+      VIPS_DEBUG_MSG_RED( "phf_tile_cache_ref: "
 				"tile %d, %d (%p)\n", x, y, tile ); 
 
 			n += 1;
 		}
+	}
 
-	//printf("vips_tile_cache_ref(): appended %d tiles\n", n);
+  GSList *p;
+  for( p = work; p; p = p->next ) {
+    tile = (PhFTile *) p->data;
+    if(tile->ref_count < 1) {
+      printf("phf_tile_cache_gen: tile %p wrong ref_count %d, state=%d, region=%p, cache=%p\n",
+        tile, tile->ref_count, tile->state, tile->region, tile->cache);
+      //fflush(stdout);
+    }
+    g_assert( tile->ref_count > 0 );
+  }
+
+  phf_tile_pool_unlock();
+	//printf("phf_tile_cache_ref(): appended %d tiles\n", n);
 	return( work );
 }
 
 static void
-vips_tile_paste( PhFTile *tile, VipsRegion *or )
+phf_tile_paste( PhFTile *tile, VipsRegion *or )
 {
 	VipsRect hit;
 
@@ -688,10 +982,10 @@ vips_tile_paste( PhFTile *tile, VipsRegion *or )
 }
 
 
-/* Also called from vips_line_cache_gen(), beware.
+/* Also called from phf_line_cache_gen(), beware.
  */
 static int
-vips_tile_cache_gen( VipsRegion *or, 
+phf_tile_cache_gen( VipsRegion *or,
 	void *seq, void *a, void *b, gboolean *stop )
 {
 	VipsRegion *in = (VipsRegion *) seq;
@@ -699,7 +993,8 @@ vips_tile_cache_gen( VipsRegion *or,
 	VipsRect *r = &or->valid;
 
 	PhFTile *tile;
-	GSList *work;
+  GSList *work;
+  GSList *work2;
 	GSList *p;
 	int result;
   gint64 locked_tot;
@@ -709,45 +1004,51 @@ vips_tile_cache_gen( VipsRegion *or,
   locked_tot = 0;
   waiting_tot = 0;
 
-	VIPS_GATE_START( "vips_tile_cache_gen: wait1" );
-	gint64 time = vips_get_time();
+  VIPS_DEBUG_MSG_RED( "phf_tile_cache_gen: "
+    "left = %d, top = %d, width = %d, height = %d\n",
+    r->left, r->top, r->width, r->height );
+  //printf( "phf_tile_cache_gen: thread=%p, "
+  //    "left = %d, top = %d, width = %d, height = %d, threaded=%d\n",
+  //    g_thread_self(), r->left, r->top, r->width, r->height, cache->threaded );
+  //if( cache->tiles )
+  //  printf("  cache hash table size: %d\n", (int)g_hash_table_size(cache->tiles));
+
+
+  /* Ref all the tiles we will need.
+   */
+  //gint64 time_ = phf_get_time();
+  work = phf_tile_cache_ref( cache, r );
+  //gint64 time2_ = phf_get_time();
+  //printf("phf_tile_cache_gen(): cache_ref took %d\n", (int)(time2_ - time_));
+
+	VIPS_GATE_START( "phf_tile_cache_gen: wait1" );
+	//gint64 time = phf_get_time();
 	g_mutex_lock( cache->lock );
-	//printf("vips_tile_cache_gen: cache locked by thread=%p\n", g_thread_self());
-  gint64 time2 = vips_get_time();
-  gint64 tstart = vips_get_time();
-	VIPS_GATE_STOP( "vips_tile_cache_gen: wait1" );
-	//printf("vips_tile_cache_gen: thread=%p, lock 1 took %d\n", g_thread_self(), (int)(time2 - time));
-  //printf("vips_tile_cache_gen: thread=%p, tstart set at beginning\n",
+	//printf("phf_tile_cache_gen: cache locked by thread=%p\n", g_thread_self());
+  //gint64 time2 = phf_get_time();
+  //gint64 tstart = phf_get_time();
+	VIPS_GATE_STOP( "phf_tile_cache_gen: wait1" );
+	//printf("phf_tile_cache_gen: thread=%p, lock 1 took %d\n", g_thread_self(), (int)(time2 - time));
+  //printf("phf_tile_cache_gen: thread=%p, tstart set at beginning\n",
   //            g_thread_self());
 
-	VIPS_DEBUG_MSG_RED( "vips_tile_cache_gen: "
-		"left = %d, top = %d, width = %d, height = %d\n",
-		r->left, r->top, r->width, r->height );
-	//printf( "vips_tile_cache_gen: thread=%p, "
-	//    "left = %d, top = %d, width = %d, height = %d, threaded=%d\n",
-	//    g_thread_self(), r->left, r->top, r->width, r->height, cache->threaded );
+	for( p = work; p; p = p->next ) {
+    tile = (PhFTile *) p->data;
+    if(tile->ref_count < 1) {
+      printf("phf_tile_cache_gen[1]: tile %p wrong ref_count %d, state=%d, region=%p, cache=%p\n",
+        tile, tile->ref_count, tile->state, tile->region, tile->cache);
+      //fflush(stdout);
+    }
+    g_assert( tile->ref_count > 0 );
+	}
 
-	/* Ref all the tiles we will need.
-	 */
-  //gint64 time_ = vips_get_time();
-	work = vips_tile_cache_ref( cache, r );
-  //gint64 time2_ = vips_get_time();
-  //printf("vips_tile_cache_gen(): cache_ref took %d\n", (int)(time2_ - time_));
-
-  int iter = 0;
+	int iter = 0;
   int nprocessed = 0;
   int npasted = 0;
 	while( work ) {
-		/* Fill a list of available data tiles: easy, we can just paste those in.
-		 *//*
-	  GSList *dlist = 0;
-    for( p = work; p; p = p->next ) {
-      tile = (PhFTile *) p->data;
-      if( tile->state == VIPS_TILE_STATE_DATA )
-        dlist = g_slist_prepend( dlist, tile );
-    }
-    */
-	  gint64 time2 = vips_get_time();
+    /* Search for data tiles: easy, we can just paste those in.
+     */
+	  gint64 time2 = phf_get_time();
 	  iter += 1;
     int nchecked=0;
 		for(;;) {
@@ -762,36 +1063,56 @@ vips_tile_cache_gen( VipsRegion *or,
 			if( !p )
 				break;
 
-			VIPS_DEBUG_MSG_RED( "vips_tile_cache_gen: "
+      if(phf_tile_pool.debug > 1) {
+        printf("phf_tile_cache_gen: start of tile pasting: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+        //fflush(stdout);
+      }
+			VIPS_DEBUG_MSG_RED( "phf_tile_cache_gen: "
 				"pasting %p\n", tile ); 
+			//printf("phf_tile_cache_gen: pasting %p\n", tile );
 
-      /*printf("visp_tile_cache_gen(): before vips_tile_paste()\n");*/
-			//gint64 time_ = vips_get_time();
-      gint64 tstop = vips_get_time();
-      locked_tot += tstop - tstart;
-      g_mutex_unlock(cache->lock);
-			vips_tile_paste( tile, or );
-      g_mutex_lock(cache->lock);
-      tstart = vips_get_time();
+			if(tile->ref_count < 1) {
+			  printf("phf_tile_cache_gen[2]: tile %p wrong ref_count %d, state=%d, region=%p, cache=%p\n",
+			    tile, tile->ref_count, tile->state, tile->region, tile->cache);
+			  //fflush(stdout);
+			}
+			g_assert( tile->ref_count > 0 );
+
+      /*printf("visp_tile_cache_gen(): before phf_tile_paste()\n");*/
+			//gint64 time_ = phf_get_time();
+      //gint64 tstop = phf_get_time();
+      //locked_tot += tstop - tstart;
+      //g_mutex_unlock(cache->lock);
+			phf_tile_paste( tile, or );
+      //g_mutex_lock(cache->lock);
+      //tstart = phf_get_time();
 			npasted += 1;
-      //printf("visp_tile_cache_gen: thread=%p, iter=%d, vips_tile_paste called\n"
+      //printf("visp_tile_cache_gen: thread=%p, iter=%d, phf_tile_paste called\n"
       //    "                     %dx%d+%d+%d -> %dx%d+%d+%d\n", g_thread_self(), iter,
       //    tile->pos.width, tile->pos.height, tile->pos.left, tile->pos.top,
       //    or->valid.width, or->valid.height, or->valid.left, or->valid.top);
-      //gint64 time2_ = vips_get_time();
-      //printf("vips_tile_cache_gen: vips_tile_paste took %d\n"
+      //gint64 time2_ = phf_get_time();
+      //printf("phf_tile_cache_gen: phf_tile_paste took %d\n"
 
 			/* We're done with this tile.
 			 */
 			work = g_slist_remove( work, tile );
-      //time2_ = vips_get_time();
-      //printf("vips_tile_cache_gen: vips_tile_paste + remove took %d\n", (int)(time2_ - time_));
-			vips_tile_unref( tile ); 
-      //time2_ = vips_get_time();
-      //printf("vips_tile_cache_gen: vips_tile_paste + remove + unref took %d\n", (int)(time2_ - time_));
+      //time2_ = phf_get_time();
+      //printf("phf_tile_cache_gen: phf_tile_paste + remove took %d\n", (int)(time2_ - time_));
+      if(phf_tile_pool.debug > 1) {
+        printf("phf_tile_cache_gen: before phf_tile_unref: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+        //fflush(stdout);
+      }
+			phf_tile_unref( tile );
+      if(phf_tile_pool.debug > 1) {
+        printf("phf_tile_cache_gen: tile: %p unreferenced\n", tile);
+        //fflush(stdout);
+      }
+      //time2_ = phf_get_time();
+      //printf("phf_tile_cache_gen: phf_tile_paste + remove + unref took %d\n", (int)(time2_ - time_));
 		}
-    gint64 time3 = vips_get_time();
-    //printf("vips_tile_cache_gen: thread=%p, iter=%d, data tile paste took %d, pasted=%d, checked=%d\n", g_thread_self(), iter, (int)(time3 - time2), npasted, nchecked);
+    gint64 time3 = phf_get_time();
+    //printf("phf_tile_cache_gen: thread=%p, iter=%d, data tile paste took %d, pasted=%d, checked=%d\n", g_thread_self(), iter, (int)(time3 - time2), npasted, nchecked);
 
 		/* Calculate the first PEND tile we find on the work list. We
 		 * don't calculate all PEND tiles since after the first, more
@@ -801,40 +1122,53 @@ vips_tile_cache_gen( VipsRegion *or,
 		for( p = work; p; p = p->next ) { 
 			tile = (PhFTile *) p->data;
 
-			//printf("vips_tile_cache_gen(): tile->state=%d\n", tile->state);
+			//printf("phf_tile_cache_gen(): tile->state=%d\n", tile->state);
 
+      if(phf_tile_pool.debug > 1) {
+        printf("phf_tile_cache_gen: checking tile before preparation: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+        //fflush(stdout);
+      }
 			if( tile->state == VIPS_TILE_STATE_PEND ) {
 				tile->state = VIPS_TILE_STATE_CALC;
 
-				VIPS_DEBUG_MSG_RED( "vips_tile_cache_gen: "
+				VIPS_DEBUG_MSG_RED( "phf_tile_cache_gen: "
 					"calc of %p\n", tile ); 
+
+	      if(phf_tile_pool.debug > 1) {
+	        printf("phf_tile_cache_gen: start of tile preparation: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+	        //fflush(stdout);
+	      }
+	      g_assert( tile->ref_count > 0 );
 
 				/* In threaded mode, we let other threads run
 				 * while we calc this tile. In non-threaded
 				 * mode, we keep the lock and make 'em wait.
 				 */
-			  gint64 tstop = vips_get_time();
-			  locked_tot += tstop - tstart;
-        //printf("vips_tile_cache_gen: thread=%p, iter=%d, time elpased before vips_region_prepare_to: %d\n",
+			  //gint64 tstop = phf_get_time();
+			  //locked_tot += tstop - tstart;
+        //printf("phf_tile_cache_gen: thread=%p, iter=%d, time elpased before phf_region_prepare_to: %d\n",
         //    g_thread_self(), iter, (int)(tstop - tstart));
-        //printf("vips_tile_cache_gen: thread=%p, cache unlocked\n", g_thread_self());
+        //printf("phf_tile_cache_gen: thread=%p, cache unlocked\n", g_thread_self());
 				if( cache->threaded ) 
 					g_mutex_unlock( cache->lock );
-			  //gint64 time3 = vips_get_time();
+			  //gint64 time3 = phf_get_time();
 
 			  if( !tile->region ) {
-			    //printf("vips_tile_cache_gen(): calling vips_tile_init_region()\n");
-			    vips_tile_init_region( tile );
-          //printf("vips_tile_cache_gen(): vips_tile_init_region() finished\n");
+			    //printf("phf_tile_cache_gen(): calling phf_tile_init_region()\n");
+			    phf_tile_init_region( tile );
+          //printf("phf_tile_cache_gen(): phf_tile_init_region() finished\n");
 			  }
 
-				result = vips_region_prepare_to( in, 
+        g_assert( tile->ref_count > 0 );
+        g_assert( tile->region );
+
+	      result = vips_region_prepare_to( in,
 					tile->region, 
 					&tile->pos, 
 					tile->pos.left, tile->pos.top );
 				nprocessed += 1;
 				/*
-        printf("vips_tile_cache_gen: thread=%p, iter=%d, vips_region_prepare_to finished\n"
+        printf("phf_tile_cache_gen: thread=%p, iter=%d, vips_region_prepare_to finished\n"
             "                     in->im=%dx%d\n"
             "                     in->valid=%dx%d+%d+%d\n"
             "                     tile->region->valid=%dx%d+%d+%d\n"
@@ -846,18 +1180,24 @@ vips_tile_cache_gen( VipsRegion *or,
 				*/
 
 				if( cache->threaded ) {
-					VIPS_GATE_START( "vips_tile_cache_gen: "
+					VIPS_GATE_START( "phf_tile_cache_gen: "
 						"wait2" );
-					//time = vips_get_time();
+					//time = phf_get_time();
 					g_mutex_lock( cache->lock );
-	        //printf("vips_tile_cache_gen: thread=%p, cache locked\n", g_thread_self());
-					//time2 = vips_get_time();
-					VIPS_GATE_STOP( "vips_tile_cache_gen: "
+	        //printf("phf_tile_cache_gen: thread=%p, cache locked\n", g_thread_self());
+					//time2 = phf_get_time();
+					VIPS_GATE_STOP( "phf_tile_cache_gen: "
 						"wait2" );
-					//printf("vips_tile_cache_gen(): lock 2 took %d\n", (int)(time2 - time));
+					//printf("phf_tile_cache_gen(): lock 2 took %d\n", (int)(time2 - time));
 				}
-        tstart = vips_get_time();
-        //printf("vips_tile_cache_gen: thread=%p, iter=%d, tstart set after vips_region_prepare_to\n",
+
+        if(phf_tile_pool.debug > 1) {
+          printf("phf_tile_cache_gen: end of tile preparation: cache: %p  tile: %p  tile->cache: %p  ref_count: %d\n", cache, tile, tile->cache, tile->ref_count);
+          //fflush(stdout);
+        }
+	      g_assert( tile->ref_count > 0 );
+        //tstart = phf_get_time();
+        //printf("phf_tile_cache_gen: thread=%p, iter=%d, tstart set after vips_region_prepare_to\n",
         //            g_thread_self(), iter);
 				/* If there was an error calculating this
 				 * tile, black it out and terminate
@@ -868,7 +1208,7 @@ vips_tile_cache_gen( VipsRegion *or,
 				 */
 				if( result ) {
 					VIPS_DEBUG_MSG_RED( 
-						"vips_tile_cache_gen: "
+						"phf_tile_cache_gen: "
 						"error on tile %p\n", tile ); 
 
 					g_warning( _( "error in tile %d x %d" ),
@@ -881,7 +1221,7 @@ vips_tile_cache_gen( VipsRegion *or,
 
 				tile->state = VIPS_TILE_STATE_DATA;
 
-				vips_tile_touch( tile );
+				phf_tile_touch( tile );
 
 				/* Let everyone know there's a new DATA tile. 
 				 * They need to all check their work lists.
@@ -905,54 +1245,55 @@ vips_tile_cache_gen( VipsRegion *or,
 				g_assert( tile->state == VIPS_TILE_STATE_CALC );
 			}
 
-			VIPS_DEBUG_MSG_RED( "vips_tile_cache_gen: waiting\n" ); 
+			VIPS_DEBUG_MSG_RED( "phf_tile_cache_gen: waiting\n" );
 
-			VIPS_GATE_START( "vips_tile_cache_gen: wait3" );
+			VIPS_GATE_START( "phf_tile_cache_gen: wait3" );
 
-      gint64 tstop = vips_get_time();
-      locked_tot += tstop - tstart;
-      //printf("vips_tile_cache_gen: thread=%p, iter=%d, time elpased before g_cond_wait: %d\n",
+      //gint64 tstop = phf_get_time();
+      //locked_tot += tstop - tstart;
+      //printf("phf_tile_cache_gen: thread=%p, iter=%d, time elpased before g_cond_wait: %d\n",
       //    g_thread_self(), iter, (int)(tstop - tstart));
-      //printf("vips_tile_cache_gen: cache unlocked by thread=%p\n", g_thread_self());
+      //printf("phf_tile_cache_gen: cache unlocked by thread=%p\n", g_thread_self());
 			g_cond_wait( cache->new_tile, cache->lock );
-		  //printf("vips_tile_cache_gen: cache locked by thread=%p\n", g_thread_self());
-			tstart = vips_get_time();
-      //printf("vips_tile_cache_gen: thread=%p, iter=%d, waited %d\n",
+		  //printf("phf_tile_cache_gen: cache locked by thread=%p\n", g_thread_self());
+			//tstart = phf_get_time();
+      //printf("phf_tile_cache_gen: thread=%p, iter=%d, waited %d\n",
       //            g_thread_self(), iter, (int)(tstart-tstop));
-			waiting_tot += tstart - tstop;
+			//waiting_tot += tstart - tstop;
 
-			VIPS_GATE_STOP( "vips_tile_cache_gen: wait3" );
+			VIPS_GATE_STOP( "phf_tile_cache_gen: wait3" );
 
-			VIPS_DEBUG_MSG( "vips_tile_cache_gen: awake!\n" ); 
+			VIPS_DEBUG_MSG( "phf_tile_cache_gen: awake!\n" );
 		}
 	}
 
-  gint64 tstop = vips_get_time();
-  locked_tot += tstop - tstart;
-  //printf("vips_tile_cache_gen: thread=%p, iter=%d, total time elapsed before end: %d\n",
+  //gint64 tstop = phf_get_time();
+  //locked_tot += tstop - tstart;
+  //printf("phf_tile_cache_gen: thread=%p, iter=%d, total time elapsed before end: %d\n",
   //    g_thread_self(), iter, (int)(tstop - tstart));
-  //printf("vips_tile_cache_gen: thread=%p, ts=%dx%d, iter=%d, total=%d, waiting=%d, pasted=%d, processed=%d\n",
+  //printf("phf_tile_cache_gen: thread=%p, ts=%dx%d, iter=%d, total=%d, waiting=%d, pasted=%d, processed=%d\n",
   //        g_thread_self(), cache->tile_width, cache->tile_height, iter,
   //        (int)(tstop-time), (int)waiting_tot, npasted, nprocessed);
   if( 0 && locked_tot > 200 ) {
-    printf("vips_tile_cache_gen: thread=%p, iter=%d, total time spend in locked state: %ld, pasted=%d, processed=%d",
+    printf("phf_tile_cache_gen: thread=%p, iter=%d, total time spend in locked state: %ld, pasted=%d, processed=%d",
         g_thread_self(), iter, locked_tot, npasted, nprocessed);
     printf("   ********************");
     printf("\n");
   }
-  //printf("vips_tile_cache_gen: cache unlocked by thread=%p\n", g_thread_self());
+  //printf("phf_tile_cache_gen: cache unlocked by thread=%p\n", g_thread_self());
 	g_mutex_unlock( cache->lock );
+  //printf( "phf_tile_cache_gen: thread=%p, finished\n", g_thread_self() );
 
 	return( result );
 }
 
 static int
-vips_tile_cache_build( VipsObject *object )
+phf_tile_cache_build( VipsObject *object )
 {
 	PhFBlockCache *block_cache = (PhFBlockCache *) object;
 	PhFTileCache *cache = (PhFTileCache *) object;
 
-	VIPS_DEBUG_MSG( "vips_tile_cache_build\n" );
+	VIPS_DEBUG_MSG( "phf_tile_cache_build\n" );
 
 	if( VIPS_OBJECT_CLASS( phf_tile_cache_parent_class )->
 		build( object ) )
@@ -966,10 +1307,12 @@ vips_tile_cache_build( VipsObject *object )
 		return( -1 );
 
 	if( vips_image_generate( block_cache->out,
-		vips_start_one, vips_tile_cache_gen, vips_stop_one, 
+		vips_start_one, phf_tile_cache_gen, vips_stop_one,
 		block_cache->in, cache ) )
 		return( -1 );
 
+  //printf("phf_tile_cache_build(): out ref count: %p->%d\n",
+  //    G_OBJECT(block_cache->out), G_OBJECT(block_cache->out)->ref_count);
 	return( 0 );
 }
 
@@ -979,20 +1322,20 @@ phf_tile_cache_class_init( PhFTileCacheClass *class )
 	GObjectClass *gobject_class = G_OBJECT_CLASS( class );
 	VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( class );
 
-	VIPS_DEBUG_MSG( "vips_tile_cache_class_init\n" );
+	VIPS_DEBUG_MSG( "phf_tile_cache_class_init\n" );
 
 	gobject_class->set_property = vips_object_set_property;
 	gobject_class->get_property = vips_object_get_property;
 
 	vobject_class->nickname = "phf_tilecache";
 	vobject_class->description = _( "cache an image as a set of tiles" );
-	vobject_class->build = vips_tile_cache_build;
+	vobject_class->build = phf_tile_cache_build;
 
-	VIPS_ARG_INT( class, "tile_width", 3, 
+	/*VIPS_ARG_INT( class, "tile_width", 3,
 		_( "Tile width" ), 
 		_( "Tile width in pixels" ),
 		VIPS_ARGUMENT_OPTIONAL_INPUT,
-		G_STRUCT_OFFSET( PhFBlockCache, tile_width ),
+		G_STRUCT_OFFSET( PhFBlockCache, tile_width2 ),
 		1, 1000000, 128 );
 
 	VIPS_ARG_INT( class, "max_tiles", 5, 
@@ -1001,16 +1344,18 @@ phf_tile_cache_class_init( PhFTileCacheClass *class )
 		VIPS_ARGUMENT_OPTIONAL_INPUT,
 		G_STRUCT_OFFSET( PhFBlockCache, max_tiles ),
 		-1, 1000000, 1000 );
-
+  */
 }
 
 static void
 phf_tile_cache_init( PhFTileCache *cache )
 {
+  phf_tile_pool_init();
+  cache->parent_instance.tile_width = PHF_TILE_SIZE;
 }
 
 /**
- * vips_tilecache:
+ * phf_tilecache:
  * @in: input image
  * @out: output image
  * @...: %NULL-terminated list of optional named arguments
@@ -1042,13 +1387,13 @@ phf_tile_cache_init( PhFTileCache *cache )
  * will cache up to 1,000 tiles. @access defaults to #VIPS_ACCESS_RANDOM.
  *
  * Normally, only a single thread at once is allowed to calculate tiles. If
- * you set @threaded to %TRUE, vips_tilecache() will allow many threads to
+ * you set @threaded to %TRUE, phf_tilecache() will allow many threads to
  * calculate tiles at once, and share the cache between them.
  *
  * Normally the cache is dropped when computation finishes. Set @persistent to
  * %TRUE to keep the cache between computations.
  *
- * See also: vips_cache(), vips_linecache().
+ * See also: phf_cache(), phf_linecache().
  *
  * Returns: 0 on success, -1 on error.
  */
@@ -1058,9 +1403,17 @@ phf_tilecache( VipsImage *in, VipsImage **out, ... )
 	va_list ap;
 	int result;
 
+  //printf("phf_tilecache(): in ref count (before): %p->%d\n",
+  //    G_OBJECT(in), G_OBJECT(in)->ref_count);
+
 	va_start( ap, out );
 	result = vips_call_split( "phf_tilecache", ap, in, out );
 	va_end( ap );
+
+  //printf("phf_tilecache(): in ref count (after): %p->%d\n",
+  //    G_OBJECT(in), G_OBJECT(in)->ref_count);
+  //printf("phf_tilecache(): out ref count: %p->%d\n",
+  //    G_OBJECT(*out), G_OBJECT(*out)->ref_count);
 
 	return( result );
 }
@@ -1075,16 +1428,16 @@ typedef PhFBlockCacheClass PhFLineCacheClass;
 G_DEFINE_TYPE( PhFLineCache, phf_line_cache, PHF_TYPE_BLOCK_CACHE );
 
 static int
-vips_line_cache_gen( VipsRegion *or, 
+phf_line_cache_gen( VipsRegion *or,
 	void *seq, void *a, void *b, gboolean *stop )
 {
 	PhFBlockCache *block_cache = (PhFBlockCache *) b;
 
-	VIPS_GATE_START( "vips_line_cache_gen: wait" );
+	VIPS_GATE_START( "phf_line_cache_gen: wait" );
 
 	g_mutex_lock( block_cache->lock );
 
-	VIPS_GATE_STOP( "vips_line_cache_gen: wait" );
+	VIPS_GATE_STOP( "phf_line_cache_gen: wait" );
 
 	/* We size up the cache to the largest request.
 	 */
@@ -1092,17 +1445,17 @@ vips_line_cache_gen( VipsRegion *or,
 		block_cache->max_tiles * block_cache->tile_height ) {
 		block_cache->max_tiles = 
 			1 + (or->valid.height / block_cache->tile_height);
-		VIPS_DEBUG_MSG( "vips_line_cache_gen: bumped max_tiles to %d\n",
+		VIPS_DEBUG_MSG( "phf_line_cache_gen: bumped max_tiles to %d\n",
 			block_cache->max_tiles ); 
 	}
 
 	g_mutex_unlock( block_cache->lock );
 
-	return( vips_tile_cache_gen( or, seq, a, b, stop ) ); 
+	return( phf_tile_cache_gen( or, seq, a, b, stop ) );
 }
 
 static int
-vips_line_cache_build( VipsObject *object )
+phf_line_cache_build( VipsObject *object )
 {
 	PhFBlockCache *block_cache = (PhFBlockCache *) object;
 	PhFLineCache *cache = (PhFLineCache *) object;
@@ -1111,7 +1464,7 @@ vips_line_cache_build( VipsObject *object )
 	int tile_height;
 	int n_lines;
 
-	VIPS_DEBUG_MSG( "vips_line_cache_build\n" );
+	VIPS_DEBUG_MSG( "phf_line_cache_build\n" );
 
 	if( !vips_object_argument_isset( object, "access" ) ) 
 		block_cache->access = VIPS_ACCESS_SEQUENTIAL;
@@ -1120,9 +1473,9 @@ vips_line_cache_build( VipsObject *object )
 		build( object ) )
 		return( -1 );
 
-	/* This can go up with request size, see vips_line_cache_gen().
+	/* This can go up with request size, see phf_line_cache_gen().
 	 */
-	vips_get_tile_size( block_cache->in, 
+	vips_get_tile_size( block_cache->in,
 		&tile_width, &tile_height, &n_lines );
 	block_cache->tile_width = block_cache->in->Xsize;
 
@@ -1132,13 +1485,13 @@ vips_line_cache_build( VipsObject *object )
 	 */
 	block_cache->max_tiles = 3 * n_lines / block_cache->tile_height;
 
-	VIPS_DEBUG_MSG( "vips_line_cache_build: n_lines = %d\n", 
+	VIPS_DEBUG_MSG( "phf_line_cache_build: n_lines = %d\n",
 		n_lines );
-	VIPS_DEBUG_MSG( "vips_line_cache_build: max_tiles = %d\n", 
+	VIPS_DEBUG_MSG( "phf_line_cache_build: max_tiles = %d\n",
 		block_cache->max_tiles ); 
-	VIPS_DEBUG_MSG( "vips_line_cache_build: tile_height = %d\n", 
+	VIPS_DEBUG_MSG( "phf_line_cache_build: tile_height = %d\n",
 		block_cache->tile_height ); 
-	VIPS_DEBUG_MSG( "vips_line_cache_build: max size = %g MB\n",
+	VIPS_DEBUG_MSG( "phf_line_cache_build: max size = %g MB\n",
 		(block_cache->max_tiles * 
 		 block_cache->tile_width * 
 		 block_cache->tile_height * 
@@ -1152,7 +1505,7 @@ vips_line_cache_build( VipsObject *object )
 		return( -1 );
 
 	if( vips_image_generate( block_cache->out,
-		vips_start_one, vips_line_cache_gen, vips_stop_one, 
+		vips_start_one, phf_line_cache_gen, vips_stop_one,
 		block_cache->in, cache ) )
 		return( -1 );
 
@@ -1164,11 +1517,11 @@ phf_line_cache_class_init( PhFLineCacheClass *class )
 {
 	VipsObjectClass *vobject_class = VIPS_OBJECT_CLASS( class );
 
-	VIPS_DEBUG_MSG( "vips_line_cache_class_init\n" );
+	VIPS_DEBUG_MSG( "phf_line_cache_class_init\n" );
 
 	vobject_class->nickname = "linecache";
 	vobject_class->description = _( "cache an image as a set of lines" );
-	vobject_class->build = vips_line_cache_build;
+	vobject_class->build = phf_line_cache_build;
 
 }
 
@@ -1178,7 +1531,7 @@ phf_line_cache_init( PhFLineCache *cache )
 }
 
 /**
- * vips_linecache:
+ * phf_linecache:
  * @in: input image
  * @out: output image
  * @...: %NULL-terminated list of optional named arguments
@@ -1204,13 +1557,13 @@ phf_line_cache_init( PhFLineCache *cache )
  * the top-most tile is reused. @access defaults to #VIPS_ACCESS_RANDOM.
  *
  * @tile_height can be used to set the size of the strips that
- * vips_linecache() uses. The default is 1 (a single scanline).
+ * phf_linecache() uses. The default is 1 (a single scanline).
  *
  * Normally, only a single thread at once is allowed to calculate tiles. If
- * you set @threaded to %TRUE, vips_linecache() will allow many threads to
+ * you set @threaded to %TRUE, phf_linecache() will allow many threads to
  * calculate tiles at once and share the cache between them.
  *
- * See also: vips_cache(), vips_tilecache(). 
+ * See also: phf_cache(), phf_tilecache().
  *
  * Returns: 0 on success, -1 on error.
  */
