@@ -596,6 +596,8 @@ endif( FALSE )
 
 add_subdirectory(benchmarks) 
 
+#add_subdirectory(tests) 
+
 
 #if(GTKMM3_FOUND)
 
