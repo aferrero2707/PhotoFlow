@@ -43,7 +43,7 @@ matrix:
             - pwd
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh "continuous" photoflow*.zip;
+            - bash  ./upload_rotate.sh "continuous" photoflow*.zip
         - os: osx
           cache: ccache
           osx_image: xcode7.3
@@ -80,7 +80,7 @@ matrix:
             - ./package-photoflow-hb.sh
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh "continuous" $HOME/photoflow-osx-*.dmg > /dev/null;
+            - bash  ./upload_rotate.sh "continuous" $HOME/photoflow-osx-*.dmg > /dev/null
 
 
 branches:
