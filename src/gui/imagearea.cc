@@ -1073,7 +1073,9 @@ void PF::ImageArea::update( VipsRect* area )
     std::cout<<"                     image->Bands="<<image->Bands<<std::endl;
     std::cout<<"                     image->BandFmt="<<image->BandFmt<<std::endl;
     std::cout<<"                     image size: "<<image->Xsize<<"x"<<image->Ysize<<std::endl;
+    PF_PRINT_REF(image, "ImageArea::update(): pipeine->get_output():");
 #endif
+    //return;
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "ImageArea::update(): merged image ref" );
     } else {
@@ -1591,7 +1593,7 @@ void PF::ImageArea::update( VipsRect* area )
   preview_size.height = outimg->Ysize;
   g_mutex_unlock(preview_size_mutex);
 #ifdef DEBUG_DISPLAY
-  std::cout<<"   update->rect: "<<update->rect<<std::endl;
+  //std::cout<<"   update->rect: "<<update->rect<<std::endl;
   std::cout<<"PF::ImageArea::update(): installing set_size callback."<<std::endl;
 #endif
   //gdk_threads_add_idle ((GSourceFunc) set_size_cb, update);

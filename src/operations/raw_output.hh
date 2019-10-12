@@ -597,6 +597,9 @@ enum exposure_mode_t {
                 newr = pro_photo[0][0] * line2[xi] + pro_photo[0][1] * line2[xi+1] + pro_photo[0][2] * line2[xi+2];
                 newg = pro_photo[1][0] * line2[xi] + pro_photo[1][1] * line2[xi+1] + pro_photo[1][2] * line2[xi+2];
                 newb = pro_photo[2][0] * line2[xi] + pro_photo[2][1] * line2[xi+1] + pro_photo[2][2] * line2[xi+2];
+                newr *= 65535.f;
+                newg *= 65535.f;
+                newb *= 65535.f;
                 // If point is in negative area, just the matrix, but not the LUT. This is checked inside Color::rgb2hsvdcp
                 if( false && r->top==0 && r-> left==0 && y<4 && xi<12 )
                   std::cout<<"newr="<<newr<<" newg="<<newg<<" newb="<<newb<<std::endl;
@@ -605,7 +608,7 @@ enum exposure_mode_t {
                   newg *= opar->get_dcp_exp_scale();
                   newb *= opar->get_dcp_exp_scale();
                 }
-                if(rtengine::Color::rgb2hsvdcp(newr*65535.f, newg*65535.f, newb*65535.f, h , s, v)) {
+                if(rtengine::Color::rgb2hsvdcp(newr, newg, newb, h , s, v)) {
                   if( false && r->top==0 && r-> left==0 && y<4 && xi<12 )
                     std::cout<<"  h="<<h<<" s="<<s<<" v="<<v<<std::endl;
                   if( opar->get_apply_hue_sat_map() )

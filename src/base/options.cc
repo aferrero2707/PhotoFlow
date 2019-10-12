@@ -39,6 +39,9 @@ PF::Options::Options()
   working_trc_type = PF_TRC_LINEAR;
   display_profile_type = PF::PF_DISPLAY_PROF_sRGB;
   display_profile_intent = INTENT_RELATIVE_COLORIMETRIC;
+
+  tile_cache_size = 1000;
+
   save_sidecar_files = 0;
   use_default_preset = 0;
   layerlist_widget_width = 250;
@@ -96,6 +99,9 @@ void PF::Options::load()
       if (keyFile.has_group ("Processing")) {
         if (keyFile.has_key ("Processing", "use_default_preset")) {
           use_default_preset = keyFile.get_integer ("Processing", "apply_default_preset");
+        }
+        if (keyFile.has_key ("Processing", "tile_cache_size")) {
+          tile_cache_size = keyFile.get_integer ("Processing", "tile_cache_size");
         }
       }
 
@@ -215,6 +221,7 @@ void PF::Options::save()
   keyFile.set_string ("Folders", "last_visited_icc_folder", last_visited_icc_folder);
 
   keyFile.set_integer ("Processing", "apply_default_preset", (int)use_default_preset);
+  keyFile.set_integer ("Processing", "tile_cache_size", (int)tile_cache_size);
 
   keyFile.set_integer ("GUI", "layerlist_widget_width", (int)layerlist_widget_width);
   keyFile.set_integer ("GUI", "use_system_theme", (int)ui_use_system_theme);

@@ -182,6 +182,7 @@ void PF::ToneMappingParV2::pre_build( rendermode_t mode )
   int iter = 0;
   TM_lin_exp_params_t par;
   float max = LE_shoulder_max.get(), maxout;
+#ifndef NDEBUG
   std::cout<<"ToneMappingParV2::pre_build: gain="<<LE_gain.get()
           <<"  slope="<<LE_slope.get()
           <<"  LE_lin_max="<<LE_lin_max.get()
@@ -192,12 +193,15 @@ void PF::ToneMappingParV2::pre_build( rendermode_t mode )
           <<"  sh_desaturation="<<sh_desaturation.get()
           <<"  hl_desaturation="<<hl_desaturation.get()
       <<std::endl;
+#endif
   while( !found ) {
     par.init(LE_gain.get(), LE_slope.get(), LE_lin_max.get(), LE_knee_strength.get(),
       compression, LE_shoulder_slope.get());
     TM_lin_exp( par, max, maxout );
     float delta = maxout - 1.0f;
+#ifndef NDEBUG
     std::cout<<iter<<"  compression="<<compression<<"  maxout="<<maxout<<"  delta="<<delta<<std::endl;
+#endif
     if( delta > -1.0e-10 && delta < 1.0e-10 ) {
       found = true;
       break;
@@ -210,7 +214,9 @@ void PF::ToneMappingParV2::pre_build( rendermode_t mode )
 
   //if( found ) {
     LE_compression.set(compression);
+#ifndef NDEBUG
     std::cout<<"ToneMappingParV2::pre_build: max="<<max<<"  maxout="<<maxout<<"  compression="<<compression<<std::endl;
+#endif
   //}
 }
 
@@ -223,6 +229,7 @@ VipsImage* PF::ToneMappingParV2::build(std::vector<VipsImage*>& in, int first,
   if( in.size()<1 || in[0]==NULL ) return NULL;
 
   ICCProfile* new_icc_data = PF::get_icc_profile( in[0] );
+#ifndef NDEBUG
   std::cout<<"ToneMappingParV2::build: new_icc_data="<<new_icc_data<<std::endl;
 
   std::cout<<"ToneMappingParV2::build: gain="<<LE_gain.get()
@@ -235,6 +242,7 @@ VipsImage* PF::ToneMappingParV2::build(std::vector<VipsImage*>& in, int first,
           <<"  sh_desaturation="<<sh_desaturation.get()
           <<"  hl_desaturation="<<hl_desaturation.get()
       <<std::endl;
+#endif
   LE_params.init(LE_gain.get(), LE_slope.get(), LE_lin_max.get(), LE_knee_strength.get(),
       LE_compression.get(), LE_shoulder_slope.get());
 

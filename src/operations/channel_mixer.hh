@@ -36,73 +36,75 @@
 namespace PF 
 {
 
-  class ChannelMixerPar: public PixelProcessorPar
+class ChannelMixerPar: public PixelProcessorPar
+{
+  Property<float> red_mix, green_mix, blue_mix;
+public:
+  ChannelMixerPar():
+    PixelProcessorPar(),
+    red_mix("red_mix",this,1),
+    green_mix("green_mix",this,0),
+    blue_mix("blue_mix",this,0)
+{
+    set_type( "channel_mixer" );
+
+    set_default_name( _("channel mixer") );
+}
+  float get_red_mix() { return red_mix.get(); }
+  float get_green_mix() { return green_mix.get(); }
+  float get_blue_mix() { return blue_mix.get(); }
+};
+
+
+
+
+
+template < typename T, colorspace_t CS, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
+class ChannelMixerProc
+{
+  ChannelMixerPar* par;
+public:
+  ChannelMixerProc(ChannelMixerPar* p): par(p) {}
+
+  void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T*& pout)
   {
-    Property<float> red_mix, green_mix, blue_mix;
-  public:
-    ChannelMixerPar(): 
-      PixelProcessorPar(), 
-      red_mix("red_mix",this,1), 
-      green_mix("green_mix",this,0), 
-      blue_mix("blue_mix",this,0)
-    {
-      set_type( "channel_mixer" );
-
-      set_default_name( _("channel mixer") );
-    }
-    float get_red_mix() { return red_mix.get(); }
-    float get_green_mix() { return green_mix.get(); }
-    float get_blue_mix() { return blue_mix.get(); }
-  };
-
-  
+    for( int ch = CHMIN; ch <= CHMAX; ch++ )
+      pout[x+ch] = p[first][x+ch];
+  }
+};
 
 
+template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
+class ChannelMixerProc<T,PF_COLORSPACE_RGB,CHMIN,CHMAX,PREVIEW,OP_PAR>
+{
+  ChannelMixerPar* par;
+public:
+  ChannelMixerProc(ChannelMixerPar* p): par(p) {}
 
-  template < typename T, colorspace_t CS, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
-  class ChannelMixerProc
+  void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T*& pout)
   {
-    ChannelMixerPar* par;
-  public:
-    ChannelMixerProc(ChannelMixerPar* p): par(p) {}
-    
-    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T*& pout) 
-    {
-      for( int ch = CHMIN; ch <= CHMAX; ch++ )
-	pout[x+ch] = p[first][x+ch];
-    }
-  };
-
-
-  template < typename T, int CHMIN, int CHMAX, bool PREVIEW, class OP_PAR >
-  class ChannelMixerProc<T,PF_COLORSPACE_RGB,CHMIN,CHMAX,PREVIEW,OP_PAR>
-  {
-    ChannelMixerPar* par;
-  public:
-    ChannelMixerProc(ChannelMixerPar* p): par(p) {}
-
-    void process(T**p, const int& n, const int& first, const int& nch, const int& x, const double& intensity, T*& pout)
-    {
-      float sum = par->get_red_mix() + par->get_green_mix() + par->get_blue_mix();
-      typename FormatInfo<T>::PROMOTED newval;
-      int i = x;
+    float sum = par->get_red_mix() + par->get_green_mix() + par->get_blue_mix();
+    typename FormatInfo<T>::PROMOTED newval = 0;
+    int i = x;
+    if( sum < -1.0e-15 || sum > 1.0e-15 ) {
       newval = (typename FormatInfo<T>::PROMOTED)( (par->get_red_mix()*p[first][x] + 
-						    par->get_green_mix()*p[first][x+1] + 
-						    par->get_blue_mix()*p[first][x+2])/sum );
-      clip(newval,pout[x]);
-      pout[x+1] = pout[x];
-      pout[x+2] = pout[x];
+          par->get_green_mix()*p[first][x+1] +
+          par->get_blue_mix()*p[first][x+2])/sum );
     }
-  };
-
-  
-  template < OP_TEMPLATE_DEF > 
-  class ChannelMixer: public PixelProcessor< OP_TEMPLATE_IMP, ChannelMixerPar, ChannelMixerProc >
-  {
-  };
+    clip(newval,pout[x]);
+    pout[x+1] = pout[x];
+    pout[x+2] = pout[x];
+  }
+};
 
 
-  ProcessorBase* new_channel_mixer();
+template < OP_TEMPLATE_DEF >
+class ChannelMixer: public PixelProcessor< OP_TEMPLATE_IMP, ChannelMixerPar, ChannelMixerProc >
+{
+};
+
+
+ProcessorBase* new_channel_mixer();
 
 }
 

@@ -98,18 +98,20 @@ VipsImage* PF::PaddedOpPar::build(std::vector<VipsImage*>& in, int first,
   // Final cropping to remove the padding pixels
   VipsImage* cropped = padded;
   if( pmax > 0 ) {
+#ifndef NDEBUG
     std::cout<<"PaddedOpPar::build(): pmax="<<pmax
         <<"  padded_size="<<padded->Xsize<<","<<padded->Ysize
         <<"  srcimg_size="<<srcimg->Xsize<<","<<srcimg->Ysize
         <<std::endl;
-  if( vips_crop(padded, &cropped, pmax, pmax,
-      srcimg->Xsize, srcimg->Ysize, NULL) ) {
-    std::cout<<"PaddedOpPar::build(): vips_crop() failed."<<std::endl;
+#endif
+    if( vips_crop(padded, &cropped, pmax, pmax,
+        srcimg->Xsize, srcimg->Ysize, NULL) ) {
+      std::cout<<"PaddedOpPar::build(): vips_crop() failed."<<std::endl;
+      PF_UNREF( padded, "PaddedOpPar::build(): padded unref" );
+      PF_REF( in[0], "PaddedOpPar::build(): vips_crop() failed" );
+      return in[0];
+    }
     PF_UNREF( padded, "PaddedOpPar::build(): padded unref" );
-    PF_REF( in[0], "PaddedOpPar::build(): vips_crop() failed" );
-    return in[0];
-  }
-  PF_UNREF( padded, "PaddedOpPar::build(): padded unref" );
   }
 
   //std::cout<<"cropped->Xsize: "<<cropped->Xsize<<std::endl;

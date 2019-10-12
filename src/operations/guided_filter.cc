@@ -653,8 +653,10 @@ VipsImage* PF::GuidedFilterPar::build(std::vector<VipsImage*>& in, int first,
   int padding = radius_real * 2 + subsampling_real;
   set_padding( padding, 0 );
 
+#ifdef GF_DEBUG
   std::cout<<"GuidedFilterPar::build: radius="<<radius_real<<"  threshold="<<threshold.get()
       <<"  in.size()="<<in.size()<<std::endl;
+#endif
   VipsImage* out = PF::PaddedOpPar::build( in, first, imap, omap, level );
   //std::cout<<"GuidedFilterPar::build: out="<<out<<std::endl;
   return out;

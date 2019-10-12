@@ -183,6 +183,7 @@ namespace PF
 
     bool internal;
     bool passive;
+    bool persistent; // set to false if the property should not be stored in the .pfi files
 
     bool modified_flag;
 
@@ -211,6 +212,9 @@ namespace PF
 
     bool is_passive() { return passive; }
     void set_passive(bool p) { passive = p; }
+
+    bool is_persistent() { return persistent; }
+    void set_persistent(bool p) { persistent = p; }
 
     bool is_modified() { return modified_flag; }
     void set_modified() { modified_flag = true; }

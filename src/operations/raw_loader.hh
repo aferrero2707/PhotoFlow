@@ -74,6 +74,8 @@ namespace PF
       OpParBase::set_format(VIPS_FORMAT_FLOAT);
     }
 
+    unsigned int get_real_level(unsigned int level) { return 0; }
+
     /* Set processing hints:
        1. the intensity parameter makes no sense for an image, 
           creation of an intensity map is not allowed

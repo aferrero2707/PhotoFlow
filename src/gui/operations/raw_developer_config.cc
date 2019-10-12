@@ -1471,6 +1471,8 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
   cmsCloseProfile( profile_out );
 
   par->set_caching( true );
+  l->set_dirty(true);
+  par->set_modified();
   // Update the prepipeline to reflect the new settings
   img->update();
 }
@@ -1975,6 +1977,8 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   cmsCloseProfile( profile_out );
 
   par->set_caching( true );
+  l->set_dirty(true);
+  par->set_modified();
   // Update the preview to reflect the new settings
   img->update();
 }

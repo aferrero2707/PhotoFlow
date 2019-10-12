@@ -664,7 +664,8 @@ void PF::OperationConfigGUI::enable_editing()
 
   //std::cout<<"OperationConfigGUI::enable_editing(\""<<get_layer()->get_name()<<"\"): par->set_editing_flag( true )"<<std::endl;
   par->set_editing_flag( true );
-
+  par->modified();
+  get_layer()->set_dirty( true );
   get_layer()->get_image()->update();
 }
 
@@ -690,6 +691,8 @@ void PF::OperationConfigGUI::disable_editing()
   par->set_editing_flag( false );
   //std::cout<<"  updating image"<<std::endl;
   //editor->set_edited_layer( -1 );
+  par->modified();
+  get_layer()->set_dirty( true );
   get_layer()->get_image()->update();
 }
 

@@ -115,6 +115,8 @@ typedef struct _VipsLayer {
   int height;
   int nbands;
 
+  int serial_id;
+
   //int rand;
 
   /* All the imput images, including the intensity 
@@ -469,6 +471,14 @@ vips_layer_class_init( VipsLayerClass *klass )
       1, 1000, 3);
   argid += 1;
 
+  VIPS_ARG_INT( klass, "serial", argid,
+      _( "SerialID" ),
+      _( "Serial ID" ),
+      VIPS_ARGUMENT_REQUIRED_INPUT,
+      G_STRUCT_OFFSET( VipsLayer, serial_id ),
+      0, 0xFFFFFFF, 0);
+  argid += 1;
+
   char tstr[100];
   char tstr2[100];
   char tstr3[100];
@@ -485,14 +495,6 @@ vips_layer_class_init( VipsLayerClass *klass )
   }
 }
 
-static void
-vips_layer_init( VipsLayer *layer )
-{
-  for(int i = 0; i < PF_MAX_INPUT_IMAGES; i++)
-    layer->in[i] = NULL;
-  layer->in_all = NULL;
-}
-
 /**
  * vips_layer:
  * @in: input image
@@ -501,16 +503,24 @@ vips_layer_init( VipsLayer *layer )
  *
  * Returns: 0 on success, -1 on error.
  */
+static void
+vips_layer_init( VipsLayer *layer )
+{
+  for(int i = 0; i < PF_MAX_INPUT_IMAGES; i++)
+    layer->in[i] = NULL;
+  layer->in_all = NULL;
+}
+
 int
 vips_layer( int n, VipsImage **out, PF::ProcessorBase* proc, 
     VipsImage* imap, VipsImage* omap, VipsDemandStyle demand_hint,
-    int width, int height, int nbands, ...)
+    int width, int height, int nbands, int sid, ...)
 {
   va_list ap;
   int result;
 
-  va_start( ap, nbands );
-  result = vips_call_split( "layer", ap, n, out, proc, imap, omap, demand_hint, width, height, nbands );
+  va_start( ap, sid );
+  result = vips_call_split( "layer", ap, n, out, proc, imap, omap, demand_hint, width, height, nbands, sid );
   va_end( ap );
 
   return( result );

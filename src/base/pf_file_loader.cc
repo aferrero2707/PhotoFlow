@@ -347,7 +347,7 @@ static void start_element (GMarkupParseContext *context,
         }
       } else {
         PF::PropertyBase* p = current_op->get_property( pname );
-        if( p ) p->set_str( pvalue );
+        if( p && p->is_persistent() ) p->set_str( pvalue );
       }
     }
 

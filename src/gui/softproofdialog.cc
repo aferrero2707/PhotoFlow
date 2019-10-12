@@ -48,7 +48,7 @@ PF::SoftProofDialog::SoftProofDialog(PF::ImageEditor* ed):
       clip_overflow_button( _("clip overflow") ),
       gamut_warning_button( _("gamut warning") ),
       profile_open_button(Gtk::Stock::OPEN),
-      editor( ed )
+      close_button(_("Close")), editor( ed )
 {
   set_default_size(300,150);
 
@@ -175,6 +175,17 @@ PF::SoftProofDialog::SoftProofDialog(PF::ImageEditor* ed):
 
   get_vbox()->pack_start( display_profile_frame, Gtk::PACK_SHRINK, 15 );
 
+  close_button_box.pack_end( close_button, Gtk::PACK_SHRINK, 5 );
+#ifdef GTKMM_3
+  get_content_area()->pack_end( close_button_box, Gtk::PACK_SHRINK );
+#else
+  get_vbox()->pack_end( close_button_box, Gtk::PACK_SHRINK );
+#endif
+
+  close_button.signal_clicked().connect( sigc::mem_fun(*editor,
+      &PF::ImageEditor::soft_proof_disable) );
+
+
   profile_selector.signal_changed().
     connect(sigc::mem_fun(*this, &SoftProofDialog::on_profile_selector_changed));
 
@@ -227,6 +238,11 @@ void PF::SoftProofDialog::open()
 {
   //op_tree.update_model();
   show_all();
+}
+
+void PF::SoftProofDialog::close()
+{
+  hide();
 }
 
 

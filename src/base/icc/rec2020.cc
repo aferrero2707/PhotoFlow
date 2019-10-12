@@ -171,6 +171,6 @@ PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile()
   cmsMLUfree(description);
   /**/
 
-  std::cout<<"Initializing Rec.2020 profile"<<std::endl;
+  //std::cout<<"Initializing Rec.2020 profile"<<std::endl;
   set_profile( profile );
 }

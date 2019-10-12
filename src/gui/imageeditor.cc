@@ -1311,13 +1311,13 @@ bool PF::ImageEditor::zoom_fit()
 #endif
   }
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"ImageEditor::zoom_fit(): image area size="
       <<area_hsize<<","<<area_vsize
       <<"  image size="<<image_size_updater->get_image_width()
       <<","<<image_size_updater->get_image_height()
       <<"  level="<<target_level<<"  shrink="<<shrink_min<<std::endl;
-//#endif
+#endif
 
   if( (imageArea->get_shrink_factor() != shrink_min) ||
       (pipeline->get_level() != target_level) ) {

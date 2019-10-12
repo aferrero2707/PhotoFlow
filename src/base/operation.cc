@@ -35,12 +35,14 @@
 #include "../operations/image_to_map.hh"
 //#include "../vips/vips_layer.h"
 
+static int _phf_operation_serial_id = 0;
+
 int
 vips_layer( int n, VipsImage **out, 
             PF::ProcessorBase* proc,
             VipsImage* imap, VipsImage* omap, 
             VipsDemandStyle demand_hint,
-	    int width, int height, int nbands, ... );
+	    int width, int height, int nbands, int sid, ... );
 
 
 
@@ -107,6 +109,19 @@ PF::OpParBase::OpParBase():
 }
 
 
+
+PF::OpParBase::~OpParBase()
+{
+  //for(unsigned int i = 0; i < outvec.size(); i++ ) {
+  //  PF_UNREF( outvec[i], "~OpParBase(): previous outputs unref" );
+  //}
+  //#ifndef NDEBUG
+  //std::cout<<"~OpParBase(): deleting operation "<<(void*)this<<" ("<<get_type()<<")"<<std::endl;
+  //#endif
+}
+
+
+
 PF::PropertyBase* PF::OpParBase::get_property(std::string name)
 {
   std::list<PropertyBase*>::iterator pi;
@@ -161,6 +176,16 @@ void PF::OpParBase::compute_padding( VipsImage* full_res, unsigned int id, unsig
 {
   int p = enable_padding.get() ? test_padding : 0;
   set_padding( p, id );
+}
+
+
+void PF::OpParBase::modified()
+{
+  //std::cout<<"OpParBase::modified() called for "<<type<<std::endl;
+  set_modified();
+  //std::cout<<"OpParBase::modified(): emitting signal_modified."<<std::endl;
+  signal_modified.emit();
+  //std::cout<<"OpParBase::modified(): signal_modified emitted."<<std::endl;
 }
 
 
@@ -268,31 +293,33 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
   //std::cout<<"OpParBase::build("<<get_type()<<"): size = "<<get_xsize()<<"x"<<get_ysize()<<std::endl;
   std::cout<<"OpParBase::build("<<get_type()<<"): in.size()="<<in.size()<<"  n="<<n<<std::endl;
 #endif
+  if( _phf_operation_serial_id == 0xFFFFFFF ) _phf_operation_serial_id = 0;
+  else _phf_operation_serial_id += 1;
   switch( n ) {
   case 0:
     vips_layer( n, &outnew, processor, imap, omap, 
-		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
 		NULL );
     break;
   case 1:
     vips_layer( n, &outnew, processor, imap, omap, 
-		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
 		"in0", invec[0], NULL );
     break;
   case 2:
     vips_layer( n, &outnew, processor, imap, omap, 
-    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
     "in0", invec[0], "in1", invec[1], NULL );
     break;
   case 3:
     vips_layer( n, &outnew, processor, imap, omap,
-    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
     "in0", invec[0], "in1", invec[1],
     "in2", invec[2], NULL );
     break;
   case 4:
     vips_layer( n, &outnew, processor, imap, omap,
-    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(),
+    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
     "in0", invec[0], "in1", invec[1],
     "in2", invec[2], "in3", invec[3], NULL );
     break;
@@ -412,28 +439,22 @@ std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage
         continue;
       }
 
-      int p = get_output_padding( i );
-      if( p > 0 ) {
-        int nt = out->Xsize*(p/PF_OUPUT_CACHE_TS + 3)/PF_OUPUT_CACHE_TS;
-        //VipsAccess acc = VIPS_ACCESS_SEQUENTIAL;
-        VipsAccess acc = VIPS_ACCESS_RANDOM; // gives worst performances
-        int threaded = 1, persistent = 0;
-        VipsImage* cached;
-        if( !vips_tilecache(out, &cached,
-            "tile_width", PF_OUPUT_CACHE_TS,
-            "tile_height", PF_OUPUT_CACHE_TS,
-            "max_tiles", nt,
-            "access", acc, "threaded", threaded,
-            "persistent", persistent, NULL) ) {
-          result_cached.push_back( cached );
-          PF_UNREF( out, "OpParBase::build_many_internal(): out unref" );
-          std::cout<<"OpParBase::build_many_internal(): added tilecache for output image #"
-              <<i<<", padding="<<p<<", nt="<<nt<<std::endl;
-        } else {
-          std::cout<<"OpParBase::build_many_internal(): vips_tilecache() failed."<<std::endl;
-          result_cached.push_back( out );
-        }
+    int p = get_output_padding( i );
+    if( p > 32 || needs_caching() ) {
+      VipsAccess acc = VIPS_ACCESS_RANDOM;
+      int threaded = 1, persistent = 1;
+      VipsImage* cached;
+      std::cout<<"OpParBase::build_many_internal(): adding tilecache for output image #"
+          <<i<<", padding="<<p<<std::endl;
+      if( !phf_tilecache(out, &cached,
+          "access", acc, "threaded", threaded,
+          "persistent", persistent, NULL) ) {
+        result_cached.push_back( cached );
+        PF_UNREF( out, "OpParBase::build_many_internal(): out unref" );
+        std::cout<<"OpParBase::build_many_internal(): added tilecache for output image #"
+            <<i<<", padding="<<p<<std::endl;
       } else {
+        std::cout<<"OpParBase::build_many_internal(): phf_tilecache() failed."<<std::endl;
         result_cached.push_back( out );
       }
     }
@@ -492,6 +513,7 @@ bool PF::OpParBase::save( std::ostream& ostr, int level )
 
   for( std::list<PropertyBase*>::iterator pi = properties.begin();
        pi != properties.end(); pi++ ) {
+    if( (*pi)->is_persistent() == false ) continue;
     std::string pvalue = (*pi)->get_str();
     for(int i = 0; i < level+1; i++) ostr<<"  ";
     ostr<<"<property name=\""<<(*pi)->get_name()<<"\" value=\"";
@@ -504,6 +526,7 @@ bool PF::OpParBase::save( std::ostream& ostr, int level )
   
   for( std::list<PropertyBase*>::iterator pi = mapped_properties.begin();
        pi != mapped_properties.end(); pi++ ) {
+    if( (*pi)->is_persistent() == false ) continue;
     std::string pvalue = (*pi)->get_str();
     for(int i = 0; i < level+1; i++) ostr<<"  ";
     ostr<<"<property name=\""<<(*pi)->get_name()<<"\" value=\"";

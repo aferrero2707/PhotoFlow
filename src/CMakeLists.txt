@@ -17,6 +17,12 @@ IF(APPLE)
   ENDIF("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
 ENDIF()
 
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-Wno-deprecated-register" COMPILER_SUPPORTS_W_NO_DEPRECATED_REGISTER)
+IF(COMPILER_SUPPORTS_W_NO_DEPRECATED_REGISTER)
+	set(COMPILE_FLAGS "${COMPILE_FLAGS} -Wno-deprecated-register")
+ENDIF(COMPILER_SUPPORTS_W_NO_DEPRECATED_REGISTER)
+
 if(Msgfmt_FOUND)
 	set(COMPILE_FLAGS "${COMPILE_FLAGS} -DLOCALEDIR=\"${LOCALE_DIR}\"")
 endif()
@@ -78,7 +84,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG " -O0 -g -DNDEBUG ${COMPILE_FLAGS} -Wno-unused-paramet
 SET(CMAKE_CXX_FLAGS_VERBDEBUG " -Wall -O0 -g -DDO_WARNINGS ${COMPILE_FLAGS}") 
 #SET(CMAKE_CXX_FLAGS_RELEASE " -O3 -ffast-math -ftree-vectorize -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter") 
 #SET(CMAKE_CXX_FLAGS_TEST " -O3 -g -ffast-math -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
-SET(CMAKE_CXX_FLAGS_RELEASE        "  -Werror -O3 -ftree-vectorize -funroll-loops -fomit-frame-pointer -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter -Wno-deprecated-declarations")
+SET(CMAKE_CXX_FLAGS_RELEASE        " -O3 -ftree-vectorize -funroll-loops -fomit-frame-pointer -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter")
 #SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2 -fomit-frame-pointer -ftree-vectorize -funroll-loops -DNDEBUG ${COMPILE_FLAGS}  -Wno-unused-parameter -Wno-deprecated-declarations")
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g ${CMAKE_CXX_FLAGS_RELEASE}")
 SET(CMAKE_CXX_FLAGS_TEST "            -O3 -g -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
@@ -370,6 +376,35 @@ else(BUNDLED_LENSFUN)
 endif(BUNDLED_LENSFUN)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_INCLUDES ${LENSFUN_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES)
+foreach(l ${LENSFUN_LIBRARIES})
+    if(LENSFUN_LIBRARY_DIRS)
+        # the NO_DEFAULT_PATH is to make sure we find the lensfun version we
+        # want, and not the system's one (e.g. if we have a custom version
+        # installed in a non-standard location)
+        find_library(_l ${l} PATHS ${LENSFUN_LIBRARY_DIRS} NO_DEFAULT_PATH)
+    else()
+        # LENSFUN_LIBRARY_DIRS can be empty if lensfun is installed in the
+        # default path. In this case, adding NO_DEFAULT_PATH would make
+        # find_library fail...
+        find_library(_l ${l})
+    endif()
+    set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${_l})
+endforeach()
+check_cxx_source_compiles(
+    "#include <lensfun.h>
+int main()
+{
+    lfDatabase *db = 0;
+    lfLens tmplens;
+    bool found = db->FindLenses(&tmplens, LF_SEARCH_LOOSE);
+    return 0;
+}" LENSFUN_HAS_OVERLOADED_FIND_LENSES)
+
+
+
 
 #if(BUNDLED_GEXIV2)
 #  include(ExternalProject)
@@ -424,6 +459,9 @@ add_library (pfbase STATIC
 #  ${GMicIncludes}
 #  ${GMicSources}
 )
+IF(LENSFUN_HAS_OVERLOADED_FIND_LENSES)
+	SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-DLENSFUN_HAS_OVERLOADED_FIND_LENSES=1")
+ENDIF(LENSFUN_HAS_LOAD_DIRECTORY)
 
 
 add_library (pfgmic STATIC
@@ -452,6 +490,15 @@ add_library (pfgui STATIC
   ${GuiSources}
   ${OcioGuiIncludes}
   ${OcioGuiSources}
+)
+
+
+file(GLOB_RECURSE LIBRTPROCESS_INCLUDES "external/librtprocess/src/*.h")
+file(GLOB_RECURSE LIBRTPROCESS_SOURCES "external/librtprocess/src/*.cc")
+include_directories(external/librtprocess/src/include)
+add_library (pfrtprocess STATIC
+  ${LIBRTPROCESS_INCLUDES}
+  ${LIBRTPROCESS_SOURCES}
 )
 
 
@@ -494,6 +541,7 @@ target_link_libraries(photoflow ${LIBS}
   pfbase 
   pfgmic
   pfdt
+  pfrtprocess
   ${STATIC_LIBS}
   ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${LCMS2_LIBRARIES} 
   ${VIPS_LIBRARIES} ${VIPSCC_LIBRARIES}
@@ -585,6 +633,8 @@ if( FALSE )
 endif( FALSE )
 
 add_subdirectory(benchmarks) 
+
+#add_subdirectory(tests) 
 
 
 #if(GTKMM3_FOUND)

@@ -139,7 +139,11 @@ for( unsigned int x  = 0; x < xsize; x++ ) {					\
   }									\
 }									\
 for( unsigned int y = 0; y < ysize; y++ ) {				\
-  write( fd, buf, sizeof(TYPE)*xsize*bands );				\
+  ssize_t bwrite = write( fd, buf, sizeof(TYPE)*xsize*bands );				\
+  if( bwrite != sizeof(TYPE)*xsize*bands ) {      \
+    std::cout<<"RawBuffer INIT_BUF(): write failed"<<std::endl;      \
+    break;      \
+  }      \
 }									\
 free( buf );								\
 buf = NULL;								\
@@ -250,11 +254,19 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
     unsigned int x;																												\
     TYPE* tbuf = (TYPE*)buf;																							\
     off_t offset = (off_t(xsize)*row+startcol)*sizeof(TYPE)*bands;				\
-    lseek( fd, offset, SEEK_SET );																				\
+    off_t bseek = lseek( fd, offset, SEEK_SET );													\
+    if( bseek < 0 ) {                                               \
+      std::cout<<"RawBuffer DRAW_ROW(): lseek failed"<<std::endl;         \
+      return;                                                             \
+    }                                                                     \
     unsigned int col, col2;																								\
     unsigned int npx = endcol-startcol+1;																	\
     if( pen.get_opacity() < 1 ) {																					\
-      read( fd, buf, sizeof(TYPE)*bands*(endcol-startcol+1) );						\
+      ssize_t bread = read( fd, buf, sizeof(TYPE)*bands*(endcol-startcol+1) );						\
+      if( bread != sizeof(TYPE)*bands*(endcol-startcol+1) ) {             \
+        std::cout<<"RawBuffer DRAW_ROW(): read failed"<<std::endl;        \
+        return;                                                           \
+      }                                                                   \
       TYPE oldval;																												\
       float transparency = 1.0f - pen.get_opacity();											\
       for( col = 0, col2 = startcol; col < npx; col++, col2++ ) {					\
@@ -277,11 +289,15 @@ void PF::RawBuffer::init( const std::vector<float>& bgdcol)
           tbuf[x] = val[ch];																								\
         }																																		\
       }									\
-} \
-off_t result = lseek( fd, offset, SEEK_SET );					\
-if(result<0) perror("draw_row(): lseek failed");					\
-size_t bufsize = sizeof(TYPE)*bands*(endcol-startcol+1);	\
-write( fd, buf, bufsize );						\
+    } \
+    off_t result = lseek( fd, offset, SEEK_SET );					\
+    if(result<0) perror("draw_row(): lseek failed");					\
+    size_t bufsize = sizeof(TYPE)*bands*(endcol-startcol+1);	\
+    ssize_t bwrite = write( fd, buf, bufsize );						\
+    if( bwrite !=  bufsize) {      \
+      std::cout<<"RawBuffer DRAW_ROW(): write failed"<<std::endl;      \
+      return;      \
+    }      \
 }
 
 

@@ -129,6 +129,7 @@ class Image: public sigc::trackable
 
   GMutex* export_mutex;
   GCond* export_done;
+  bool export_ok;
 
   GMutex* sample_mutex;
   GCond* sample_done;
@@ -195,6 +196,8 @@ public:
     return(pipelines[n]);
   }
 
+  PipelineNode* get_compatible_node(Layer* layer, Pipeline* pipeline, unsigned int level);
+
   bool is_async() { return async; }
   void set_async( bool flag ) { async = flag; }
 
@@ -216,6 +219,8 @@ public:
 
   void lock();
   void unlock();
+  void export_lock();
+  void export_unlock();
   void sample_lock();
   void sample_unlock();
   void destroy_lock();
@@ -261,7 +266,7 @@ public:
   bool save_backup();
 
   bool save( std::string filename, bool do_clear=true );
-  void export_merged( std::string filename, image_export_opt_t* export_opt=NULL );
+  bool export_merged( std::string filename, image_export_opt_t* export_opt=NULL );
   void do_export_merged( std::string filename, image_export_opt_t* export_opt=NULL );
   void export_merged_to_mem( ImageBuffer* imgbuf, void* gimp_iccdata, size_t gimp_iccsize );
   void export_merged_to_tiff( const std::string filename );

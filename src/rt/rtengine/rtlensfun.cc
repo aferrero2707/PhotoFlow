@@ -460,6 +460,7 @@ LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name, b
                 break;
             }
         }
+#ifdef LENSFUN_HAS_OVERLOADED_FIND_LENSES
         if (!found && camera) {
           if (camera.isFixedLens()) {
             found = data_->FindLenses(camera.data_, nullptr, "");
@@ -494,6 +495,11 @@ LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name, b
             }
           }
         }
+#else
+        iff (!found && camera && camera.isFixedLens()) {
+            found = data_->FindLenses(camera.data_, nullptr, "");
+        }
+#endif
         if (found) {
             ret.data_ = found[0];
             lf_free(found);

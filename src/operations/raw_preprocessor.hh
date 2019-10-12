@@ -274,7 +274,7 @@ namespace PF
             rpout.color(x) = rp.color(x);
             //rpout[x] = __CLIP(rp[x] * sat_corr * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
             int c = rp.icolor(x);
-            rval = (rp[x]-black[c]) * 65535.f / (white[c]-black[c]);
+            rval = (rp[x]-black[c]) / (white[c]-black[c]);
             if( hlreco_mode == HLRECO_CLIP ) {
               rpout[x] = CLIP( rval * mul[c] );
             } else {
@@ -288,7 +288,7 @@ namespace PF
                                <<"  mul[ c ]="<<mul[ c ]
                                                      <<"  black[ c ]="<<black[ c ]
                                                                            <<"  white[ c ]="<<white[ c ]
-              <<"  rpout[x]="<<rpout[x]/65535.f<<std::endl;
+              <<"  rpout[x]="<<rpout[x]<<std::endl;
 #ifdef RT_EMU
             /* RawTherapee emulation */
             rpout[x] *= 65535;

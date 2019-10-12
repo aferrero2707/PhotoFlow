@@ -81,8 +81,7 @@ namespace PF {
     Gtk::Entry outProfFileEntry;
     Gtk::Button outProfOpenButton;
 
-    Gtk::CheckButton gamutWarningButton;
-    Gtk::Label gamutWarningLabel;
+    CheckBox gamutWarningButton;
     Gtk::HBox gamutWarningButtonBox;
 
     

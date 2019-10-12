@@ -52,6 +52,6 @@ PF::LabProfile::LabProfile(TRC_type type): ICCProfile()
   cmsMLUsetASCII(description, "en", "US", "Lab-D50-Identity-elle-V4.icc");
   cmsMLUfree(description);
 
-  std::cout<<"Initializing Lab profile"<<std::endl;
+  //std::cout<<"Initializing Lab profile"<<std::endl;
   set_profile( profile );
 }

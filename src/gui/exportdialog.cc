@@ -437,9 +437,36 @@ void PF::ExportDialog::on_colorspace_changed()
 
 void PF::ExportDialog::on_button_clicked(int id)
 {
+  Gtk::Container* toplevel = get_toplevel();
+  Gtk::Window* toplevelwin = NULL;
+#ifdef GTKMM_2
+  if( toplevel && toplevel->is_toplevel() )
+#endif
+#ifdef GTKMM_3
+    if( toplevel && toplevel->get_is_toplevel() )
+#endif
+      toplevelwin = dynamic_cast<Gtk::Window*>(toplevel);
+
   switch(id) {
-  case 1:
+  case 1: {
     std::cout << "File selected: " <<  file_entry.get_text() << std::endl;
+
+    bool overwrite = true;
+    if( g_access(file_entry.get_text().c_str(), F_OK) == 0 ) {
+      Gtk::MessageDialog md(_("The destination file already exists.\nDo you want to overwrite it?"),
+          false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO);
+      if(toplevelwin) md.set_transient_for(*toplevelwin);
+      md.set_default_response( Gtk::RESPONSE_NO );
+      int result = md.run();
+      std::cout<<"ExportDialog: response="<<result<<std::endl;
+      switch (result) {
+      case Gtk::RESPONSE_YES: break;
+      case Gtk::RESPONSE_NO: overwrite = false; break;
+      default: overwrite = false; break;
+      }
+    }
+    if( !overwrite ) break;
+
     if( editor && editor->get_image() ) {
       image_export_opt_t options;
       options.jpeg_quality = jpeg_quality_scale.get_value();
@@ -458,11 +485,19 @@ void PF::ExportDialog::on_button_clicked(int id)
       options.trc_type = (TRC_type)icc_trc.get_active_id();
       options.intent = (cmsUInt32Number)icc_intent.get_active_id();
       options.bpc = icc_bpc_check.get_active();
-      editor->get_image()->export_merged( file_entry.get_text(), &options );
+
+      if( !editor->get_image()->export_merged( file_entry.get_text(), &options ) ) {
+        Gtk::MessageDialog md(_("Failed to write output file."),
+            false, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK);
+        if(toplevelwin) md.set_transient_for(*toplevelwin);
+        md.run();
+        break;
+      }
       editor->set_last_exported_file( file_entry.get_text() );
     }
     hide();
     break;
+  }
   case 0:
     //hide_all();
     hide();

@@ -50,7 +50,10 @@ PF::UnsharpMaskPar::~UnsharpMaskPar()
 void PF::UnsharpMaskPar::propagate_settings()
 {
   PropertyBase* pradius = blur->get_par()->get_property("radius");
-  if(!pradius) return;
+  if(!pradius) {
+    std::cout<<"UnsharpMaskPar::propagate_settings(): could not find property \"radius\""<<std::endl;
+    return;
+  }
   pradius->import( &radius );
   blur->get_par()->propagate_settings();
 }

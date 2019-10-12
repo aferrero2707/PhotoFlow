@@ -333,7 +333,7 @@ namespace Exiv2 {
 #ifdef EXV_HAVE_STRERROR_R
         const size_t n = 1024;
 // _GNU_SOURCE: See Debian bug #485135
-# if defined EXV_STRERROR_R_CHAR_P && defined _GNU_SOURCE
+# if defined EXV_STRERROR_R_CHAR_P //&& defined _GNU_SOURCE
         char *buf = 0;
         char buf2[n];
         std::memset(buf2, 0x0, n);
@@ -341,7 +341,7 @@ namespace Exiv2 {
 # else
         char buf[n];
         std::memset(buf, 0x0, n);
-        strerror_r(error, buf, n);
+        const int ret = strerror_r(error, buf, n);
 # endif
         os << buf;
         // Issue# 908.

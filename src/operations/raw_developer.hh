@@ -116,6 +116,9 @@ namespace PF
 
     void set_caching( bool flag ) { caching_enabled = flag; }
 
+    unsigned int get_real_level(unsigned int level) { return 0; }
+    bool do_shirnk_on_blend() { return true; }
+
     dcraw_data_t* get_image_data() {return image_data; }
     RawPreprocessorPar* get_rawpreprocessor_par() {
       return dynamic_cast<PF::RawPreprocessorPar*>( raw_preprocessor->get_par() );

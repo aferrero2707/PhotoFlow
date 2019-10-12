@@ -152,6 +152,6 @@ PF::ProPhotoProfileD65::ProPhotoProfileD65(TRC_type type): ICCProfile()
   //cmsSaveProfileToFile(profile, filename);
   cmsMLUfree(description);
 
-  std::cout<<"Initializing sRGB profile"<<std::endl;
+  //std::cout<<"Initializing sRGB profile"<<std::endl;
   set_profile( profile );
 }

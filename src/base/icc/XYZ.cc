@@ -46,6 +46,6 @@ PF::XYZProfile::XYZProfile(TRC_type type): ICCProfile()
   cmsMLUsetASCII(description, "en", "US", "XYZ-D50-Identity-elle-V4.icc");
   cmsMLUfree(description);
 
-  std::cout<<"Initializing XYZ profile"<<std::endl;
+  //std::cout<<"Initializing XYZ profile"<<std::endl;
   set_profile( profile );
 }

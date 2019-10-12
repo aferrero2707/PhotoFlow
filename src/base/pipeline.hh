@@ -57,8 +57,9 @@ namespace PF
     std::vector<VipsImage*> images;
     VipsImage* blended;
     int input_id;
+    unsigned int level_real; // zoom level at which the images were actually built
 
-    PipelineNode(): processor( NULL ), blender( NULL ), image( NULL ), blended( NULL ), input_id( -1 ) {}
+    PipelineNode(): processor(NULL), blender(NULL), image(NULL), blended(NULL), input_id(-1), level_real(0) {}
     ~PipelineNode();
   };
 
@@ -110,6 +111,7 @@ namespace PF
 
     void set_level( unsigned int l )
     {
+      //std::cout<<"Pipeline::setlevel: l="<<l<<"  level="<<level<<std::endl;
       if( level != l ) {
         //Glib::Threads::Mutex::Lock lock(mutex);
         set_force_rebuild();
@@ -135,15 +137,19 @@ namespace PF
     int get_auto_zoom_height() { return auto_zoom_height; }
 
     bool get_force_rebuild() { return force_rebuild; }
-    void set_force_rebuild() { force_rebuild = true; }
+    void set_force_rebuild()
+    {
+      force_rebuild = true;
+      std::cout<<"Pipeline: force_rebuild set to true"<<std::endl;
+    }
     void clear_force_rebuild() { force_rebuild = false; }
 
     bool get_op_caching_enabled() { return op_caching_enabled; }
     void set_op_caching_enabled(bool flag) { op_caching_enabled = flag; }
 
     PipelineNode* set_node( Layer* layer, Layer* input_layer );
-    void set_image( VipsImage* img, unsigned int id );
-    void set_images( std::vector<VipsImage*> img, unsigned int id );
+    void set_image( VipsImage* img, unsigned int id, unsigned int level_real );
+    void set_images( std::vector<VipsImage*> img, unsigned int id, unsigned int level_real );
     void set_blended( VipsImage* img, unsigned int id );
     void remove_node( unsigned int id );
 

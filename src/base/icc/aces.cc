@@ -159,6 +159,6 @@ PF::ACESProfile::ACESProfile(TRC_type type): ICCProfile()
   cmsMLUfree(description);
   /**/
 
-  std::cout<<"Initializing ACES profile"<<std::endl;
+  //std::cout<<"Initializing ACES profile"<<std::endl;
   set_profile( profile );
 }
