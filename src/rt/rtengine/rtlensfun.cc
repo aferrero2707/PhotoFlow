@@ -496,7 +496,7 @@ LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name, b
           }
         }
 #else
-        iff (!found && camera && camera.isFixedLens()) {
+        if (!found && camera && camera.isFixedLens()) {
             found = data_->FindLenses(camera.data_, nullptr, "");
         }
 #endif
