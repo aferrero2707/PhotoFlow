@@ -123,13 +123,28 @@ static int histogram_scan( VipsRegion *region,
 
 PF::Histogram::Histogram( Pipeline* v ):
   PipelineSink( v ),
+  image(NULL),
+  mem_array(NULL),
+  clip_range_label(_("clip range")),
   display_merged( true ),
   active_layer( -1 )
 {
   hist = new unsigned long int[65536*3];
+  hist_area.hist = hist;
   //std::cout<<"Histogram::Histogram(): hist="<<hist<<std::endl;
-  set_size_request( 200, 150 );
-  signal_queue_draw.connect(sigc::mem_fun(*this, &Histogram::queue_draw));
+  hist_area.set_size_request( 200, 150 );
+  signal_queue_draw.connect(sigc::mem_fun(hist_area, &HistogramArea::queue_draw));
+
+  pack_start(hist_area, Gtk::PACK_SHRINK);
+
+  clip_range_hbox.pack_start(clip_range_check, Gtk::PACK_SHRINK, 0);
+  clip_range_hbox.pack_start(clip_range_label, Gtk::PACK_SHRINK, 4);
+  pack_start(clip_range_hbox, Gtk::PACK_SHRINK);
+  clip_range_check.set_active(true);
+  clip_range = clip_range_check.get_active();
+
+  clip_range_check.signal_toggled().connect(
+      sigc::mem_fun(*this,&Histogram::on_clip_range_check_toggled) );
 
 }
 
@@ -139,12 +154,33 @@ PF::Histogram::~Histogram ()
 }
 
 
+void PF::Histogram::on_clip_range_check_toggled()
+{
+  clip_range = clip_range_check.get_active();
+  update_histogram();
+}
+
+
 
 #ifdef GTKMM_2
-bool PF::Histogram::on_expose_event (GdkEventExpose * event)
+bool PF::HistogramArea::on_expose_event (GdkEventExpose * event)
 {
-  //std::cout<<"Histogram::on_expose_event() called"<<std::endl;
-  int border_size = 2;
+  std::cout<<"HistogramArea::on_expose_event() called"<<std::endl;
+
+  Pango::FontDescription font;
+  int text_width;
+  int text_height;
+
+  font.set_family("Monospace");
+  font.set_weight(Pango::WEIGHT_BOLD);
+  auto layout = create_pango_layout("0");
+  layout->set_font_description(font);
+  //get the text dimensions (it updates the variables -- by reference)
+  layout->get_pixel_size(text_width, text_height);
+
+  int hborder_size = text_width/2;
+  int border_top = 2;
+  int border_bottom = text_height+4;
 
   // This is where we draw on the window
   Glib::RefPtr<Gdk::Window> window = get_window();
@@ -152,21 +188,21 @@ bool PF::Histogram::on_expose_event (GdkEventExpose * event)
     return true;
 
   Gtk::Allocation allocation = get_allocation();
-  const int width = allocation.get_width() - border_size*2;
-  const int height = allocation.get_height() - border_size*2;
-  const int x0 = border_size;
-  const int y0 = border_size;
+  const int width = allocation.get_width() - hborder_size*2;
+  const int height = allocation.get_height() - border_top - border_bottom;
+  const int x0 = hborder_size;
+  const int y0 = border_top;
 
   Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
 
 #endif
 #ifdef GTKMM_3
-bool PF::Histogram::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+bool PF::HistogramArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
   int border_size = 2;
   Gtk::Allocation allocation = get_allocation();
   const int width = allocation.get_width() - border_size*2;
-  const int height = allocation.get_height() - border_size*2;
+  const int height = allocation.get_height() - border_size - border_bottom;
   const int x0 = border_size;
   const int y0 = border_size;
 #endif
@@ -179,9 +215,8 @@ bool PF::Histogram::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   cr->set_antialias( Cairo::ANTIALIAS_GRAY );
   cr->set_source_rgb( 0.9, 0.9, 0.9 );
   cr->set_line_width( 0.5 );
-  cr->rectangle( double(0.5), double(0.5),
-      double(allocation.get_width()-1),
-      double(allocation.get_height()-1) );
+  cr->rectangle( double(hborder_size), double(0.5),
+      double(width), double(height+border_top-0.5) );
   cr->stroke ();
 
   unsigned long int* h[3];
@@ -233,6 +268,57 @@ bool PF::Histogram::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     }
     cr->stroke();
   }
+
+  float fullrange = hist_max - hist_min;
+  float x_0 = (0.0f-hist_min) * width / fullrange;
+  float x_1 = (1.0f-hist_min) * width / fullrange;
+
+  cr->set_antialias( Cairo::ANTIALIAS_GRAY );
+  cr->set_source_rgb( 0.9, 0.9, 0.9 );
+  cr->set_line_width( 0.5 );
+  std::valarray< double > dashes(2);
+  dashes[0] = 2.0;
+  dashes[1] = 2.0;
+  cr->set_dash (dashes, 0.0);
+  std::cout<<"[Histogram] hist_min="<<hist_min<<" hist_max="<<hist_max<<std::endl;
+  if( hist_max > 1.01 ) {
+    std::cout<<"[Histogram] drawin line at 1"<<std::endl;
+    cr->move_to( x0+x_1, y0);
+    cr->line_to( x0+x_1, y0+height );
+    cr->stroke();
+  }
+  if( hist_min < -0.01 ) {
+    std::cout<<"[Histogram] drawin line at 0"<<std::endl;
+    cr->move_to( x0+x_0, y0);
+    cr->line_to( x0+x_0, y0+height );
+    cr->stroke();
+  }
+
+
+  layout = create_pango_layout("0");
+  layout->set_font_description(font);
+  //get the text dimensions (it updates the variables -- by reference)
+  layout->get_pixel_size(text_width, text_height);
+  // Position the text
+  cr->move_to(x0+x_0-text_width/2, y0+height+4);
+  layout->show_in_cairo_context(cr);
+
+  layout = create_pango_layout("1");
+  layout->set_font_description(font);
+  //get the text dimensions (it updates the variables -- by reference)
+  layout->get_pixel_size(text_width, text_height);
+  // Position the text
+  cr->move_to(x0+x_1-text_width/2, y0+height+4);
+  layout->show_in_cairo_context(cr);
+
+  layout = create_pango_layout("0.5");
+  layout->set_font_description(font);
+  //get the text dimensions (it updates the variables -- by reference)
+  layout->get_pixel_size(text_width, text_height);
+  // Position the text
+  cr->move_to(x0+(x_0+x_1)/2-text_width/2, y0+height+4);
+  layout->show_in_cairo_context(cr);
+
 
   if(hh[0]) delete[] hh[0];
   if(hh[1]) delete[] hh[1];
@@ -307,13 +393,66 @@ PF_UNREF( gamma, "Histogram::update(): gamma unref after vips_cast_ushort()" );
 
 
 
+void PF::Histogram::update_histogram()
+{
+  unsigned int npx = array_sz/sizeof(float);
+
+  for( int j = 0; j < 65536*3; j++ ) {
+    hist[j] = 0;
+  }
+
+  float* p = mem_array;
+  hist_min = 0; hist_max = 1;
+  if( !clip_range ) {
+    // search for minimum and maximum values
+    for( unsigned int i = 0; i < npx; i++ ) {
+      if( (*p) < hist_min ) hist_min = *p;
+      if( (*p) > hist_max ) hist_max = *p;
+      p++;
+    }
+  }
+
+  std::cout<<"[Histogram::update] min="<<hist_min<<" max="<<hist_max<<std::endl;
+
+  ulong_p h1 = hist;
+  ulong_p h2 = &(hist[65536]);
+  ulong_p h3 = &(hist[65536*2]);
+  p = mem_array;
+  float val;
+  unsigned short int idx;
+  for( unsigned int i = 0; i < npx; i+=image->Bands ) {
+    val = p[0];
+    if( (val > hist_min) && (val < hist_max) ) {
+      idx = static_cast<unsigned short int>( (val-hist_min) * 65535 / (hist_max-hist_min) );
+      h1[idx] += 1;
+    }
+    val = p[1];
+    if( (val > hist_min) && (val < hist_max) ) {
+      idx = static_cast<unsigned short int>( (val-hist_min) * 65535 / (hist_max-hist_min) );
+      h2[idx] += 1;
+    }
+    val = p[2];
+    if( (val > hist_min) && (val < hist_max) ) {
+      idx = static_cast<unsigned short int>( (val-hist_min) * 65535 / (hist_max-hist_min) );
+      h3[idx] += 1;
+    }
+
+    p += image->Bands;
+  }
+
+  hist_area.hist_min = hist_min;
+  hist_area.hist_max = hist_max;
+  signal_queue_draw.emit();
+}
+
+
 void PF::Histogram::update( VipsRect* area )
 {
   //PF::Pipeline* pipeline = pf_image->get_pipeline(0);
 
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
   std::cout<<"PF::Histogram::update(): called"<<std::endl;
-#endif
+//#endif
   if( !get_pipeline() ) {
     std::cout<<"Histogram::update(): error: NULL pipeline"<<std::endl;
     return;
@@ -325,7 +464,7 @@ void PF::Histogram::update( VipsRect* area )
 
   //return;
 
-  VipsImage* image = NULL;
+  image = NULL;
   bool do_merged = display_merged;
   //std::cout<<"Histogram::update(): do_merged="<<do_merged<<"  active_layer="<<active_layer<<std::endl;
   if( !do_merged ) {
@@ -347,12 +486,12 @@ void PF::Histogram::update( VipsRect* area )
   }
   if( do_merged ) {
     image = get_pipeline()->get_output();
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
     std::cout<<"Histogram::update(): image="<<image<<std::endl;
     std::cout<<"                     image->Bands="<<image->Bands<<std::endl;
     std::cout<<"                     image->BandFmt="<<image->BandFmt<<std::endl;
     std::cout<<"                     image size: "<<image->Xsize<<"x"<<image->Ysize<<std::endl;
-#endif
+//#endif
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "Histogram::update(): merged image ref" );
     } else {
@@ -364,12 +503,12 @@ void PF::Histogram::update( VipsRect* area )
     if( !(node->blended) ) return;
 
     image = node->blended;
-#ifdef DEBUG_DISPLAY
+//#ifdef DEBUG_DISPLAY
     std::cout<<"Histogram::update(): node->image("<<node->image<<")->Xsize="<<node->image->Xsize
         <<"    node->image->Ysize="<<node->image->Ysize<<std::endl;
     std::cout<<"Histogram::update(): node->blended("<<node->blended<<")->Xsize="<<node->blended->Xsize
         <<"    node->blended->Ysize="<<image->Ysize<<std::endl;
-#endif
+//#endif
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "Histogram::update(): active image ref" );
     } else {
@@ -378,16 +517,16 @@ void PF::Histogram::update( VipsRect* area )
   }
   if( !image ) return;
 
-  for( int j = 0; j < 65536*3; j++ ) {
-    hist[j] = 0;
-  }
-
   //std::cout<<"before vips_sink()"<<std::endl;
-  vips_sink( image, histogram_start, histogram_scan, histogram_stop, this, NULL );
+  //vips_sink( image, histogram_start, histogram_scan, histogram_stop, this, NULL );
   //std::cout<<"after vips_sink()"<<std::endl;
+
+  // write image to memory buffer
+  if(mem_array) free(mem_array);
+  mem_array = (float*)vips_image_write_to_memory( image, &array_sz );
   PF_UNREF( image, "Histogram::update(): image unref after vips_sink()" );
 
-  signal_queue_draw.emit();
+  update_histogram();
 }
 
 

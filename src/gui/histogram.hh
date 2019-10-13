@@ -52,17 +52,48 @@
 namespace PF
 {
 
-class Histogram : public PipelineSink, public Gtk::DrawingArea
+class HistogramArea : public Gtk::DrawingArea
+{
+public:
+
+  typedef unsigned long int* ulong_p;
+
+  ulong_p hist;
+  float hist_min, hist_max;
+
+  HistogramArea(): hist(NULL) {}
+
+#ifdef GTKMM_2
+  //void expose_rect (const VipsRect& area);
+  bool on_expose_event (GdkEventExpose * event);
+#endif
+
+#ifdef GTKMM_3
+  //void expose_rect (const VipsRect& area, const Cairo::RefPtr<Cairo::Context>& cr);
+  bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+#endif
+};
+
+
+class Histogram : public PipelineSink, public Gtk::VBox
 {
 
   /* The derived image we paint to the screen.
    */
-  VipsImage* display_image;
-  VipsImage* outimg;
+  VipsImage* image;
+  HistogramArea hist_area;
+  size_t array_sz;
+  float* mem_array;
+
+  Gtk::HBox clip_range_hbox;
+  Gtk::Label clip_range_label;
+  Gtk::CheckButton clip_range_check;
 
   bool display_merged;
   int active_layer;
   int edited_layer;
+
+  bool clip_range;
 
   Glib::Dispatcher signal_queue_draw;
 
@@ -79,23 +110,18 @@ public:
   typedef unsigned long int* ulong_p;
 
   ulong_p hist;
+  float hist_min, hist_max;
 
   //static gboolean queue_draw_cb (Update * update);
 
   Histogram( Pipeline* v );
   virtual ~Histogram();
 
-	VipsImage* get_display_image() { return display_image; }
+  void on_clip_range_check_toggled();
 
-#ifdef GTKMM_2
-  //void expose_rect (const VipsRect& area);
-  bool on_expose_event (GdkEventExpose * event);
-#endif
+  //VipsImage* get_display_image() { return display_image; }
 
-#ifdef GTKMM_3
-  //void expose_rect (const VipsRect& area, const Cairo::RefPtr<Cairo::Context>& cr);
-  bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
-#endif
+  void update_histogram();
   void update( VipsRect* area );
 
   //void sink( const VipsRect& area );
@@ -106,12 +132,12 @@ public:
     std::cout<<"Histogram::set_displayed_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
     if( !display_merged && (old_id != active_layer) ) {
       //update( NULL );
-			if( get_pipeline() && get_pipeline()->get_image() ) {
+      if( get_pipeline() && get_pipeline()->get_image() ) {
         std::cout<<"Histogram::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
         get_pipeline()->set_output_layer_id( old_id );
-				get_pipeline()->get_image()->update();
-			}
-		}
+        get_pipeline()->get_image()->update();
+      }
+    }
   }
   int get_active_layer() { return active_layer; }
 
@@ -124,11 +150,11 @@ public:
       get_pipeline()->set_output_layer_id( -1 );
     if( display_merged != old_val ) {
       //update( NULL );
-			if( get_pipeline() && get_pipeline()->get_image() ) {
-			  std::cout<<"Histogram::set_displayed_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
-				get_pipeline()->get_image()->update();
-			}
-		}
+      if( get_pipeline() && get_pipeline()->get_image() ) {
+        std::cout<<"Histogram::set_displayed_merged(): get_pipeline()->get_image()->update() called."<<std::endl;
+        get_pipeline()->get_image()->update();
+      }
+    }
   }
   bool get_display_merged() { return display_merged; }
 };
