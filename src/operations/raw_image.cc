@@ -309,7 +309,7 @@ PF::RawImage::RawImage( const std::string _fname ):
   // Save the raw histogram into the image
   vips_image_set_blob( image, "raw-hist",
       (VipsCallbackFn) g_free, raw_hist,
-      sizeof(int)*65535*3 );
+      sizeof(unsigned long int)*65536*3 );
 
 
   vips_image_set_blob( image, PF_META_EXIV2_NAME,
@@ -740,7 +740,7 @@ bool PF::RawImage::load_rawspeed()
   /* Normalized raw data to 65535 and build raw histogram
    * */
   // Allocate raw histogram and fill it with zero
-  raw_hist = (int*)malloc( 65536*3*sizeof(int) );
+  raw_hist = (unsigned long int*)malloc( 65536*3*sizeof(unsigned long int) );
   if( !raw_hist ) {
     std::cout<<"RawImage::load_rawspeed(): cannot allocate raw histogram buffer"<<std::endl;
     return false;
@@ -748,7 +748,7 @@ bool PF::RawImage::load_rawspeed()
 #ifndef NDEBUG
   std::cout<<"Raw histogram buffer allocated: "<<(void*)raw_hist<<std::endl;
 #endif
-  memset( raw_hist, 0, 65536*3*sizeof(int) );
+  memset( raw_hist, 0, 65536*3*sizeof(unsigned long int) );
 
 #ifndef NDEBUG
   std::cout<<"Initialising rawData structure..."<<std::endl;
@@ -807,7 +807,7 @@ bool PF::RawImage::load_rawspeed()
       int ch = -1;
       if( color < 3 ) ch = color;
       else if( color == 3 ) ch = 1;
-      if( ch >= 0 ) hist_id = static_cast<int>( val*3 + ch );
+      if( ch >= 0 ) hist_id = static_cast<int>( 65536*ch + val );
       if( hist_id >= 65536*3 ) hist_id = 65536*3-1;
       if( hist_id >= 0 ) {
         //std::cout<<"hist_id="<<hist_id
@@ -1069,8 +1069,8 @@ bool PF::RawImage::load_rawtherapee()
   /* Normalized raw data to 65535 and build raw histogram
    * */
   // Allocate raw histogram and fill it with zero
-  raw_hist = (int*)malloc( 65536*3*sizeof(int) );
-  memset( raw_hist, 0, 65536*3*sizeof(int) );
+  raw_hist = (unsigned long int*)malloc( 65536*3*sizeof(unsigned long int) );
+  memset( raw_hist, 0, 65536*3*sizeof(unsigned long int) );
 
   rawData.Init( iwidth, iheight, 0, 0 );
 
@@ -1112,7 +1112,7 @@ bool PF::RawImage::load_rawtherapee()
       int ch = -1;
       if( color < 3 ) ch = color;
       else if( color == 3 ) ch = 1;
-      if( ch >= 0 ) hist_id = static_cast<int>( val*3 + ch );
+      if( ch >= 0 ) hist_id = static_cast<int>( 65536*ch + val );
       if( hist_id >= 65536*3 ) hist_id = 65536*3-1;
       if( hist_id >= 0 ) {
         //std::cout<<"hist_id="<<hist_id

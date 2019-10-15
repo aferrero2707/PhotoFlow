@@ -143,7 +143,7 @@ dcraw_data_t* get_raw_data( VipsImage* image );
     VipsImage* demo_image;
     PF::ProcessorBase* fast_demosaic;
 
-    int* raw_hist;
+    unsigned long int* raw_hist;
 
     exif_data_t exif_data;
 

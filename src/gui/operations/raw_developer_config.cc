@@ -480,6 +480,190 @@ static double white_level_slider_to_prop(double& val, PF::OperationConfigGUI* di
 
 
 
+#ifdef GTKMM_2
+bool PF::RawHistogramArea::on_expose_event (GdkEventExpose * event)
+{
+  std::cout<<"HistogramArea::on_expose_event() called"<<std::endl;
+
+  Pango::FontDescription font;
+  int text_width;
+  int text_height;
+
+  font.set_family("Monospace");
+  font.set_weight(Pango::WEIGHT_BOLD);
+  auto layout = create_pango_layout("B");
+  layout->set_font_description(font);
+  //get the text dimensions (it updates the variables -- by reference)
+  layout->get_pixel_size(text_width, text_height);
+
+  int hborder_size = text_width/2;
+  int border_top = 2;
+  int border_bottom = text_height+4;
+
+  // This is where we draw on the window
+  Glib::RefPtr<Gdk::Window> window = get_window();
+  if( !window )
+    return true;
+
+  Gtk::Allocation allocation = get_allocation();
+  const int width = allocation.get_width() - hborder_size*2;
+  const int height = allocation.get_height() - border_top - border_bottom;
+  const int x0 = hborder_size;
+  const int y0 = border_top;
+
+  Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
+
+#endif
+#ifdef GTKMM_3
+bool PF::RawHistogramArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+{
+  int border_size = 2;
+  Gtk::Allocation allocation = get_allocation();
+  const int width = allocation.get_width() - border_size*2;
+  const int height = allocation.get_height() - border_size - border_bottom;
+  const int x0 = border_size;
+  const int y0 = border_size;
+#endif
+  cr->save();
+  cr->set_source_rgba(0.2, 0.2, 0.2, 1.0);
+  cr->paint();
+  cr->restore();
+
+  // Draw outer rectangle
+  cr->set_antialias( Cairo::ANTIALIAS_GRAY );
+  cr->set_source_rgb( 0.9, 0.9, 0.9 );
+  cr->set_line_width( 0.5 );
+  cr->rectangle( double(hborder_size), double(0.5),
+      double(width), double(height+border_top-0.5) );
+  cr->stroke ();
+
+  std::cout<<"[RawHistogramArea] hist="<<hist<<std::endl;
+
+  if( hist == NULL ) return TRUE;
+
+  unsigned long int* h[3];
+  h[0] = hist;
+  h[1] = &(hist[65536]);
+  h[2] = &(hist[65536*2]);
+
+  unsigned short int xmax = (white * 1.1) > 65535 ? 65535 : (white * 1.1);
+  unsigned short int xmin = 0;
+  if( zoom_black ) {
+    xmax = black * 2;
+  } else if( zoom_white ) {
+    xmin = white * 0.9;
+  }
+  std::cout<<"[RawHistogramArea] xmin="<<xmin<<"  xmax="<<xmax<<std::endl;
+
+  //for(unsigned int i = 65535; i >= 0; i--) {
+  //  if(h[0][i] > 0 || h[1][i] > 0 || h[2][i] > 0) {
+  //    xmax = i;
+  //    break;
+  //  }
+  //}
+  //xmax += xmax/10;
+
+  unsigned long int* hh[3];
+  hh[0] = new unsigned long int[width];
+  hh[1] = new unsigned long int[width];
+  hh[2] = new unsigned long int[width];
+
+  unsigned long int max = 0;
+  for( int i = 0; i < 3; i++ ) {
+    for( int j = 0; j < width; j++ ) {
+      hh[i][j] = 0;
+    }
+    for( int j = xmin; j <= xmax; j++ ) {
+      float nj = j;
+      nj = (nj-xmin) * width / (xmax-xmin);
+      int bin = (int)nj;
+      if( bin < 0 ) continue;
+      if( bin >= width ) continue;
+      //if(j==65535) std::cout<<"j="<<j<<"  bin="<<bin<<"  width="<<width<<std::endl;
+      hh[i][bin] += h[i][j];
+    }
+    for( int j = 0; j < width; j++ ) {
+      if( hh[i][j] > max) max = hh[i][j];
+    }
+  }
+  max *= 1.05;
+
+  for( int i = 0; i < 3; i++ ) {
+    if( i == 0 ) cr->set_source_rgb( 0.9, 0., 0. );
+    if( i == 1 ) cr->set_source_rgb( 0., 0.9, 0. );
+    if( i == 2 ) cr->set_source_rgb( 0.2, 0.6, 1. );
+
+    float ny = 0;
+    if( max > 0 ) {
+      ny = hh[i][0]; ny *= height; ny /= max;
+    }
+    float y = height; y -= ny; y -= 1;
+    cr->move_to( x0, y+y0 );
+    for( int j = 1; j < width; j++ ) {
+      ny = 0;
+      if( max > 0 ) {
+        ny = hh[i][j]; ny *= height; ny /= max;
+      }
+      y = height; y -= ny; y -= 1;
+      //y = (max>0) ? height - hh[i][j]*height/max - 1 : height-1;
+      //std::cout<<"bin #"<<j<<": "<<hh[i][j]<<" ("<<max<<") -> "<<y<<std::endl;
+      cr->line_to( j+x0, y+y0 );
+    }
+    cr->stroke();
+  }
+
+  float fullrange = xmax-xmin;
+  float x_0 = (black-xmin) * width / fullrange;
+  float x_1 = (white-xmin) * width / fullrange;
+
+  cr->set_antialias( Cairo::ANTIALIAS_GRAY );
+  cr->set_source_rgb( 0.9, 0.9, 0.9 );
+  cr->set_line_width( 0.5 );
+  std::valarray< double > dashes(2);
+  dashes[0] = 2.0;
+  dashes[1] = 2.0;
+  cr->set_dash (dashes, 0.0);
+  std::cout<<"[Histogram] black="<<black<<" white="<<white<<std::endl;
+  if( xmax > white ) {
+    std::cout<<"[Histogram] drawin line at "<<x_1<<std::endl;
+    cr->move_to( x0+x_1, y0);
+    cr->line_to( x0+x_1, y0+height );
+    cr->stroke();
+  }
+  if( xmin < black ) {
+    std::cout<<"[Histogram] drawin line at 0"<<std::endl;
+    cr->move_to( x0+x_0, y0);
+    cr->line_to( x0+x_0, y0+height );
+    cr->stroke();
+  }
+
+  if( true ) {
+  layout = create_pango_layout("B");
+  layout->set_font_description(font);
+  //get the text dimensions (it updates the variables -- by reference)
+  layout->get_pixel_size(text_width, text_height);
+  // Position the text
+  cr->move_to(x0+x_0-text_width/2, y0+height+4);
+  layout->show_in_cairo_context(cr);
+
+  layout = create_pango_layout("W");
+  layout->set_font_description(font);
+  //get the text dimensions (it updates the variables -- by reference)
+  layout->get_pixel_size(text_width, text_height);
+  // Position the text
+  cr->move_to(x0+x_1-text_width/2, y0+height+4);
+  layout->show_in_cairo_context(cr);
+  }
+
+  if(hh[0]) delete[] hh[0];
+  if(hh[1]) delete[] hh[1];
+  if(hh[2]) delete[] hh[2];
+
+  return TRUE;
+}
+
+
+
 
 PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
         OperationConfigGUI( layer, "Raw Developer" ),
@@ -543,6 +727,10 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
         outProfOpenButton(Gtk::Stock::OPEN),
         inProfFrame( _("camera profile") ),
         outProfFrame( _("working profile") ),
+        hist_range_label(_("range: ")),
+        hist_range_full_label(_("full")),
+        hist_range_sh_label(_("shadows")),
+        hist_range_hi_label(_("highlights")),
         clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
         clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
         selected_wb_area_id(-1),
@@ -722,11 +910,33 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   outputControlsBox.pack_start( clip_negative_checkbox, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( clip_overflow_checkbox, Gtk::PACK_SHRINK );
 
+  histogramBox.pack_start( histogramArea, Gtk::PACK_EXPAND_WIDGET );
+  histogramBox.pack_start( histogramCtrlBox, Gtk::PACK_SHRINK );
+  histogramCtrlBox.pack_start( hist_range_label, Gtk::PACK_SHRINK );
+  histogramCtrlBox.pack_start( hist_range_full_check, Gtk::PACK_SHRINK );
+  histogramCtrlBox.pack_start( hist_range_full_label, Gtk::PACK_SHRINK );
+  histogramCtrlBox.pack_start( hist_range_sh_check, Gtk::PACK_SHRINK );
+  histogramCtrlBox.pack_start( hist_range_sh_label, Gtk::PACK_SHRINK );
+  histogramCtrlBox.pack_start( hist_range_hi_check, Gtk::PACK_SHRINK );
+  histogramCtrlBox.pack_start( hist_range_hi_label, Gtk::PACK_SHRINK );
+
+#ifdef GTKMM_2
+  Gtk::RadioButton::Group hist_range_check_group = hist_range_full_check.get_group();
+  hist_range_sh_check.set_group(hist_range_check_group);
+  hist_range_hi_check.set_group(hist_range_check_group);
+#endif
+
+#ifdef GTKMM_3
+  hist_range_sh_check.join_group(hist_range_full_check);
+  hist_range_hi_check.join_group(hist_range_full_check);
+#endif
+  hist_range_full_check.set_active();
+
 
   notebook.append_page( wbControlsBox, "Input" );
   notebook.append_page( lensControlsBox, "Corrections" );
-  //notebook.append_page( demoControlsBox, "Demo" );
   notebook.append_page( outputControlsBox, "Output" );
+  notebook.append_page( histogramBox, "Histogram" );
   notebook.append_page( exposureControlsBox, "Advanced" );
 
   add_widget( notebook );
@@ -754,6 +964,13 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
       connect(sigc::mem_fun(*this,&PF::RawDeveloperConfigGUI::temp_tint_changed));
   wbTintSlider.get_adjustment()->signal_value_changed().
       connect(sigc::mem_fun(*this,&PF::RawDeveloperConfigGUI::temp_tint_changed));
+
+  hist_range_full_check.signal_toggled().connect(
+      sigc::mem_fun(*this,&PF::RawDeveloperConfigGUI::on_histogram_radio_group_changed));
+  hist_range_sh_check.signal_toggled().connect(
+      sigc::mem_fun(*this,&PF::RawDeveloperConfigGUI::on_histogram_radio_group_changed));
+  hist_range_hi_check.signal_toggled().connect(
+      sigc::mem_fun(*this,&PF::RawDeveloperConfigGUI::on_histogram_radio_group_changed));
 
   get_main_box().show_all_children();
 }
@@ -856,6 +1073,7 @@ void PF::RawDeveloperConfigGUI::do_update()
   bool is_xtrans = false;
   PF::exif_data_t* exif_data = NULL;
   dcraw_data_t* raw_data = NULL;
+  unsigned long int* raw_hist = NULL;
 
   PF::Image* image = get_layer()->get_image();
   PF::Pipeline* pipeline = image->get_pipeline(0);
@@ -876,6 +1094,27 @@ void PF::RawDeveloperConfigGUI::do_update()
         blobsz != sizeof(dcraw_data_t) ) {
       raw_data = NULL;
     }
+    if( vips_image_get_blob( inode->image, "raw-hist",(void**)&raw_hist,&blobsz ) ||
+        blobsz != (sizeof(unsigned long int)*65536*3) ) {
+      std::cout<<"[RawDeveloperConfigGUI::do_update] raw_hist="<<raw_hist<<"  blobsz="<<blobsz<<std::endl;
+      raw_hist = NULL;
+    }
+    histogramArea.hist = raw_hist;
+    histogramArea.black = 128;
+    histogramArea.white = 3700;
+    if( histogram_range_full ) {
+      histogramArea.zoom_black = false;
+      histogramArea.zoom_white = false;
+    }
+    if( histogram_range_sh ) {
+      histogramArea.zoom_black = true;
+      histogramArea.zoom_white = false;
+    }
+    if( histogram_range_hi ) {
+      histogramArea.zoom_black = false;
+      histogramArea.zoom_white = true;
+    }
+    histogramArea.queue_draw();
 
     if( exif_data && raw_data ) {
       //char makermodel[1024];
@@ -2197,6 +2436,27 @@ void PF::RawDeveloperConfigGUI::on_out_filename_changed()
     //std::cout<<"  updating image"<<std::endl;
     get_layer()->get_image()->update();
   }
+}
+
+
+void PF::RawDeveloperConfigGUI::on_histogram_radio_group_changed()
+{
+  histogram_range_full = hist_range_full_check.get_active();
+  histogram_range_sh = hist_range_sh_check.get_active();
+  histogram_range_hi = hist_range_hi_check.get_active();
+  if( histogram_range_full ) {
+    histogramArea.zoom_black = false;
+    histogramArea.zoom_white = false;
+  }
+  if( histogram_range_sh ) {
+    histogramArea.zoom_black = true;
+    histogramArea.zoom_white = false;
+  }
+  if( histogram_range_hi ) {
+    histogramArea.zoom_black = false;
+    histogramArea.zoom_white = true;
+  }
+  histogramArea.queue_draw();
 }
 
 
