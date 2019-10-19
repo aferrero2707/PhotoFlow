@@ -42,7 +42,7 @@ PF::SharpenPar::SharpenPar():
   OpParBase(), 
   method("method",this,PF::SHARPEN_USM,"USM","Unsharp Mask"),
   usm_radius("usm_radius",this,1),
-  eusm_amount("eusm_amount",this,100),
+  eusm_amount("eusm_amount",this,2),
   eusm_radius("eusm_radius",this,3),
   eusm_threshold_l("eusm_threshold_l",this,0.005),
   eusm_threshold_h("eusm_threshold_h",this,0.02),
