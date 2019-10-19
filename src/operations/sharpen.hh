@@ -34,58 +34,65 @@
 namespace PF 
 {
 
-  enum sharpen_method_t
+enum sharpen_method_t
+{
+  SHARPEN_USM,
+  SHARPEN_EUSM,
+  SHARPEN_DECONV,
+  SHARPEN_TEXTURE
+};
+
+class SharpenPar: public OpParBase
+{
+  PropertyBase method;
+  Property<float> usm_radius;
+  Property<float> eusm_amount;
+  Property<float> eusm_radius;
+  Property<float> eusm_threshold_l;
+  Property<float> eusm_threshold_h;
+  Property<bool> eusm_do_sum;
+  Property<float> rl_sigma;
+  Property<int> rl_iterations;
+  Property<float> texture_radius;
+  Property<float> texture_strength;
+  ProcessorBase* usm;
+  ProcessorBase* eusm;
+  ProcessorBase* rl;
+  ProcessorBase* texture;
+public:
+  SharpenPar();
+  ~SharpenPar();
+
+  bool has_intensity() { return false; }
+  bool needs_caching();
+  bool has_target_channel() { return true; }
+
+  void set_usm_radius(float val) { usm_radius.update(val); }
+
+  void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
+  void propagate_settings();
+
+  VipsImage* build(std::vector<VipsImage*>& in, int first,
+      VipsImage* imap, VipsImage* omap,
+      unsigned int& level);
+};
+
+
+
+template < OP_TEMPLATE_DEF >
+class SharpenProc
+{
+public:
+  void render(VipsRegion** in, int n, int in_first,
+      VipsRegion* imap, VipsRegion* omap,
+      VipsRegion* out, OpParBase* par)
   {
-    SHARPEN_USM,
-    SHARPEN_DECONV,
-    SHARPEN_TEXTURE
-  };
-
-  class SharpenPar: public OpParBase
-  {
-    PropertyBase method;
-    Property<float> usm_radius;
-    Property<float> rl_sigma;
-    Property<int> rl_iterations;
-    Property<float> texture_radius;
-    Property<float> texture_strength;
-    ProcessorBase* usm;
-    ProcessorBase* rl;
-    ProcessorBase* texture;
-  public:
-    SharpenPar();
-    ~SharpenPar();
-
-    bool has_intensity() { return false; }
-    bool needs_caching();
-    bool has_target_channel() { return true; }
-
-    void set_usm_radius(float val) { usm_radius.update(val); }
-      
-    void compute_padding( VipsImage* full_res, unsigned int id, unsigned int level );
-    void propagate_settings();
-
-    VipsImage* build(std::vector<VipsImage*>& in, int first, 
-		     VipsImage* imap, VipsImage* omap, 
-		     unsigned int& level);
-  };
-
-  
-
-  template < OP_TEMPLATE_DEF > 
-  class SharpenProc
-  {
-  public: 
-    void render(VipsRegion** in, int n, int in_first,
-								VipsRegion* imap, VipsRegion* omap, 
-								VipsRegion* out, OpParBase* par) 
-    {
-    }
-  };
+  }
+};
 
 
 
-  ProcessorBase* new_sharpen();
+ProcessorBase* new_sharpen();
 
 }
 

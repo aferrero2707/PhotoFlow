@@ -32,6 +32,7 @@
 #include <fcntl.h>
 
 #include "unsharp_mask.hh"
+#include "enhanced_usm.hh"
 #include "gmic/sharpen_rl.hh"
 #include "gmic/sharpen_texture.hh"
 #include "sharpen.hh"
@@ -41,12 +42,18 @@ PF::SharpenPar::SharpenPar():
   OpParBase(), 
   method("method",this,PF::SHARPEN_USM,"USM","Unsharp Mask"),
   usm_radius("usm_radius",this,1),
+  eusm_amount("eusm_amount",this,100),
+  eusm_radius("eusm_radius",this,3),
+  eusm_threshold_l("eusm_threshold_l",this,0.005),
+  eusm_threshold_h("eusm_threshold_h",this,0.02),
+  eusm_do_sum("eusm_do_sum",this,true),
   rl_sigma("rl_sigma",this,1),
   rl_iterations("rl_iterations",this,10),
   texture_radius("texture_radius",this,4),
   texture_strength("texture_strength",this,1)
 {
-  //method.add_enum_value(PF::SHARPEN_USM,"USM","Unsharp Mask");
+  method.add_enum_value(PF::SHARPEN_USM,"USM","Unsharp Mask");
+  method.add_enum_value(PF::SHARPEN_EUSM,"EUSM","Enhanced Unsharp Mask");
 #ifndef PF_DISABLE_GMIC
   method.add_enum_value(PF::SHARPEN_DECONV,"DECONV","RL Deconvolution");
   method.add_enum_value(PF::SHARPEN_TEXTURE,"TEXTURE","texture");
@@ -54,6 +61,7 @@ PF::SharpenPar::SharpenPar():
   //method.add_enum_value(PF::SHARPEN_MICRO,"MICRO","Micro Contrast");
 
   usm = new_unsharp_mask();
+  eusm = new_enhanced_usm();
 #ifndef PF_DISABLE_GMIC
   rl = new_gmic_sharpen_rl();
   texture = new_gmic_sharpen_texture();
@@ -69,6 +77,8 @@ PF::SharpenPar::~SharpenPar()
 {
   std::cout<<"~SharpenPar(): delete usm"<<std::endl;
   delete usm ;
+  std::cout<<"~SharpenPar(): delete eusm"<<std::endl;
+  delete eusm ;
 #ifndef PF_DISABLE_GMIC
   std::cout<<"~SharpenPar(): delete rl"<<std::endl;
   delete rl;
@@ -82,6 +92,7 @@ bool PF::SharpenPar::needs_caching()
 {
   switch( method.get_enum_value().first ) {
   case PF::SHARPEN_USM:
+  case PF::SHARPEN_EUSM:
     return false; break;
 #ifndef PF_DISABLE_GMIC
   case PF::SHARPEN_DECONV:
@@ -103,6 +114,11 @@ void PF::SharpenPar::compute_padding( VipsImage* full_res, unsigned int id, unsi
     g_assert(usm->get_par() != NULL);
     usm->get_par()->compute_padding(full_res, id, level);
     set_padding( usm->get_par()->get_padding(id), id );
+    break;
+  case PF::SHARPEN_EUSM:
+    g_assert(eusm->get_par() != NULL);
+    eusm->get_par()->compute_padding(full_res, id, level);
+    set_padding( eusm->get_par()->get_padding(id), id );
     break;
 #ifndef PF_DISABLE_GMIC
   case PF::SHARPEN_DECONV:
@@ -129,6 +145,17 @@ void PF::SharpenPar::propagate_settings()
     //std::cout<<"SharpenPar::propagate_settings(): usm_radius="<<usm_radius.get()<<std::endl;
     usmpar->set_radius( usm_radius.get() );
     usmpar->propagate_settings();
+  }
+
+  EnhancedUnsharpMaskPar* eusmpar = dynamic_cast<EnhancedUnsharpMaskPar*>( eusm->get_par() );
+  if( eusmpar ) {
+    //std::cout<<"SharpenPar::propagate_settings(): usm_radius="<<usm_radius.get()<<std::endl;
+    eusmpar->set_amount( eusm_amount.get() );
+    eusmpar->set_radius( eusm_radius.get() );
+    eusmpar->set_threshold_l( eusm_threshold_l.get() );
+    eusmpar->set_threshold_h( eusm_threshold_h.get() );
+    eusmpar->set_do_sum( eusm_do_sum.get() );
+    eusmpar->propagate_settings();
   }
 
   GmicSharpenRLPar* rlpar = dynamic_cast<GmicSharpenRLPar*>( rl->get_par() );
@@ -163,6 +190,15 @@ VipsImage* PF::SharpenPar::build(std::vector<VipsImage*>& in, int first,
       usmpar->set_image_hints( in[0] );
       usmpar->set_format( get_format() );
       out = usmpar->build( in, first, imap, omap, level );
+    }
+    break;
+  }
+  case PF::SHARPEN_EUSM: {
+    EnhancedUnsharpMaskPar* eusmpar = dynamic_cast<EnhancedUnsharpMaskPar*>( eusm->get_par() );
+    if( eusmpar ) {
+      eusmpar->set_image_hints( in[0] );
+      eusmpar->set_format( get_format() );
+      out = eusmpar->build( in, first, imap, omap, level );
     }
     break;
   }
