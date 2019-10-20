@@ -245,14 +245,14 @@ VipsImage* PF::EnhancedUnsharpMaskPar::build(std::vector<VipsImage*>& in, int fi
     smoothed[gi] = guidedpar->build( in2, first, NULL, NULL, level );
 
     //#ifndef NDEBUG
-        std::cout<<"EnhancedUnsharpMaskPar::build(): gi="<<gi<<"  radius="
-            <<rv[gi]<<"  padding="<<guidedpar->get_padding(0)
-            <<"  logimg="<<logimg<<"  smoothed="<<smoothed[gi]<<std::endl;
+    std::cout<<"EnhancedUnsharpMaskPar::build(): gi="<<gi<<"  radius="
+        <<rv[gi]<<"  padding="<<guidedpar->get_padding(0)
+        <<"  logimg="<<logimg<<"  smoothed="<<smoothed[gi]<<std::endl;
     //#endif
 
-      if( smoothed[gi] ) {
-      PF_UNREF(logimg, "EnhancedUnsharpMaskPar::build(): timg unref");
-    }
+    //if( smoothed[gi] ) {
+    //  PF_UNREF(logimg, "EnhancedUnsharpMaskPar::build(): timg unref");
+    //}
   }
 
 
