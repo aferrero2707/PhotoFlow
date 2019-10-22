@@ -65,15 +65,15 @@ public:
 // the preview image is shown in zoom-to-fit mode.
 class ImageSizeUpdater: public PipelineSink
 {
-  int displayed_layer_id;
+  int sticky_layer_id;
 
   VipsImage* image;
   int image_width, image_height;
 public:
   ImageSizeUpdater( Pipeline* p );
 
-  int get_displayed_layer() { return displayed_layer_id; }
-  void set_displayed_layer( int id ) { displayed_layer_id = id; }
+  int get_sticky_layer() { return sticky_layer_id; }
+  void set_sticky_layer( int id ) { sticky_layer_id = id; }
 
   VipsImage* get_image() { return image; }
   int get_image_width() { return image_width; }
@@ -92,7 +92,7 @@ class ImageEditor: public Gtk::HBox
   Image* image;
   bool image_opened;
 
-  Layer* displayed_layer;
+  Layer* sticky_layer;
   Layer* edited_layer;
   int selected_layer_id;
   std::list<PF::Layer*> edited_layer_children;
@@ -191,8 +191,8 @@ public:
     return( (edited_layer) ? edited_layer->get_id() : -1 );
   }
   void set_edited_layer( int id );
-  int get_displayed_layer() { return (displayed_layer) ? displayed_layer->get_id() : -1; }
-  void set_displayed_layer( int id );
+  int get_sticky_layer() { return (sticky_layer) ? sticky_layer->get_id() : -1; }
+  void set_sticky_layer( int id );
   void set_selected_layer( int id );
   int get_selected_layer() { return selected_layer_id; }
 

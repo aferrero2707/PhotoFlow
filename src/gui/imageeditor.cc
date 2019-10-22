@@ -74,7 +74,7 @@ bool PF::PreviewScrolledWindow::on_configure_event(GdkEventConfigure*event)
 
 PF::ImageSizeUpdater::ImageSizeUpdater( Pipeline* v ):
     PipelineSink( v ),
-    displayed_layer_id( -1 ),
+    sticky_layer_id( -1 ),
     image( NULL ),
     image_width( 0 ),
     image_height( 0 )
@@ -94,13 +94,13 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
   }
 
   image = NULL;
-  bool do_merged = (displayed_layer_id<0) ? true : false;
+  bool do_merged = (sticky_layer_id<0) ? true : false;
   if( !do_merged ) {
-    PF::PipelineNode* node = get_pipeline()->get_node( displayed_layer_id );
+    PF::PipelineNode* node = get_pipeline()->get_node( sticky_layer_id );
     if( !node ) do_merged = true;
     //std::cout<<"ImageArea::update(): node="<<node<<std::endl;
     if( get_pipeline()->get_image() ) {
-      PF::Layer* temp_layer = get_pipeline()->get_image()->get_layer_manager().get_layer( displayed_layer_id );
+      PF::Layer* temp_layer = get_pipeline()->get_image()->get_layer_manager().get_layer( sticky_layer_id );
       if( !temp_layer ) do_merged = true;
       if( !(temp_layer->is_visible()) ) do_merged = true;
     }
@@ -108,7 +108,7 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
   if( do_merged ) {
     image = get_pipeline()->get_output();
   } else {
-    PF::PipelineNode* node = get_pipeline()->get_node( displayed_layer_id );
+    PF::PipelineNode* node = get_pipeline()->get_node( sticky_layer_id );
     if( !node ) return;
     if( !(node->blended) ) return;
     image = node->blended;
@@ -437,7 +437,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
         filename( fname ),
         image( new PF::Image() ),
         image_opened( false ),
-        displayed_layer( NULL ),
+        sticky_layer( NULL ),
         edited_layer( NULL ),
         selected_layer_id( -1 ),
         //imageArea( image->get_pipeline(PREVIEW_PIPELINE_ID) ),
@@ -1217,9 +1217,36 @@ void PF::ImageEditor::zoom_out()
     imageArea->set_shrink_factor( ((shrink*2)/2) / 2 );
     image->update();
   } else {
-  pipeline->set_level( level + 1 );
-  imageArea->set_shrink_factor( 1 );
-  image->update();
+    // compute the maximum reasonable zoom level
+    int displayed_layer = imageArea->get_displayed_layer();
+    VipsImage* displayed_image = NULL;
+    PF::Pipeline* pipeline0 = image->get_pipeline( CACHE_PIPELINE_ID );
+    g_assert(pipeline0);
+    if(displayed_layer < 0) {
+      displayed_image = pipeline0->get_output();
+    } else {
+      PF::PipelineNode* node = pipeline0->get_node( displayed_layer );
+      if( node ) {
+        displayed_image = node->blended;
+      }
+    }
+    if( displayed_image ) {
+      int level_max = 0;
+      int W = displayed_image->Xsize;
+      int H = displayed_image->Ysize;
+      while( level_max <= (level+1) ) {
+        //std::cout<<"[ImageEditor::zoom_out] level="<<level<<"  level_max="<<level_max<<"  W="<<W<<"  H="<<H<<std::endl;
+        W /= 2; H /= 2;
+        if( (W < 16) || (H < 16) ) break;
+        level_max += 1;
+      }
+      if( (level_max >= (level+1)) ) {
+        //std::cout<<"[ImageEditor::zoom_out] setting level to "<<level+1<<std::endl;
+        pipeline->set_level( level + 1 );
+        imageArea->set_shrink_factor( 1 );
+        image->update();
+      }
+    }
   }
 
   fit_image = false;
@@ -1411,30 +1438,30 @@ void PF::ImageEditor::set_edited_layer( int id )
 }
 
 
-void PF::ImageEditor::set_displayed_layer( int id )
+void PF::ImageEditor::set_sticky_layer( int id )
 {
-  PF::Layer* old_displayed = displayed_layer;
-  displayed_layer = NULL;
+  PF::Layer* old_displayed = sticky_layer;
+  sticky_layer = NULL;
   if( image )
-    displayed_layer = image->get_layer_manager().get_layer( id );
+    sticky_layer = image->get_layer_manager().get_layer( id );
 #ifndef NDEBUG
-  std::cout<<"ImageEditor::set_displayed_layer("<<id<<"): old_displayed="<<old_displayed<<"  displayed_layer="<<displayed_layer<<std::endl;
+  std::cout<<"ImageEditor::set_sticky_layer("<<id<<"): old_displayed="<<old_displayed<<"  sticky_layer="<<sticky_layer<<std::endl;
 #endif
-  if( old_displayed != displayed_layer ) {
-    if( displayed_layer ) {
-      image_size_updater->set_displayed_layer( id );
-      imageArea->set_displayed_layer( id );
+  if( old_displayed != sticky_layer ) {
+    if( sticky_layer ) {
+      image_size_updater->set_sticky_layer( id );
+      imageArea->set_sticky_layer( id );
       imageArea->set_display_merged( false );
       for(int si = 0; si < samplers->get_sampler_num(); si++) {
-        samplers->get_sampler(si).set_displayed_layer( id );
+        samplers->get_sampler(si).set_sticky_layer( id );
         samplers->get_sampler(si).set_display_merged( false );
       }
     } else {
-      image_size_updater->set_displayed_layer( -1 );
+      image_size_updater->set_sticky_layer( -1 );
       imageArea->set_display_merged( true );
-      imageArea->set_displayed_layer( -1 );
+      imageArea->set_sticky_layer( -1 );
       for(int si = 0; si < samplers->get_sampler_num(); si++) {
-        samplers->get_sampler(si).set_displayed_layer( -1 );
+        samplers->get_sampler(si).set_sticky_layer( -1 );
         samplers->get_sampler(si).set_display_merged( true );
       }
     }
@@ -1471,14 +1498,14 @@ void PF::ImageEditor::set_display_mask( bool val )
       if( first_visible ) {
         PF::Layer* ml = first_visible;
         for(int si = 0; si < samplers->get_sampler_num(); si++) {
-          samplers->get_sampler(si).set_displayed_layer( ml->get_id() );
+          samplers->get_sampler(si).set_sticky_layer( ml->get_id() );
           samplers->get_sampler(si).set_display_merged( false );
         }
       }
     }
   } else {
     for(int si = 0; si < samplers->get_sampler_num(); si++) {
-      samplers->get_sampler(si).set_displayed_layer( -1 );
+      samplers->get_sampler(si).set_sticky_layer( -1 );
       samplers->get_sampler(si).set_display_merged( true );
     }
   }
