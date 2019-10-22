@@ -2002,8 +2002,8 @@ void PF::LayerWidget::unset_sticky_and_editing( Layer* l )
   if( editor ) {
     //if( editor->get_edited_layer() == l->get_id() )
     //  editor->set_edited_layer(-1);
-    if( editor->get_displayed_layer() == (int)(l->get_id()) )
-      editor->set_displayed_layer(-1);
+    if( editor->get_sticky_layer() == (int)(l->get_id()) )
+      editor->set_sticky_layer(-1);
   }
   unset_sticky_and_editing( l->get_omap_layers() );
   unset_sticky_and_editing( l->get_imap_layers() );

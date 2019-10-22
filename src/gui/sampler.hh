@@ -113,14 +113,14 @@ public:
 
   //void sink( const VipsRect& area );
 
-  void set_displayed_layer( int id ) {
+  void set_sticky_layer( int id ) {
     int old_id = active_layer;
     active_layer = id; 
-    std::cout<<"Sampler::set_displayed_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
+    std::cout<<"Sampler::set_sticky_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
     if( !display_merged && (old_id != active_layer) ) {
       //update( NULL );
 			if( get_pipeline() && get_pipeline()->get_image() ) {
-        //std::cout<<"Sampler::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
+        //std::cout<<"Sampler::set_sticky_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
         get_pipeline()->set_output_layer_id( active_layer );
 				//get_pipeline()->get_image()->update();
 			}

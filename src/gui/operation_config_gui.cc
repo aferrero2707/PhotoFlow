@@ -729,7 +729,7 @@ void PF::OperationConfigGUI::set_sticky()
   }
 
   //std::cout<<"OperationConfigGUI::set_sticky(): editor->set_displayed_layer("<<get_layer()->get_id()<<")"<<std::endl;
-  editor->set_displayed_layer( get_layer()->get_id() );
+  editor->set_sticky_layer( get_layer()->get_id() );
 }
 
 
@@ -743,7 +743,7 @@ void PF::OperationConfigGUI::reset_sticky_button()
 void PF::OperationConfigGUI::unset_sticky()
 {
   reset_sticky_button();
-  editor->set_displayed_layer( -1 );
+  editor->set_sticky_layer( -1 );
 }
 
 

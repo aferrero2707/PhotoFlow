@@ -136,9 +136,10 @@ class ImageArea : public PipelineSink, public Gtk::DrawingArea
 
   bool display_merged;
   bool display_mask;
-  int displayed_layer;
+  int sticky_layer;
   int selected_layer;
   int edited_layer;
+  int displayed_layer;
 
 	float shrink_factor;
 
@@ -260,23 +261,23 @@ public:
   }
   int get_edited_layer() { return edited_layer; }
 
-  void set_displayed_layer( int id ) {
-    int old_id = displayed_layer;
-    displayed_layer = id;
+  void set_sticky_layer( int id ) {
+    int old_id = sticky_layer;
+    sticky_layer = id;
 #ifdef DEBUG_DISPLAY
-    std::cout<<"ImageArea::set_displayed_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
+    std::cout<<"ImageArea::set_sticky_layer(): id="<<id<<"  old_id="<<old_id<<"  display_merged="<<display_merged<<std::endl;
 #endif
-    if( !display_merged && (old_id != displayed_layer) ) {
+    if( !display_merged && (old_id != sticky_layer) ) {
       //update( NULL );
       if( get_pipeline() && get_pipeline()->get_image() ) {
 #ifdef DEBUG_DISPLAY
-        std::cout<<"ImageArea::set_displayed_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
+        std::cout<<"ImageArea::set_sticky_layer(): get_pipeline()->get_image()->update() called."<<std::endl;
 #endif
         get_pipeline()->get_image()->update();
       }
     }
   }
-  int get_displayed_layer() { return displayed_layer; }
+  int get_sticky_layer() { return sticky_layer; }
 
   void set_selected_layer( int id );
   int get_selected_layer() { return selected_layer; }
@@ -318,6 +319,8 @@ public:
     }
   }
   bool get_display_mask() { return display_mask; }
+
+  int get_displayed_layer() { return displayed_layer; }
 
   virtual void on_realize() 
   {

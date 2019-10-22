@@ -214,6 +214,7 @@ PF::ImageArea::ImageArea( Pipeline* v ):
   adaptation_state(1),
   display_merged( true ),
   display_mask( false ),
+  sticky_layer( -1 ),
   displayed_layer( -1 ),
   selected_layer( -1 ),
   edited_layer( -1 ),
@@ -578,10 +579,10 @@ void PF::ImageArea::draw_area()
   Glib::RefPtr< Gdk::Pixbuf > current_pxbuf = modify_preview();
   /*
   Glib::RefPtr< Gdk::Pixbuf > current_pxbuf = double_buffer.get_active().get_pxbuf();
-  if( displayed_layer >= 0 ) {
+  if( sticky_layer >= 0 ) {
     PF::Image* image = get_pipeline()->get_image();
     if( image ) {
-      PF::Layer* layer = image->get_layer_manager().get_layer( displayed_layer );
+      PF::Layer* layer = image->get_layer_manager().get_layer( sticky_layer );
       if( layer &&
           layer->get_processor() &&
           layer->get_processor()->get_par() ) {
@@ -1039,17 +1040,18 @@ void PF::ImageArea::update( VipsRect* area )
 
   VipsImage* image = NULL;
   bool do_merged = display_merged && (!display_mask);
+  displayed_layer = -1;
 #ifdef DEBUG_DISPLAY
-  std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  display_merged="<<display_merged<<"  displayed_layer="<<displayed_layer<<"  display_mask="<<display_mask<<std::endl;
+  std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  display_merged="<<display_merged<<"  sticky_layer="<<sticky_layer<<"  display_mask="<<display_mask<<std::endl;
 #endif
   if( !do_merged ) {
-    if( displayed_layer < 0 && (!display_mask) ) do_merged = true;
+    if( sticky_layer < 0 && (!display_mask) ) do_merged = true;
     else {
       int layer_id = -1;
       if( display_mask ) {
         layer_id = selected_layer;
       } else {
-        layer_id = displayed_layer;
+        layer_id = sticky_layer;
       }
       PF::PipelineNode* node = get_pipeline()->get_node( layer_id );
 #ifdef DEBUG_DISPLAY
@@ -1061,6 +1063,7 @@ void PF::ImageArea::update( VipsRect* area )
         if( !temp_layer ) do_merged = true;
         if( !(temp_layer->is_visible()) ) do_merged = true;
       }
+      if( !do_merged ) displayed_layer = layer_id;
     }
   }
 #ifdef DEBUG_DISPLAY
@@ -1089,12 +1092,14 @@ void PF::ImageArea::update( VipsRect* area )
     if( display_mask ) {
       layer_id = selected_layer;
     } else {
-      layer_id = displayed_layer;
+      layer_id = sticky_layer;
     }
     PF::PipelineNode* node = get_pipeline()->get_node( layer_id );
-    //PF::PipelineNode* node = get_pipeline()->get_node( displayed_layer );
+    //PF::PipelineNode* node = get_pipeline()->get_node( sticky_layer );
     if( !node ) return;
     if( !(node->blended) ) return;
+
+    displayed_layer = layer_id;
 
     if( node->processor &&
 				node->processor->get_par() &&
@@ -1111,7 +1116,7 @@ void PF::ImageArea::update( VipsRect* area )
       // We need to find the first non-mask layer that contains the active mask layer
       /*
       PF::Layer* container_layer = NULL;
-      int temp_id = displayed_layer;
+      int temp_id = sticky_layer;
       while( !container_layer ) {
 				container_layer = 
           get_pipeline()->get_image()->get_layer_manager().
