@@ -43,10 +43,12 @@ PF::SharpenPar::SharpenPar():
   method("method",this,PF::SHARPEN_USM,"USM","Unsharp Mask"),
   usm_radius("usm_radius",this,1),
   eusm_amount("eusm_amount",this,2),
+  eusm_iterations("eusm_iterations",this,1),
   eusm_radius("eusm_radius",this,3),
   eusm_threshold_l("eusm_threshold_l",this,0.005),
   eusm_threshold_h("eusm_threshold_h",this,0.02),
   eusm_do_sum("eusm_do_sum",this,true),
+  eusm_linear("eusm_linear",this,false),
   rl_sigma("rl_sigma",this,1),
   rl_iterations("rl_iterations",this,10),
   texture_radius("texture_radius",this,4),
@@ -155,6 +157,7 @@ void PF::SharpenPar::propagate_settings()
     eusmpar->set_threshold_l( eusm_threshold_l.get() );
     eusmpar->set_threshold_h( eusm_threshold_h.get() );
     eusmpar->set_do_sum( eusm_do_sum.get() );
+    eusmpar->set_linear( eusm_linear.get() );
     eusmpar->propagate_settings();
   }
 

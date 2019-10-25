@@ -40,15 +40,19 @@ class EUSMLogLumiPar: public PF::OpParBase
 {
   PF::ICCProfile* profile;
   float anchor;
+  bool linear;
 public:
   EUSMLogLumiPar():
-    PF::OpParBase(), profile(NULL), anchor(0.5) {
+    PF::OpParBase(), profile(NULL), anchor(0.5), linear(false) {
 
   }
 
   PF::ICCProfile* get_profile() { return profile; }
   float get_anchor() { return anchor; }
   void set_anchor(float a) { anchor = a; }
+
+  bool do_linear() { return linear; }
+  void set_linear(bool l) { linear = l; }
 
 
   VipsImage* build(std::vector<VipsImage*>& in, int first,
@@ -102,6 +106,7 @@ public:
     int height = r->height;
     PF::ICCProfile* profile = opar->get_profile();
     if( !profile ) return;
+    bool linear = opar->do_linear();
 
     const float bias = 1.0f/profile->perceptual2linear(opar->get_anchor());
 
@@ -117,9 +122,12 @@ public:
       for( x = 0; x < width; x++, pin+=3, pout++ ) {
         L = profile->get_lightness(pin[0], pin[1], pin[2]);
         //L *= bias;
-        pL = (L>1.0e-16) ? xlog10( L ) : -16;
-
-        pout[0] = pL;
+        if( !linear ) {
+          pL = (L>1.0e-16) ? xlog10( L ) : -16;
+          pout[0] = pL;
+        } else {
+          pout[0] = L;
+        }
       }
     }
   }
@@ -130,6 +138,7 @@ public:
 PF::EnhancedUnsharpMaskPar::EnhancedUnsharpMaskPar():
   OpParBase(), 
   do_sum("do_sum",this,true),
+  linear("linear",this,false),
   amount("amount",this,1),
   radius("radius",this,3),
   threshold_l("threshold_l",this,0.005),
@@ -159,11 +168,18 @@ void PF::EnhancedUnsharpMaskPar::propagate_settings()
 
 void PF::EnhancedUnsharpMaskPar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
 {
+  threshold_real_l = threshold_l.get();
+  threshold_real_h = threshold_h.get();
+  if( get_linear() ) {
+    threshold_real_l /= 100;
+    threshold_real_h /= 100;
+  }
+
   int padding = 0;
   int rv[2] = { radius.get(), radius.get() };
-  float tv[2] = { threshold_l.get(), threshold_h.get() };
+  float tv[2] = { threshold_real_l, threshold_real_h };
 
-  for(int gi = 0; gi < 2; gi++) {
+  for(int gi = 0; gi < 1; gi++) {
     PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
     if( !guidedpar ) break;
 #ifndef NDEBUG
@@ -195,10 +211,18 @@ VipsImage* PF::EnhancedUnsharpMaskPar::build(std::vector<VipsImage*>& in, int fi
   std::vector<VipsImage*> in2;
   in_profile = PF::get_icc_profile( in[0] );
 
+  threshold_real_l = threshold_l.get();
+  threshold_real_h = threshold_h.get();
+  if( get_linear() ) {
+    threshold_real_l /= 100;
+    threshold_real_h /= 100;
+  }
+
   EUSMLogLumiPar* logpar = dynamic_cast<EUSMLogLumiPar*>( loglumi->get_par() );
   VipsImage* logimg = NULL;
   if(logpar) {
     logpar->set_anchor( 0.5 );
+    logpar->set_linear( get_linear() );
     logpar->set_image_hints( in[0] );
     logpar->set_format( get_format() );
     in2.clear(); in2.push_back( in[0] );
@@ -218,9 +242,9 @@ VipsImage* PF::EnhancedUnsharpMaskPar::build(std::vector<VipsImage*>& in, int fi
 
 
   int rv[2] = { radius.get(), radius.get() };
-  float tv[2] = { threshold_l.get(), threshold_h.get() };
+  float tv[2] = { threshold_real_l, threshold_real_h };
 
-  VipsImage* timg = logimg;
+  //VipsImage* timg = logimg;
   VipsImage* smoothed[2] = { NULL };
 #ifndef NDEBUG
   std::cout<<"EnhancedUnsharpMaskPar::build(): radius="<<radius.get()<<std::endl;
@@ -231,18 +255,21 @@ VipsImage* PF::EnhancedUnsharpMaskPar::build(std::vector<VipsImage*>& in, int fi
     PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
     if( !guidedpar ) break;
     if( rv[gi] == 0 ) break;
-    guidedpar->set_image_hints( timg );
+    guidedpar->set_image_hints( logimg );
     guidedpar->set_format( get_format() );
     guidedpar->set_radius( rv[gi] );
     guidedpar->set_threshold(tv[gi]);
     int subsampling = 1;
     guidedpar->set_subsampling(subsampling);
     guidedpar->set_convert_to_perceptual( false );
-    guidedpar->propagate_settings();
-    guidedpar->compute_padding(logimg, 0, level);
+    //guidedpar->propagate_settings();
+    //guidedpar->compute_padding(logimg, 0, level);
+    VipsImage* tmpimg = logimg;
+    PF_REF(tmpimg, "EnhancedUnsharpMaskPar::build(): tmpimg ref");
     in2.clear();
-    in2.push_back( logimg );
+    in2.push_back( tmpimg );
     smoothed[gi] = guidedpar->build( in2, first, NULL, NULL, level );
+    PF_UNREF(tmpimg, "EnhancedUnsharpMaskPar::build(): tmpimg unref");
 
     //#ifndef NDEBUG
     std::cout<<"EnhancedUnsharpMaskPar::build(): gi="<<gi<<"  radius="

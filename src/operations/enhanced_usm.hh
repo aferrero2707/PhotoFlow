@@ -39,8 +39,10 @@ namespace PF
   class EnhancedUnsharpMaskPar: public OpParBase
   {
     Property<bool> do_sum;
+    Property<bool> linear;
     Property<float> amount;
     Property<float> radius, threshold_l, threshold_h;
+    float threshold_real_l, threshold_real_h;
 
     ProcessorBase* loglumi;
     ProcessorBase* guided[2];
@@ -62,12 +64,15 @@ namespace PF
     float get_amount() { return amount.get(); }
     void set_radius( float r ) { radius.set( r ); }
     void set_threshold_l( float t ) { threshold_l.set( t ); }
-    float get_threshold_l() { return threshold_l.get(); }
+    float get_threshold_l() { return threshold_real_l; }
     void set_threshold_h( float t ) { threshold_h.set( t ); }
-    float get_threshold_h() { return threshold_h.get(); }
+    float get_threshold_h() { return threshold_real_h; }
 
     void set_do_sum(bool b) { do_sum.set(b); }
     bool get_do_sum() { return do_sum.get(); }
+
+    void set_linear(bool b) { linear.set(b); }
+    bool get_linear() { return linear.get(); }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 
@@ -123,6 +128,7 @@ namespace PF
       float bias = profile->perceptual2linear( 0.5 );
       float scale = opar->get_amount();
       bool do_sum = opar->get_do_sum();
+      bool linear = opar->get_linear();
 
       for( y = 0; y < height; y++ ) {
         // original image
@@ -141,7 +147,7 @@ namespace PF
           float l1 = pbl[x0];
           float l2 = pbh[x0];
           float lin = pL[x0];
-          if( do_sum ) {
+          if( do_sum && !linear) {
             l1 = xexp10( l1 );
             l2 = xexp10( l2 );
             lin = xexp10( lin );
@@ -151,8 +157,8 @@ namespace PF
           float lout = lin + (delta * scale);
           //std::cout<<"l1="<<l1<<"  l2="<<l2<<"  lwhite2="<<lwhite2<<"  boost="<<boost<<"  out="<<out<<std::endl;
 
-          float in = do_sum ? lin : xexp10( lin );
-          float out = do_sum ? lout : xexp10( lout );
+          float in = (do_sum || linear) ? lin : xexp10( lin );
+          float out = (do_sum || linear) ? lout : xexp10( lout );
           float R = out / in;
 
           pout[x] = pin[x] * R;

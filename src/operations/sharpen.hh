@@ -47,10 +47,12 @@ class SharpenPar: public OpParBase
   PropertyBase method;
   Property<float> usm_radius;
   Property<float> eusm_amount;
-  Property<float> eusm_radius;
+  Property<int> eusm_iterations;
+  Property<int> eusm_radius;
   Property<float> eusm_threshold_l;
   Property<float> eusm_threshold_h;
   Property<bool> eusm_do_sum;
+  Property<bool> eusm_linear;
   Property<float> rl_sigma;
   Property<int> rl_iterations;
   Property<float> texture_radius;
