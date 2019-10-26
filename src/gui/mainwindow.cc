@@ -1277,11 +1277,12 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   bckname += ".info";
   unlink( bckname.c_str() );
 
+  /*
   std::cout<<"MainWindow::remove_tab(): preparing for deleting image editor "<<editor<<" (image="<<editor->get_image()<<")"<<std::endl;
   if( PF::PhotoFlow::Instance().get_active_image() == editor->get_image() ) {
     PF::PhotoFlow::Instance().set_active_image( NULL );
     if( editor->get_image() ) {
-      // Make sure that aching of current image is stopped
+      // Make sure that caching of current image is stopped
       PF::Pipeline* pipeline = editor->get_image()->get_pipeline( 0 );
       if( pipeline ) {
         std::cout<<"MainWindow::remove_tab(): updating image "<<editor->get_image()<<"..."<<std::endl;
@@ -1290,6 +1291,7 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
       }
     }
   }
+  */
 
   for( unsigned int i = 0; i < image_editors.size(); i++ ) {
     if( image_editors[i] != widget ) continue;
@@ -1297,20 +1299,27 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
     break;
   }
 
+  //std::cout<<"  Buttons box parent (1): "<<top_box.get_parent()<<std::endl;
+  //if( top_box.get_parent() ) {
+  //  Gtk::Container* box = (Gtk::Container*)top_box.get_parent();
+  //  box->remove(top_box);
+  //}
+  //std::cout<<"  Buttons box parent (2): "<<top_box.get_parent()<<std::endl;
+
   viewerNotebook.remove_page( page );
   widget->hide();
 
-  if( top_box.get_parent() == &(editor->get_file_buttons_box()) ) {
-    editor->get_file_buttons_box().remove(top_box);
-  }
-  editor->get_file_buttons_box().pack_start(top_box, Gtk::PACK_EXPAND_WIDGET);
+  //if( top_box.get_parent() == &(editor->get_file_buttons_box()) ) {
+  //  editor->get_file_buttons_box().remove(top_box);
+  //}
+  //editor->get_file_buttons_box().pack_start(top_box, Gtk::PACK_EXPAND_WIDGET);
 
 
   if( viewerNotebook.get_n_pages() > 1 ) viewerNotebook.set_show_tabs(true);
   else viewerNotebook.set_show_tabs(false);
 
   if(immediate) {
-    std::cout<<"MainWindow::remove_tab(): preparing for deleting image editor "<<editor<<" (image="<<editor->get_image()<<")"<<std::endl;
+    std::cout<<"MainWindow::remove_tab(): deleting image editor "<<editor<<" (image="<<editor->get_image()<<")"<<std::endl;
     delete( widget );
     if( tabwidget )
       delete( tabwidget );
@@ -1341,6 +1350,7 @@ void PF::MainWindow::on_my_switch_page(
 #endif
     guint page_num)
 {
+  std::cout<<"MainWindow::on_my_switch_page() called"<<std::endl;
   for(unsigned int i = 0; i < image_editors.size(); i++) image_editors[i]->exit();
   Gtk::Widget* widget = viewerNotebook.get_nth_page( page_num );
   if( widget ) {
