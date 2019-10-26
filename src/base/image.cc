@@ -111,7 +111,7 @@ PF::Image::Image():
   rebuild_done = vips_g_cond_new();
 
   export_mutex = vips_g_mutex_new();
-  g_mutex_lock( export_mutex );
+  //g_mutex_lock( export_mutex );
   export_done = vips_g_cond_new();
 
   sample_mutex = vips_g_mutex_new();
