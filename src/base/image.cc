@@ -147,12 +147,16 @@ PF::Image::~Image()
       delete pipelines[vi];
   }
    */
+  std::cout<<"[Image::~Image()] freeing rebuild_mutex"<<std::endl;
   vips_g_mutex_free(rebuild_mutex);
   vips_g_cond_free(rebuild_done);
+  std::cout<<"[Image::~Image()] freeing export_mutex"<<std::endl;
   vips_g_mutex_free(export_mutex);
   vips_g_cond_free(export_done);
+  std::cout<<"[Image::~Image()] freeing sample_mutex"<<std::endl;
   vips_g_mutex_free(sample_mutex);
   vips_g_cond_free(sample_done);
+  std::cout<<"[Image::~Image()] freeing remove_layer_mutex"<<std::endl;
   vips_g_mutex_free(remove_layer_mutex);
   vips_g_cond_free(remove_layer_done);
 }
