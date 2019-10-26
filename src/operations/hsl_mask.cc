@@ -78,6 +78,33 @@ void PF::HSLMaskPar::update_curve( PF::Property<PF::SplineCurve>* curve, float* 
 }
 
 
+void PF::HSLMaskPar::pre_build( rendermode_t /*mode*/ )
+{
+  for( int id = 0; id < 3; id++ ) {
+#ifndef NDEBUG
+    std::cout<<"HSLMaskPar::pre_build(): eq_vec["<<id<<"]->is_modified()="<<eq_vec[id]->is_modified()<<std::endl;
+#endif
+    if( eq_vec[id]->is_modified() ) {
+#ifndef NDEBUG
+      std::cout<<"HSLMaskPar::pre_build(): updating curve #"<<id<<std::endl;
+#endif
+      update_curve( eq_vec[id], vec[id] );
+    }
+  }
+}
+
+
+bool PF::HSLMaskPar::import_settings( PF::OpParBase* pin )
+{
+  PF::HSLMaskPar* hslmpin = dynamic_cast<PF::HSLMaskPar*>( pin );
+  if( !hslmpin ) return false;
+  for( int id = 0; id < 3; id++ ) {
+    memcpy(vec[id], hslmpin->vec[id], sizeof(float)*65536);
+  }
+
+  return PF::OpParBase::import_settings(pin);
+}
+
 
 VipsImage* PF::HSLMaskPar::build(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap,
@@ -86,12 +113,6 @@ VipsImage* PF::HSLMaskPar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* out = PF::OpParBase::build( in, first, imap, omap, level );
 
   for( int id = 0; id < 3; id++ ) {
-    if( eq_vec[id]->is_modified() ) {
-#ifndef NDEBUG
-      std::cout<<"HSLMaskPar::build(): updating curve #"<<id<<std::endl;
-#endif
-      update_curve( eq_vec[id], vec[id] );
-    }
     eq_enabled[id] = false;
     //std::cout<<"eq_vec["<<id<<"]->get().get_npoints()="<<eq_vec[id]->get().get_npoints()<<std::endl;
     //for( size_t pi = 0; pi < eq_vec[id]->get().get_npoints(); pi++ ) {
