@@ -732,7 +732,8 @@ void PF::Image::do_sample( int layer_id, std::vector<VipsRect>& areas, bool weig
 
 void PF::Image::destroy()
 {
-  if( PF::PhotoFlow::Instance().is_batch() ) {
+  if( true || PF::PhotoFlow::Instance().is_batch() ) {
+    PF::ImageProcessor::Instance().remove_image_from_queue(this);
     do_destroy();
   } else {
     ProcessRequestInfo request;

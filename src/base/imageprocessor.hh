@@ -99,6 +99,10 @@ namespace PF
     GCond* caching_completed_cond;
     GMutex* caching_completed_mutex;
 
+    bool processing_completed;
+    GCond* processing_completed_cond;
+    GMutex* processing_completed_mutex;
+
     GAsyncQueue* requests;
 
     void optimize_requests();
@@ -115,7 +119,10 @@ namespace PF
     void start();
     void run();
 
+    void wait_for_processing_completed();
     void wait_for_caching();
+
+    void remove_image_from_queue(Image* image);
 
     void submit_request( ProcessRequestInfo request );
 
