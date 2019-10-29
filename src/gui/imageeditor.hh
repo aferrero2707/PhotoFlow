@@ -170,6 +170,8 @@ public:
   ImageEditor( std::string filename );
   ~ImageEditor();
 
+  void dispose();
+
   Image* get_image() { return image; }
   ImageArea* get_image_area() { return imageArea; }
 

@@ -1296,6 +1296,7 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   for( unsigned int i = 0; i < image_editors.size(); i++ ) {
     if( image_editors[i] != widget ) continue;
     image_editors.erase( image_editors.begin()+i );
+    editor->dispose();
     break;
   }
 
@@ -1306,6 +1307,7 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   //}
   //std::cout<<"  Buttons box parent (2): "<<top_box.get_parent()<<std::endl;
 
+  std::cout<<"MainWindow::remove_tab(): removing page "<<page<<std::endl;
   viewerNotebook.remove_page( page );
   widget->hide();
 
