@@ -1323,7 +1323,7 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   if(immediate) {
     std::cout<<"MainWindow::remove_tab(): deleting image editor "<<editor<<" (image="<<editor->get_image()<<")"<<std::endl;
     delete( widget );
-    if( false && tabwidget )
+    if( tabwidget )
       delete( tabwidget );
   } else {
     WidgetDestroyData * update = g_new (WidgetDestroyData, 1);
