@@ -152,6 +152,11 @@ namespace PF
             l2 = xexp10( l2 );
             lin = xexp10( lin );
           }
+          if(linear) {
+            l1  = (l1 > 0) ? xexp10( l1 ) : (l1 + 1); l1 *= 0.05;
+            l2  = (l2 > 0) ? xexp10( l2 ) : (l2 + 1); l2 *= 0.05;
+            lin = (lin > 0) ? xexp10( lin ) : (lin + 1); lin *= 0.05;
+          }
           float delta = l1 - l2;
           // add the difference back to the log-lumi
           float lout = lin + (delta * scale);

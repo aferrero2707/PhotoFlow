@@ -126,7 +126,9 @@ public:
           pL = (L>1.0e-16) ? xlog10( L ) : -16;
           pout[0] = pL;
         } else {
-          pout[0] = L;
+          L /= 0.05;
+          pL = (L > 1) ? xlog10( L ) : (L - 1);
+          pout[0] = pL;
         }
       }
     }
@@ -171,8 +173,8 @@ void PF::EnhancedUnsharpMaskPar::compute_padding( VipsImage* full_res, unsigned 
   threshold_real_l = threshold_l.get();
   threshold_real_h = threshold_h.get();
   if( get_linear() ) {
-    threshold_real_l /= 100;
-    threshold_real_h /= 100;
+    threshold_real_l /= 1;
+    threshold_real_h /= 1;
   }
 
   int padding = 0;
@@ -214,8 +216,8 @@ VipsImage* PF::EnhancedUnsharpMaskPar::build(std::vector<VipsImage*>& in, int fi
   threshold_real_l = threshold_l.get();
   threshold_real_h = threshold_h.get();
   if( get_linear() ) {
-    threshold_real_l /= 100;
-    threshold_real_h /= 100;
+    threshold_real_l /= 1;
+    threshold_real_h /= 1;
   }
 
   EUSMLogLumiPar* logpar = dynamic_cast<EUSMLogLumiPar*>( loglumi->get_par() );
