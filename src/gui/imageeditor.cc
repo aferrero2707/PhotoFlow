@@ -656,6 +656,12 @@ PF::ImageEditor::ImageEditor( std::string fname ):
 
 PF::ImageEditor::~ImageEditor()
 {
+  dispose();
+}
+
+
+void PF::ImageEditor::dispose()
+{
   /**/
 #ifndef NDEBUG
   std::cout<<"~ImageEditor(): deleting image"<<std::endl;
@@ -664,15 +670,16 @@ PF::ImageEditor::~ImageEditor()
     std::cout<<"~ImageEditor(): deleting image"<<std::endl;
     image->destroy();
     delete image;
+    image = NULL;
   }
 #ifndef NDEBUG
   std::cout<<"~ImageEditor(): image deleted"<<std::endl;
 #endif
-  delete imageArea;
-  delete histogram;
-  delete samplers;
-  delete image_size_updater;
-  delete main_panel;
+  if(imageArea) delete imageArea; imageArea = NULL;
+  if(histogram) delete histogram; histogram = NULL;
+  if(samplers) delete samplers; samplers = NULL;
+  if(image_size_updater) delete image_size_updater; image_size_updater = NULL;
+  if(main_panel) delete main_panel; main_panel = NULL;
   /**/
   /*
   // Images need to be destroyed by the processing thread
@@ -681,7 +688,7 @@ PF::ImageEditor::~ImageEditor()
   request.request = PF::IMAGE_DESTROY;
   PF::ImageProcessor::Instance().submit_request( request );
   // Ugly temporary solution to make sure that the image is destroyed before continuing
-  sleep(1);	
+  sleep(1);
    */
 }
 
@@ -1036,13 +1043,14 @@ void PF::ImageEditor::build_image()
 
 void PF::ImageEditor::on_image_modified_async()
 {
+  std::cout<<"[ImageEditor::on_image_modified_async] emitting signal_image_modified"<<std::endl;
   signal_image_modified.emit();
 }
 
 
 void PF::ImageEditor::on_image_modified()
 {
-  //std::cout<<"ImageEditor::on_image_modified() called."<<std::endl;
+  std::cout<<"ImageEditor::on_image_modified() called."<<std::endl;
   if( !tab_label_widget ) return;
   char* fullpath = strdup( image->get_filename().c_str() );
   char* fname = basename( fullpath );
@@ -1057,15 +1065,16 @@ void PF::ImageEditor::on_image_updated_async()
 #ifndef NDEBUG
   std::cout<<"ImageEditor::on_image_updated_async() called"<<std::endl;
 #endif
+  std::cout<<"[ImageEditor::on_image_updated_async] emitting signal_image_updated"<<std::endl;
   signal_image_updated.emit();
 }
 
 
 void PF::ImageEditor::on_image_updated()
 {
-#ifndef NDEBUG
+//#ifndef NDEBUG
   std::cout<<"ImageEditor::on_image_updated() called."<<std::endl;
-#endif
+//#endif
   layersWidget.update_controls();
 }
 

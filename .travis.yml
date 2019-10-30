@@ -21,6 +21,8 @@ matrix:
             - ls -lh
             #- bash appimage/package-appimage.sh
             - ls out/*
+            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/remove.sh
+            - bash ./remove.sh "continuous" "PhotoFlow-*${TRAVIS_BRANCH}-" ".AppImage"
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
             - bash  ./upload_rotate.sh "continuous" out/*;
         - os: linux
@@ -41,6 +43,8 @@ matrix:
           after_success:
             - cd $TRAVIS_BUILD_DIR
             - pwd
+            - wget -c https://github.com/aferrero2707/uploadtool/raw/master/remove.sh
+            #- bash ./remove.sh "continuous" "photoflow-w64-*${TRAVIS_BRANCH}-" ".zip"
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
             - bash  ./upload_rotate.sh "continuous" photoflow*.zip

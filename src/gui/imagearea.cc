@@ -104,7 +104,7 @@ gboolean PF::ImageArea::queue_draw_cb (PF::ImageArea::Update * update)
 //gboolean PF::ImageArea::set_size_cb (PF::ImageArea::Update * update)
 void PF::ImageArea::set_size_cb ()
 {
-  //std::cout<<"set_size_cb() called."<<std::endl;
+  //std::cout<<"ImageArea::set_size_cb() called."<<std::endl;
   /*
   std::cout<<"set_size_cb(1): ->get_hadj()->get_value()="<<->get_hadj()->get_value()<<std::endl;
   std::cout<<"                get_lower()="<<->get_hadj()->get_lower()<<std::endl;
@@ -274,7 +274,7 @@ PF::ImageArea::~ImageArea ()
 
 void PF::ImageArea::dispose()
 {
-  std::cout<<"mageArea::dispose() called"<<std::endl;
+  std::cout<<"ImageArea::dispose() called"<<std::endl;
   PF_UNREF( region, "ImageArea::dispose()" );
   PF_UNREF( display_image, "ImageArea::dispose()" );
   PF_UNREF( outimg, "ImageArea::dispose()" );
@@ -285,7 +285,7 @@ void PF::ImageArea::dispose()
   delete uniform;
   delete maskblend;
   delete clipping_warning;
-  std::cout<<"mageArea::dispose() fnished"<<std::endl;
+  std::cout<<"ImageArea::dispose() fnished"<<std::endl;
 }
 
 
@@ -357,6 +357,7 @@ void PF::ImageArea::submit_area( const VipsRect& area )
   clip.height = area_clip.height;
   
   ProcessRequestInfo request;
+  request.image = get_pipeline()->get_image();
   request.sink = this;
   request.area = clip;
   request.request = PF::IMAGE_REDRAW;
@@ -1599,7 +1600,7 @@ void PF::ImageArea::update( VipsRect* area )
   g_mutex_unlock(preview_size_mutex);
 #ifdef DEBUG_DISPLAY
   //std::cout<<"   update->rect: "<<update->rect<<std::endl;
-  std::cout<<"PF::ImageArea::update(): installing set_size callback."<<std::endl;
+  std::cout<<"PF::ImageArea::update(): emitting set_size signal."<<std::endl;
 #endif
   //gdk_threads_add_idle ((GSourceFunc) set_size_cb, update);
   signal_set_size.emit();

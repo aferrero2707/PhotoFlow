@@ -111,7 +111,7 @@ PF::Image::Image():
   rebuild_done = vips_g_cond_new();
 
   export_mutex = vips_g_mutex_new();
-  g_mutex_lock( export_mutex );
+  //g_mutex_lock( export_mutex );
   export_done = vips_g_cond_new();
 
   sample_mutex = vips_g_mutex_new();
@@ -147,12 +147,16 @@ PF::Image::~Image()
       delete pipelines[vi];
   }
    */
+  std::cout<<"[Image::~Image()] freeing rebuild_mutex"<<std::endl;
   vips_g_mutex_free(rebuild_mutex);
   vips_g_cond_free(rebuild_done);
+  std::cout<<"[Image::~Image()] freeing export_mutex"<<std::endl;
   vips_g_mutex_free(export_mutex);
   vips_g_cond_free(export_done);
+  std::cout<<"[Image::~Image()] freeing sample_mutex"<<std::endl;
   vips_g_mutex_free(sample_mutex);
   vips_g_cond_free(sample_done);
+  std::cout<<"[Image::~Image()] freeing remove_layer_mutex"<<std::endl;
   vips_g_mutex_free(remove_layer_mutex);
   vips_g_cond_free(remove_layer_done);
 }
@@ -728,7 +732,8 @@ void PF::Image::do_sample( int layer_id, std::vector<VipsRect>& areas, bool weig
 
 void PF::Image::destroy()
 {
-  if( PF::PhotoFlow::Instance().is_batch() ) {
+  if( true || PF::PhotoFlow::Instance().is_batch() ) {
+    PF::ImageProcessor::Instance().remove_image_from_queue(this);
     do_destroy();
   } else {
     ProcessRequestInfo request;

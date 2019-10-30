@@ -531,7 +531,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
 
   tool_buttons_box.pack_start( add_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( group_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( insert_image_button, Gtk::PACK_SHRINK, 2 );
+  //tool_buttons_box.pack_start( insert_image_button, Gtk::PACK_SHRINK, 2 );
   //tool_buttons_box.pack_start( levels_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( curves_button, Gtk::PACK_SHRINK, 2 );
@@ -542,10 +542,10 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   tool_buttons_box.pack_start( crop_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( perspective_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( scale_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( path_mask_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( draw_button, Gtk::PACK_SHRINK, 2 );
+  //tool_buttons_box.pack_start( path_mask_button, Gtk::PACK_SHRINK, 2 );
+  //tool_buttons_box.pack_start( draw_button, Gtk::PACK_SHRINK, 2 );
   //tool_buttons_box.pack_start( clone_button, Gtk::PACK_SHRINK, 2 );
-  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 20 );
+  tool_buttons_box.pack_start( trash_button, Gtk::PACK_SHRINK, 10 );
 
 
   //LayerTree* view = new LayerTree( editor );

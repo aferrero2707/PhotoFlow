@@ -64,12 +64,15 @@ static gpointer run_image_processor( gpointer /*data*/ )
 }
 
 
-PF::ImageProcessor::ImageProcessor(): caching_completed( false )
+PF::ImageProcessor::ImageProcessor(): caching_completed( false ), processing_completed( false )
 {
   processing_mutex = vips_g_mutex_new();
 
   caching_completed_mutex = vips_g_mutex_new();
   caching_completed_cond = vips_g_cond_new();
+
+  processing_completed_mutex = vips_g_mutex_new();
+  processing_completed_cond = vips_g_cond_new();
 
   requests = g_async_queue_new();
 }
@@ -97,6 +100,25 @@ void PF::ImageProcessor::start()
 #ifndef NDEBUG
   std::cout<<"ImageProcessor::ImageProcessor(): thread started"<<std::endl;
 #endif
+}
+
+
+void PF::ImageProcessor::remove_image_from_queue(PF::Image* image)
+{
+  wait_for_processing_completed();
+
+  // Add any further request in the queue
+  int length = g_async_queue_length( requests );
+  std::cout<<"ImageProcessor::remove_image_from_queue(): image="<<image<<"  queue length="<<length<<std::endl;
+  for( int i = 0; i < length; i++ ) {
+    //std::cout<<"ImageProcessor::optimize_requests(): popping queue again..."<<std::endl;
+    PF::ProcessRequestInfo* req = (PF::ProcessRequestInfo*)g_async_queue_pop( requests );
+    if( req->image == image ) {
+      std::cout<<"ImageProcessor::remove_image_from_queue(): removing request"<<std::endl;
+      delete( req );
+    } else
+      g_async_queue_push( requests, req );
+  }
 }
 
 
@@ -220,6 +242,7 @@ void PF::ImageProcessor::run()
       }
       */
     }
+
     optimize_requests();
     while( !optimized_requests.empty() ) {
       PF::ProcessRequestInfo request = optimized_requests.front();
@@ -385,12 +408,20 @@ void PF::ImageProcessor::run()
         break;
       }
     }
+    g_mutex_lock( processing_completed_mutex );
+    processing_completed = true;
+    g_cond_signal( processing_completed_cond );
+    g_mutex_unlock( processing_completed_mutex );
   }
 }
 
 
 void  PF::ImageProcessor::submit_request( PF::ProcessRequestInfo request )
 {
+  g_mutex_lock( processing_completed_mutex );
+  processing_completed = false;
+  g_mutex_unlock( processing_completed_mutex );
+
   PF::ProcessRequestInfo* req_copy = new PF::ProcessRequestInfo( request );
   g_async_queue_push( requests, req_copy );
 
@@ -404,6 +435,15 @@ void  PF::ImageProcessor::submit_request( PF::ProcessRequestInfo request )
   std::cout<<"PF::ImageProcessor::submit_request(): signaling condition."<<std::endl;
   g_cond_signal( requests_pending );
   */
+}
+
+
+void PF::ImageProcessor::wait_for_processing_completed()
+{
+  g_mutex_lock( processing_completed_mutex );
+  while( !processing_completed )
+    g_cond_wait( processing_completed_cond, processing_completed_mutex );
+  g_mutex_unlock( processing_completed_mutex );
 }
 
 
