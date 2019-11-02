@@ -37,8 +37,8 @@ usmRadiusSlider( this, "usm_radius", "Radius", 1, 0, 100, 0.05, 0.1, 1),
 eusmAmountSlider( this, "eusm_amount", "amount", 1, 0, 500, 0.5, 5, 100),
 eusmIterationsSlider( this, "eusm_iterations", "iterations", 1, 0, 10, 1, 5, 1),
 eusmRadiusSlider( this, "eusm_radius", "radius", 1, 0, 10, 1, 5, 1),
-eusmThresholdLSlider( this, "eusm_threshold_l", "threshold low (x1)", 1, 0, 100, 0.5, 5, 1000),
-eusmThresholdHSlider( this, "eusm_threshold_h", "threshold high", 1, 0, 100, 0.5, 5, 1000),
+eusmThresholdLSlider( this, "eusm_threshold_l", "threshold low", 1, 0, 100, 0.5, 5, 100000),
+eusmThresholdHSlider( this, "eusm_threshold_h", "threshold high", 1, 0, 100, 0.5, 5, 5000),
 eusmDoSumCbox(this, "eusm_do_sum", "sum method", true),
 eusmLinearCbox(this, "eusm_linear", "linear", true),
 rlSigmaSlider( this, "rl_sigma", "Sigma", 1, 0, 100, 0.05, 0.1, 1),
@@ -56,7 +56,7 @@ textureRadiusSlider( this, "texture_radius", _("radius"), 4, 0, 32, 0.1, 1, 1)
   eusmControlsBox.pack_start( eusmThresholdLSlider, Gtk::PACK_SHRINK );
   eusmControlsBox.pack_start( eusmThresholdHSlider, Gtk::PACK_SHRINK );
   //eusmControlsBox.pack_start( eusmDoSumCbox, Gtk::PACK_SHRINK );
-  eusmControlsBox.pack_start( eusmLinearCbox, Gtk::PACK_SHRINK );
+  //eusmControlsBox.pack_start( eusmLinearCbox, Gtk::PACK_SHRINK );
 
   rlControlsBox.pack_start( rlSigmaSlider, Gtk::PACK_SHRINK );
   rlControlsBox.pack_start( rlIterationsSlider, Gtk::PACK_SHRINK );

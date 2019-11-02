@@ -32,17 +32,18 @@
 
 #include "../rt/rtengine/sleef.c"
 #include "../base/processor.hh"
+#include "padded_op.hh"
 
 namespace PF 
 {
 
-  class EnhancedUnsharpMaskPar: public OpParBase
+  class EnhancedUnsharpMaskPar: public PaddedOpPar
   {
     Property<bool> do_sum;
     Property<bool> linear;
     Property<float> amount;
     Property<float> radius, threshold_l, threshold_h;
-    float threshold_real_l, threshold_real_h;
+    float radius_real, threshold_real_l, threshold_real_h;
 
     ProcessorBase* loglumi;
     ProcessorBase* guided[2];
@@ -63,6 +64,7 @@ namespace PF
     void set_amount( float a ) { amount.set( a ); }
     float get_amount() { return amount.get(); }
     void set_radius( float r ) { radius.set( r ); }
+    float get_radius() { return radius_real; }
     void set_threshold_l( float t ) { threshold_l.set( t ); }
     float get_threshold_l() { return threshold_real_l; }
     void set_threshold_h( float t ) { threshold_h.set( t ); }
@@ -72,7 +74,7 @@ namespace PF
     bool get_do_sum() { return do_sum.get(); }
 
     void set_linear(bool b) { linear.set(b); }
-    bool get_linear() { return linear.get(); }
+    bool get_linear() { return false; /*linear.get();*/ }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 
@@ -80,6 +82,10 @@ namespace PF
   };
 
   
+  void eusm_gf(const PixelMatrix<float> &src, PixelMatrix<float> &dst_a,
+      PixelMatrix<float> &dst_mean, int r, float epsilon);
+
+
 
   template < OP_TEMPLATE_DEF > 
   class EnhancedUnsharpMaskProc
@@ -97,21 +103,50 @@ namespace PF
   template < OP_TEMPLATE_DEF_CS_SPEC >
   class EnhancedUnsharpMaskProc< OP_TEMPLATE_IMP_CS_SPEC(PF_COLORSPACE_RGB) >
   {
+    ICCProfile* profile;
   public:
+
+    void fill_L_matrix(int rw, int rh, PixelMatrix<float>& rgbin, PixelMatrix<float>& Lout, bool log_conv)
+    {
+      int x, y, z;
+
+      for(y = 0; y < rh; y++) {
+        float* row = rgbin[y];
+        float* L = Lout[y];
+        for( x = 0; x < rw; x++ ) {
+          //std::cout<<"  y="<<y<<"  x="<<x<<"  row="<<row<<"  rr="<<rr<<"  gr="<<gr<<"  br="<<br<<std::endl;
+          //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
+          float Lin = (profile != NULL) ? profile->get_lightness(row[0], row[1], row[2]) : ((row[0]+row[1]+row[2])/3.0f);
+          if( log_conv && profile && profile->is_linear() ) {
+            //*L = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
+            *L = (Lin>1.0e-16) ? log10(Lin) : -16;
+          } else {
+            *L = Lin;
+          }
+          //*Lg = *L;
+
+          row += 3;
+          L += 1;
+        }
+      }
+    }
+
     void render(VipsRegion** ireg, int n, int in_first,
                 VipsRegion* imap, VipsRegion* omap,
                 VipsRegion* oreg, OpParBase* par)
     {
-      if( n != 4 ) return;
+      if( n != 1 ) return;
       if( ireg[0] == NULL ) return;
-      if( ireg[1] == NULL ) return;
-      if( ireg[2] == NULL ) return;
-      if( ireg[3] == NULL ) return;
+      //if( ireg[1] == NULL ) return;
+      //if( ireg[2] == NULL ) return;
+      //if( ireg[3] == NULL ) return;
 
       EnhancedUnsharpMaskPar* opar = dynamic_cast<EnhancedUnsharpMaskPar*>(par);
       if( !opar ) return;
 
-      PF::ICCProfile* profile = opar->get_profile();
+      const int RGBIN_INDEX = 0;
+
+      profile = opar->get_profile();
       if( !profile ) return;
 
       VipsRect *r = &oreg->valid;
@@ -129,7 +164,92 @@ namespace PF
       float scale = opar->get_amount();
       bool do_sum = opar->get_do_sum();
       bool linear = opar->get_linear();
+      float radius = opar->get_radius();
+      float thrlow = opar->get_threshold_l();
+      float thrhigh = opar->get_threshold_h();
 
+      int offsx = 0;
+      int offsy = 0;
+      int rw = ireg[RGBIN_INDEX]->valid.width;
+      int rh = ireg[RGBIN_INDEX]->valid.height;
+      int ileft = ireg[RGBIN_INDEX]->valid.left;
+      int itop = ireg[RGBIN_INDEX]->valid.top;
+      float* p = (float*)VIPS_REGION_ADDR( ireg[RGBIN_INDEX], ileft, itop );
+      int rowstride = VIPS_REGION_LSKIP(ireg[RGBIN_INDEX]) / sizeof(float);
+      PixelMatrix<float> rgbin(p, rw, rh, rowstride, offsy, offsx);
+
+      // input luminance image
+      PixelMatrix<float> Lin(rw, rh, offsy, offsx);
+      fill_L_matrix( rw, rh, rgbin, Lin, false );
+
+      // input log-luminance image
+      PixelMatrix<float> logLin(rw, rh, offsy, offsx);
+      fill_L_matrix( rw, rh, rgbin, logLin, true );
+
+      // output a and mean coefficients, low threshold
+      PixelMatrix<float> a_thrlow(rw, rh, offsy, offsx);
+      PixelMatrix<float> mean_thrlow(rw, rh, offsy, offsx);
+      eusm_gf(Lin, a_thrlow, mean_thrlow, radius, thrlow);
+
+      // output a and mean coefficients, high threshold
+      PixelMatrix<float> a_thrhigh(rw, rh, offsy, offsx);
+      PixelMatrix<float> mean_thrhigh(rw, rh, offsy, offsx);
+      eusm_gf(logLin, a_thrhigh, mean_thrhigh, radius, thrhigh);
+
+      int dx = oreg->valid.left - ireg[0]->valid.left;
+      int dy = oreg->valid.top - ireg[0]->valid.top;
+
+      for( y = 0; y < height; y++ ) {
+        // original image
+        pin = (float*)VIPS_REGION_ADDR( ireg[RGBIN_INDEX], r->left, r->top + y );
+        // output image
+        pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+
+        float* pLin = Lin[y+dy]; pLin += dx;
+        float* plogLin = logLin[y+dy]; plogLin += dx;
+        float* pa1 = a_thrlow[y+dy]; pa1 += dx;
+        float* pa2 = a_thrhigh[y+dy]; pa2 += dx;
+        float* pmean = (linear) ? mean_thrlow[y+dy] : mean_thrhigh[y+dy]; pmean += dx;
+
+        for( x0 = 0, x = 0; x < line_size; x+=3, x0++ ) {
+          // invert the low-threshold a coefficient
+          float a1 = 1.0f - pa1[x0];
+          // the high-threshold a coefficient is not modified
+          float a2 = pa2[x0];
+          //printf("a1 = %f  a2 = %f\n", a1, a2);
+          // get the bigger of the two a coefficients
+          // this will keep the original image whenever it is kept in either of the blurs
+          float a = (a1 > a2) ? a1 : a2;
+          // compute the guided filer output, as the linear combination between the
+          // original and blurred images comtrolled by the a parameter
+          float gf;
+          if( linear ) {
+            gf = a * pLin[x0] + (1.0f - a) * pmean[x0];
+          } else {
+            float loggf = a * plogLin[x0] + (1.0f - a) * pmean[x0];
+            gf = xexp10(loggf);
+          }
+
+          // input luminance
+          float L = pLin[x0];
+
+          // compute the difference between the input and blurred luminances
+          float delta = L - gf;
+          // add back the difference to the input luminance
+          float Lout = L + (delta * scale); if(Lout < 0) Lout = 0;
+
+          float R = (L < 1.0e-10) ? 1.0f : Lout / L;
+
+          //pout[x] = gf;
+          //pout[x+1] = gf;
+          //pout[x+2] = gf;
+          pout[x] = pin[x] * R;
+          pout[x+1] = pin[x+1] * R;
+          pout[x+2] = pin[x+2] * R;
+        }
+      }
+
+      /*
       for( y = 0; y < height; y++ ) {
         // original image
         pin = (float*)VIPS_REGION_ADDR( ireg[3], r->left, r->top + y );
@@ -148,22 +268,22 @@ namespace PF
           float l2 = pbh[x0];
           float lin = pL[x0];
           if( do_sum && !linear) {
-            l1 = xexp10( l1 );
-            l2 = xexp10( l2 );
-            lin = xexp10( lin );
+            l1 = xexpf( l1 );
+            l2 = xexpf( l2 );
+            lin = xexpf( lin );
           }
           if(linear) {
-            l1  = (l1 > 0) ? xexp10( l1 ) : (l1 + 1); l1 *= 0.05;
-            l2  = (l2 > 0) ? xexp10( l2 ) : (l2 + 1); l2 *= 0.05;
-            lin = (lin > 0) ? xexp10( lin ) : (lin + 1); lin *= 0.05;
+            l1  = (l1 > 0) ? xexpf( l1 ) : (l1 + 1); l1 *= 0.05;
+            l2  = (l2 > 0) ? xexpf( l2 ) : (l2 + 1); l2 *= 0.05;
+            lin = (lin > 0) ? xexpf( lin ) : (lin + 1); lin *= 0.05;
           }
           float delta = l1 - l2;
           // add the difference back to the log-lumi
           float lout = lin + (delta * scale);
           //std::cout<<"l1="<<l1<<"  l2="<<l2<<"  lwhite2="<<lwhite2<<"  boost="<<boost<<"  out="<<out<<std::endl;
 
-          float in = (do_sum || linear) ? lin : xexp10( lin );
-          float out = (do_sum || linear) ? lout : xexp10( lout );
+          float in = (do_sum || linear) ? lin : xexpf( lin );
+          float out = (do_sum || linear) ? lout : xexpf( lout );
           float R = out / in;
 
           pout[x] = pin[x] * R;
@@ -171,6 +291,7 @@ namespace PF
           pout[x+2] = pin[x+2] * R;
         }
       }
+      */
     }
   };
 
