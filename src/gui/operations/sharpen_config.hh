@@ -53,7 +53,7 @@ namespace PF {
     Slider eusmRadiusSlider;
     Slider eusmThresholdLSlider;
     Slider eusmThresholdHSlider;
-    CheckBox eusmDoSumCbox;
+    CheckBox eusmShowMaskCbox;
     CheckBox eusmLinearCbox;
 
     Gtk::VBox rlControlsBox;

@@ -39,14 +39,11 @@ namespace PF
 
   class EnhancedUnsharpMaskPar: public PaddedOpPar
   {
-    Property<bool> do_sum;
+    Property<bool> show_mask;
     Property<bool> linear;
     Property<float> amount;
     Property<float> radius, threshold_l, threshold_h;
     float radius_real, threshold_real_l, threshold_real_h;
-
-    ProcessorBase* loglumi;
-    ProcessorBase* guided[2];
 
     PF::ICCProfile* in_profile;
   public:
@@ -70,11 +67,11 @@ namespace PF
     void set_threshold_h( float t ) { threshold_h.set( t ); }
     float get_threshold_h() { return threshold_real_h; }
 
-    void set_do_sum(bool b) { do_sum.set(b); }
-    bool get_do_sum() { return do_sum.get(); }
+    void set_show_mask(bool b) { show_mask.set(b); }
+    bool get_show_mask() { return show_mask.get(); }
 
     void set_linear(bool b) { linear.set(b); }
-    bool get_linear() { return false; /*linear.get();*/ }
+    bool get_linear() { return linear.get(); }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 
@@ -82,8 +79,8 @@ namespace PF
   };
 
   
-  void eusm_gf(const PixelMatrix<float> &src, PixelMatrix<float> &dst_a,
-      PixelMatrix<float> &dst_mean, int r, float epsilon);
+  void eusm_gf(const PixelMatrix<float> &src, PixelMatrix<float> &dst_a, PixelMatrix<float> &dst_b,
+      PixelMatrix<float> &dst_mean, int r, float epsilon, bool invert);
 
 
 
@@ -98,6 +95,10 @@ namespace PF
       std::cout<<"EnhancedUnsharpMaskProc::render() called."<<std::endl;
     }
   };
+
+
+
+  //#define GF_DEBUG 1
 
 
   template < OP_TEMPLATE_DEF_CS_SPEC >
@@ -118,7 +119,6 @@ namespace PF
           //if(x==0 && y==0) std::cout<<"  row="<<row[0]<<" "<<row[1]<<" "<<row[2]<<std::endl;
           float Lin = (profile != NULL) ? profile->get_lightness(row[0], row[1], row[2]) : ((row[0]+row[1]+row[2])/3.0f);
           if( log_conv && profile && profile->is_linear() ) {
-            //*L = (row[0]>0) ? powf( row[0], 1./2.4 ) : row[0];
             *L = (Lin>1.0e-16) ? log10(Lin) : -16;
           } else {
             *L = Lin;
@@ -137,9 +137,6 @@ namespace PF
     {
       if( n != 1 ) return;
       if( ireg[0] == NULL ) return;
-      //if( ireg[1] == NULL ) return;
-      //if( ireg[2] == NULL ) return;
-      //if( ireg[3] == NULL ) return;
 
       EnhancedUnsharpMaskPar* opar = dynamic_cast<EnhancedUnsharpMaskPar*>(par);
       if( !opar ) return;
@@ -160,9 +157,8 @@ namespace PF
       T* pbl;
       T* pout;
       int x, x0, y;
-      float bias = profile->perceptual2linear( 0.5 );
       float scale = opar->get_amount();
-      bool do_sum = opar->get_do_sum();
+      bool show_mask = opar->get_show_mask();
       bool linear = opar->get_linear();
       float radius = opar->get_radius();
       float thrlow = opar->get_threshold_l();
@@ -184,17 +180,19 @@ namespace PF
 
       // input log-luminance image
       PixelMatrix<float> logLin(rw, rh, offsy, offsx);
-      fill_L_matrix( rw, rh, rgbin, logLin, true );
+      fill_L_matrix( rw, rh, rgbin, logLin, (linear==false) );
 
       // output a and mean coefficients, low threshold
       PixelMatrix<float> a_thrlow(rw, rh, offsy, offsx);
+      PixelMatrix<float> b_thrlow(rw, rh, offsy, offsx);
       PixelMatrix<float> mean_thrlow(rw, rh, offsy, offsx);
-      eusm_gf(Lin, a_thrlow, mean_thrlow, radius, thrlow);
+      eusm_gf(Lin, a_thrlow, b_thrlow, mean_thrlow, radius, thrlow, true);
 
       // output a and mean coefficients, high threshold
       PixelMatrix<float> a_thrhigh(rw, rh, offsy, offsx);
+      PixelMatrix<float> b_thrhigh(rw, rh, offsy, offsx);
       PixelMatrix<float> mean_thrhigh(rw, rh, offsy, offsx);
-      eusm_gf(logLin, a_thrhigh, mean_thrhigh, radius, thrhigh);
+      eusm_gf(logLin, a_thrhigh, b_thrhigh, mean_thrhigh, radius, thrhigh, false);
 
       int dx = oreg->valid.left - ireg[0]->valid.left;
       int dy = oreg->valid.top - ireg[0]->valid.top;
@@ -209,89 +207,56 @@ namespace PF
         float* plogLin = logLin[y+dy]; plogLin += dx;
         float* pa1 = a_thrlow[y+dy]; pa1 += dx;
         float* pa2 = a_thrhigh[y+dy]; pa2 += dx;
-        float* pmean = (linear) ? mean_thrlow[y+dy] : mean_thrhigh[y+dy]; pmean += dx;
+        float* pb1 = b_thrlow[y+dy]; pb1 += dx;
+        float* pb2 = b_thrhigh[y+dy]; pb2 += dx;
+        float* pmean1 = mean_thrlow[y+dy]; pmean1 += dx;
+        float* pmean2 = mean_thrhigh[y+dy]; pmean2 += dx;
+        //float* pmean = mean_thrhigh[y+dy]; pmean += dx;
 
         for( x0 = 0, x = 0; x < line_size; x+=3, x0++ ) {
-          // invert the low-threshold a coefficient
-          float a1 = 1.0f - pa1[x0];
-          // the high-threshold a coefficient is not modified
+          // inverted low-threshold coefficients
+          float a1 = pa1[x0];
+          float b1 = pb1[x0];
+          // high-threshold coefficients
           float a2 = pa2[x0];
+          float b2 = pb2[x0];
           //printf("a1 = %f  a2 = %f\n", a1, a2);
-          // get the bigger of the two a coefficients
-          // this will keep the original image whenever it is kept in either of the blurs
-          float a = (a1 > a2) ? a1 : a2;
-          // compute the guided filer output, as the linear combination between the
-          // original and blurred images comtrolled by the a parameter
-          float gf;
-          if( linear ) {
-            gf = a * pLin[x0] + (1.0f - a) * pmean[x0];
-          } else {
-            float loggf = a * plogLin[x0] + (1.0f - a) * pmean[x0];
-            gf = xexp10(loggf);
-          }
-
+          // compute the guided filer output for the two thresholds
+          float gf1 = a1 * pLin[x0] + b1;
+          float gf2 = a2 * plogLin[x0] + b2;
+          if( !linear ) gf2 = xexp10(gf2);
+#ifdef GF_DEBUG
+          printf("Lin=%f  a1 = %f  a2 = %f  b1=%f  b2=%f (%f)  gf1=%f  gf2=%f\n",
+              pLin[x0], a1, a2, b1, b2, xexp10(b2), gf1, gf2);
+#endif
           // input luminance
           float L = pLin[x0];
 
           // compute the difference between the input and blurred luminances
-          float delta = L - gf;
+          float delta1 = L - gf1;
+          float delta2 = L - gf2;
+          //float delta = L - gf;
+          int gfid = (std::fabs(delta1) < std::fabs(delta2)) ? 1 : 2;
+          float delta = (gfid == 1) ? delta1 : delta2;
           // add back the difference to the input luminance
           float Lout = L + (delta * scale); if(Lout < 0) Lout = 0;
 
           float R = (L < 1.0e-10) ? 1.0f : Lout / L;
 
-          //pout[x] = gf;
-          //pout[x+1] = gf;
-          //pout[x+2] = gf;
           pout[x] = pin[x] * R;
           pout[x+1] = pin[x+1] * R;
           pout[x+2] = pin[x+2] * R;
+          if( show_mask ) {
+            float gf = (gfid == 1) ? gf1 : gf2;
+            float a = (gfid == 1) ? a1 : a2;
+            //float val = gf;
+            float val = a;
+            pout[x] = val;
+            pout[x+1] = val;
+            pout[x+2] = val;
+          }
         }
       }
-
-      /*
-      for( y = 0; y < height; y++ ) {
-        // original image
-        pin = (float*)VIPS_REGION_ADDR( ireg[3], r->left, r->top + y );
-        // log-lumi image
-        pL = (float*)VIPS_REGION_ADDR( ireg[2], r->left, r->top + y );
-        // blurred log-lumi image (high threshold)
-        pbh = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
-        // blurred log-lumi image (low threshold)
-        pbl = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
-        // output image
-        pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
-
-        for( x0 = 0, x = 0; x < line_size; x+=3, x0++ ) {
-          // compute difference between low and high thresholds
-          float l1 = pbl[x0];
-          float l2 = pbh[x0];
-          float lin = pL[x0];
-          if( do_sum && !linear) {
-            l1 = xexpf( l1 );
-            l2 = xexpf( l2 );
-            lin = xexpf( lin );
-          }
-          if(linear) {
-            l1  = (l1 > 0) ? xexpf( l1 ) : (l1 + 1); l1 *= 0.05;
-            l2  = (l2 > 0) ? xexpf( l2 ) : (l2 + 1); l2 *= 0.05;
-            lin = (lin > 0) ? xexpf( lin ) : (lin + 1); lin *= 0.05;
-          }
-          float delta = l1 - l2;
-          // add the difference back to the log-lumi
-          float lout = lin + (delta * scale);
-          //std::cout<<"l1="<<l1<<"  l2="<<l2<<"  lwhite2="<<lwhite2<<"  boost="<<boost<<"  out="<<out<<std::endl;
-
-          float in = (do_sum || linear) ? lin : xexpf( lin );
-          float out = (do_sum || linear) ? lout : xexpf( lout );
-          float R = out / in;
-
-          pout[x] = pin[x] * R;
-          pout[x+1] = pin[x+1] * R;
-          pout[x+2] = pin[x+2] * R;
-        }
-      }
-      */
     }
   };
 
