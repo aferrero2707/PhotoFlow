@@ -167,6 +167,18 @@ bool PF::HistogramArea::on_expose_event (GdkEventExpose * event)
 {
   std::cout<<"HistogramArea::on_expose_event() called"<<std::endl;
 
+  // This is where we draw on the window
+  Glib::RefPtr<Gdk::Window> window = get_window();
+  if( !window )
+    return true;
+
+  Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
+#endif
+#ifdef GTKMM_3
+bool PF::HistogramArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+{
+  std::cout<<"HistogramArea::on_draw() called"<<std::endl;
+#endif
   Pango::FontDescription font;
   int text_width;
   int text_height;
@@ -182,10 +194,6 @@ bool PF::HistogramArea::on_expose_event (GdkEventExpose * event)
   int border_top = 2;
   int border_bottom = text_height+4;
 
-  // This is where we draw on the window
-  Glib::RefPtr<Gdk::Window> window = get_window();
-  if( !window )
-    return true;
 
   Gtk::Allocation allocation = get_allocation();
   const int width = allocation.get_width() - hborder_size*2;
@@ -193,19 +201,6 @@ bool PF::HistogramArea::on_expose_event (GdkEventExpose * event)
   const int x0 = hborder_size;
   const int y0 = border_top;
 
-  Cairo::RefPtr<Cairo::Context> cr = window->create_cairo_context();
-
-#endif
-#ifdef GTKMM_3
-bool PF::HistogramArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
-{
-  int border_size = 2;
-  Gtk::Allocation allocation = get_allocation();
-  const int width = allocation.get_width() - border_size*2;
-  const int height = allocation.get_height() - border_size - border_bottom;
-  const int x0 = border_size;
-  const int y0 = border_size;
-#endif
   cr->save();
   cr->set_source_rgba(0.2, 0.2, 0.2, 1.0);
   cr->paint();
@@ -412,7 +407,7 @@ void PF::Histogram::update_histogram()
     }
   }
 
-  std::cout<<"[Histogram::update] min="<<hist_min<<" max="<<hist_max<<std::endl;
+  std::cout<<"[Histogram::update_histogram] min="<<hist_min<<" max="<<hist_max<<std::endl;
 
   ulong_p h1 = hist;
   ulong_p h2 = &(hist[65536]);
@@ -442,6 +437,7 @@ void PF::Histogram::update_histogram()
 
   hist_area.hist_min = hist_min;
   hist_area.hist_max = hist_max;
+  std::cout<<"[Histogram::update_histogram] emitting signal_queue_draw"<<std::endl;
   signal_queue_draw.emit();
 }
 
