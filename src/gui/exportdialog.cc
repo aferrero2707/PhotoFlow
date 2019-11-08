@@ -562,14 +562,26 @@ void PF::ExportDialog::on_file_button_clicked()
   if( !last_saved.empty() ) {
     dialog.set_filename( last_saved );
   } else {
+    std::string ext;
+    int id = export_format_selector.get_active_id();
+    switch( id ) {
+    case PF::EXPORT_FORMAT_JPEG:
+      ext = ".jpg"; break;
+    case PF::EXPORT_FORMAT_TIFF_8:
+    case PF::EXPORT_FORMAT_TIFF_16:
+    case PF::EXPORT_FORMAT_TIFF_32f:
+      ext = ".tif"; break;
+    default: break;
+    }
+
+    std::string image_filename = "untitled";
     if( editor->get_image() ) {
       std::string image_filename;
       PF::getFileName( "", editor->get_image()->get_filename(), image_filename );
-      image_filename = image_filename + ".jpg";
+      image_filename = image_filename + ext;
       dialog.set_current_name( image_filename );
-    } else {
-      dialog.set_current_name( "untitled.jpg" );
     }
+    dialog.set_current_name( image_filename + ext );
   }
 
   //Show the dialog and wait for a user response:
