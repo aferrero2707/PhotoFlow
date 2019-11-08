@@ -361,7 +361,7 @@ void PF::ImageProcessor::run()
         request.image->get_layer_manager().get_child_layers( request.layer, children );
         for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
           if( !(*i) ) continue;
-          //std::cout<<"LayerManamegr::run(IMAGE_MOVE_LAYER): setting dirty flag for layer \""<<(*i)->get_name()<<"\""<<std::endl;
+          //std::cout<<"LayerManager::run(IMAGE_MOVE_LAYER): (before) setting dirty flag for layer \""<<(*i)->get_name()<<"\""<<std::endl;
           //(*i)->set_dirty( true );
           (*i)->get_processor()->get_par()->modified();
         }
@@ -377,6 +377,15 @@ void PF::ImageProcessor::run()
           PF::insert_layer( *(request.dnd_dest_layer_list), request.layer, request.dnd_dest_layer_id );
         } else {
           request.dnd_dest_layer_list->push_front( request.layer );
+        }
+
+        // set the modified flag for all the new children of the moved layer
+        request.image->get_layer_manager().get_child_layers( request.layer, children );
+        for( std::list<Layer*>::iterator i = children.begin(); i != children.end(); i++ ) {
+          if( !(*i) ) continue;
+          //std::cout<<"LayerManager::run(IMAGE_MOVE_LAYER): (after) setting dirty flag for layer \""<<(*i)->get_name()<<"\""<<std::endl;
+          //(*i)->set_dirty( true );
+          (*i)->get_processor()->get_par()->modified();
         }
         request.image->do_update();
         request.image->unlock();
