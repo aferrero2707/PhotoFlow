@@ -1043,14 +1043,18 @@ void PF::ImageEditor::build_image()
 
 void PF::ImageEditor::on_image_modified_async()
 {
+#ifndef NDEBUG
   std::cout<<"[ImageEditor::on_image_modified_async] emitting signal_image_modified"<<std::endl;
+#endif
   signal_image_modified.emit();
 }
 
 
 void PF::ImageEditor::on_image_modified()
 {
+#ifndef NDEBUG
   std::cout<<"ImageEditor::on_image_modified() called."<<std::endl;
+#endif
   if( !tab_label_widget ) return;
   char* fullpath = strdup( image->get_filename().c_str() );
   char* fname = basename( fullpath );
