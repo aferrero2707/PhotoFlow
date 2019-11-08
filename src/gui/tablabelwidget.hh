@@ -32,12 +32,14 @@
 #define TAB_LABEL_WIDGET__HH
 
 #include <gtkmm.h>
+#include "widgets/toolbutton.hh"
 
 
 class VTabLabelWidget: public Gtk::VBox
 {
   Gtk::Image image;
   Gtk::Button button;
+  PF::ToolButton button2;
   Gtk::Label label;
   Gtk::Widget* widget;
 
@@ -46,21 +48,25 @@ public:
     VBox(),
     image(),
     button(),
+    button2(PF::PhotoFlow::Instance().get_icons_dir()+"/add-layer.png", "", NULL, NULL),
     label( l ),
     widget( w )
-  {
+{
     image.set_from_icon_name( "window-close", Gtk::ICON_SIZE_MENU );
     button.add( image );
     button.set_relief( Gtk::RELIEF_NONE );
+    button.set_border_width(-5);
     label.set_angle(90);
-    pack_start( button, Gtk::PACK_SHRINK );
+    pack_start( button2, Gtk::PACK_SHRINK );
     pack_start( label, Gtk::PACK_SHRINK );
 
     button.signal_clicked().connect( sigc::mem_fun(*this,
-                                                   &VTabLabelWidget::on_close_button_clicked) );
+        &VTabLabelWidget::on_close_button_clicked) );
+    //button2.signal_clicked.connect( sigc::mem_fun(*this,
+    //                                               &VTabLabelWidget::on_close_button_clicked) );
 
     show_all();
-  }
+}
 
   void on_close_button_clicked() 
   {
@@ -75,6 +81,7 @@ class HTabLabelWidget: public Gtk::HBox
 {
   Gtk::Image image;
   Gtk::Button button;
+  PF::ToolButton button2;
   Gtk::Label label;
   Gtk::Widget* widget;
 
@@ -83,20 +90,25 @@ public:
     HBox(),
     image(),
     button(),
+    button2(PF::PhotoFlow::Instance().get_icons_dir()+"/close_active.png", "", NULL, NULL),
     label( l ),
     widget( w )
-  {
+{
     image.set_from_icon_name( "window-close", Gtk::ICON_SIZE_MENU );
     button.add( image );
     button.set_relief( Gtk::RELIEF_NONE );
-    pack_start( label, Gtk::PACK_SHRINK );
-    pack_start( button, Gtk::PACK_SHRINK );
+    //button.set_size_request(16,16);
+    pack_start( label, Gtk::PACK_SHRINK, 4 );
+    pack_start( button2, Gtk::PACK_SHRINK );
+    //set_size_request(-1,20);
 
     button.signal_clicked().connect( sigc::mem_fun(*this,
-                                                   &HTabLabelWidget::on_close_button_clicked) );
+        &HTabLabelWidget::on_close_button_clicked) );
+    button2.signal_clicked.connect( sigc::mem_fun(*this,
+        &HTabLabelWidget::on_close_button_clicked) );
 
     show_all();
-  }
+}
 
   void on_close_button_clicked() 
   {
