@@ -186,10 +186,16 @@ void PF::LayerManager::get_flattened_layers_tree( std::list<Layer*>& inputs )
 void PF::LayerManager::get_child_layers( Layer* layer, std::list<PF::Layer*>& container,
     std::list<Layer*>& children )
 {
+  PF::Layer* container_layer = get_container_layer( layer );
+#ifndef NDEBUG
+  std::cout<<"get_child_layers: contaner_layer: \""
+      <<(container_layer ? container_layer->get_name() : "NULL")<<"\""<<std::endl;
+#endif
+
 #ifndef NDEBUG
   std::cout<<"Collecting children of layer \""<<layer->get_name()<<"\"("<<layer->get_id()<<")"<<std::endl;
 #endif
-  std::list<PF::Layer*> tmplist;
+  std::list<PF::Layer*> tmplist, inputs;
   std::list<PF::Layer*>::reverse_iterator li;
   // Loop over layers in reverse order and fill a temporary list,
   // until either the target layer is found or the end of the
@@ -200,10 +206,15 @@ void PF::LayerManager::get_child_layers( Layer* layer, std::list<PF::Layer*>& co
     std::cout<<"  checking layer \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
 #endif
     if( l->get_id() == layer->get_id() ) break;
-    // Add layer and all its children to the inputs list
-    //expand_layer( l, inputs );
-    // Add layer to the temporary list
-    tmplist.push_front( l );
+    // Add layer and all its children to the inputs list,
+    // but only if it is not the container of the target layer.
+    // Otherwise simply add the container layer itself
+    if( l != container_layer) {
+      expand_layer( l, inputs );
+      tmplist.insert( tmplist.begin(), inputs.begin(), inputs.end() );
+    } else {
+      tmplist.push_front( l );
+    }
 #ifndef NDEBUG
     std::cout<<"    added."<<std::endl;
 #endif
@@ -212,11 +223,6 @@ void PF::LayerManager::get_child_layers( Layer* layer, std::list<PF::Layer*>& co
   // Append the temporary list to the childrens one
   children.insert( children.end(), tmplist.begin(), tmplist.end() );
 
-  PF::Layer* container_layer = get_container_layer( layer );
-#ifndef NDEBUG
-  std::cout<<"get_child_layers: contaner_layer: \""
-      <<(container_layer ? container_layer->get_name() : "NULL")<<"\""<<std::endl;
-#endif
   if( !container_layer ) return;
 
   // Add the container layer to the list of children
