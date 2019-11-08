@@ -49,7 +49,7 @@ namespace PF {
 
     Gtk::VBox eusmControlsBox;
     Slider eusmAmountSlider;
-    Slider eusmIterationsSlider;
+    Slider eusmNScalesSlider;
     Slider eusmRadiusSlider;
     Slider eusmThresholdLSlider;
     Slider eusmThresholdHSlider;

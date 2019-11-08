@@ -35,7 +35,7 @@ OperationConfigGUI( layer, "Sharpen" ),
 modeSelector( this, "method", "Sharpen method: ", 0 ),
 usmRadiusSlider( this, "usm_radius", "Radius", 1, 0, 100, 0.05, 0.1, 1),
 eusmAmountSlider( this, "eusm_amount", "amount", 1, 0, 500, 0.5, 5, 100),
-eusmIterationsSlider( this, "eusm_iterations", "iterations", 1, 0, 10, 1, 5, 1),
+eusmNScalesSlider( this, "eusm_nscales", "number of scales", 1, 0, 10, 1, 5, 1),
 eusmRadiusSlider( this, "eusm_radius", "radius", 1, 0, 10, 1, 5, 1),
 eusmThresholdLSlider( this, "eusm_threshold_l", "noise threshold", 1, 0, 100, 0.5, 5, 100000),
 eusmThresholdHSlider( this, "eusm_threshold_h", "edge threshold", 1, 0, 100, 0.5, 5, 5000),
@@ -51,8 +51,8 @@ textureRadiusSlider( this, "texture_radius", _("radius"), 4, 0, 32, 0.1, 1, 1)
   usmControlsBox.pack_start( usmRadiusSlider, Gtk::PACK_SHRINK );
 
   eusmControlsBox.pack_start( eusmAmountSlider, Gtk::PACK_SHRINK );
-  //eusmControlsBox.pack_start( eusmIterationsSlider, Gtk::PACK_SHRINK );
   eusmControlsBox.pack_start( eusmRadiusSlider, Gtk::PACK_SHRINK );
+  eusmControlsBox.pack_start( eusmNScalesSlider, Gtk::PACK_SHRINK );
   eusmControlsBox.pack_start( eusmThresholdLSlider, Gtk::PACK_SHRINK );
   eusmControlsBox.pack_start( eusmThresholdHSlider, Gtk::PACK_SHRINK );
   eusmControlsBox.pack_start( eusmShowMaskCbox, Gtk::PACK_SHRINK );

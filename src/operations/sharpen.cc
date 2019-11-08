@@ -47,6 +47,7 @@ PF::SharpenPar::SharpenPar():
   eusm_radius("eusm_radius",this,3),
   eusm_threshold_l("eusm_threshold_l",this,0.0002),
   eusm_threshold_h("eusm_threshold_h",this,0.01),
+  eusm_nscales("eusm_nscales",this,1),
   eusm_show_mask("eusm_show_mask",this,false),
   eusm_linear("eusm_linear",this,false),
   rl_sigma("rl_sigma",this,1),
@@ -156,6 +157,7 @@ void PF::SharpenPar::propagate_settings()
     eusmpar->set_radius( eusm_radius.get() );
     eusmpar->set_threshold_l( eusm_threshold_l.get() );
     eusmpar->set_threshold_h( eusm_threshold_h.get() );
+    eusmpar->set_nscales( eusm_nscales.get() );
     eusmpar->set_show_mask( eusm_show_mask.get() );
     eusmpar->set_linear( eusm_linear.get() );
     eusmpar->propagate_settings();

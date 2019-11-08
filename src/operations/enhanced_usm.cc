@@ -357,7 +357,8 @@ PF::EnhancedUnsharpMaskPar::EnhancedUnsharpMaskPar():
   amount("amount",this,1),
   radius("radius",this,3),
   threshold_l("threshold_l",this,0.005),
-  threshold_h("threshold_h",this,0.02)
+  threshold_h("threshold_h",this,0.02),
+  nscales("nscales",this,1)
 {
   set_type("enhanced_usm" );
 
@@ -375,6 +376,9 @@ void PF::EnhancedUnsharpMaskPar::propagate_settings()
 void PF::EnhancedUnsharpMaskPar::compute_padding( VipsImage* full_res, unsigned int id, unsigned int level )
 {
   double radius2 = radius.get();
+  for( unsigned int s = 1; s < nscales.get(); s++ ) {
+    radius2 *= 2;
+  }
   for( unsigned int l = 1; l <= level; l++ ) {
     radius2 /= 2;
   }
@@ -405,8 +409,12 @@ VipsImage* PF::EnhancedUnsharpMaskPar::build(std::vector<VipsImage*>& in, int fi
     radius2 /= 2;
   }
   radius_real = radius2;
+  for( unsigned int s = 1; s < nscales.get(); s++ ) {
+    radius2 *= 2;
+  }
 
-  int padding = radius_real * 4;
+
+  int padding = radius2 * 4;
   set_padding( padding, 0 );
 
   VipsImage* out = PF::PaddedOpPar::build( in, first, imap, omap, level );
