@@ -115,8 +115,9 @@ public:
 
   void set_image_name(Glib::ustring name);
 
-  void remove_tab( Gtk::Widget* widget, bool immediate );
-  void remove_all_tabs();
+  bool remove_tab( Gtk::Widget* widget, bool immediate );
+  void remove_tab_cb( Gtk::Widget* widget, bool immediate );
+  bool remove_all_tabs();
 
   void on_my_switch_page(
 #ifdef GTKMM_2

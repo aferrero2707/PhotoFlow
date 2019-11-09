@@ -465,7 +465,7 @@ void PF::MainWindow::on_button_clicked()
 }
 
 
-void PF::MainWindow::remove_all_tabs()
+bool PF::MainWindow::remove_all_tabs()
 {
   while( true ) {
     int npages = viewerNotebook.get_n_pages();
@@ -475,8 +475,9 @@ void PF::MainWindow::remove_all_tabs()
     std::cout<<"MainWindow::on_delete_event(): tab="<<npages-1<<"  w="<<w<<std::endl;
     if( !w ) continue;
     std::cout<<"MainWindow::on_delete_event(): removing tab #"<<npages-1<<std::endl;
-    remove_tab( w, true );
+    if( !remove_tab( w, true ) ) return false;
   }
+  return true;
 }
 
 
@@ -526,8 +527,7 @@ void PF::MainWindow::on_button_exit()
 
   }
 
-  remove_all_tabs();
-  hide();
+  if( remove_all_tabs() ) hide();
 }
 
 
@@ -577,7 +577,7 @@ PF::MainWindow::open_image( std::string filename )
   HTabLabelWidget* tabwidget = 
       new HTabLabelWidget( std::string(fname),
           editor );
-  tabwidget->signal_close.connect( sigc::bind<bool>(sigc::mem_fun(*this, &PF::MainWindow::remove_tab), true) );
+  tabwidget->signal_close.connect( sigc::bind<bool>(sigc::mem_fun(*this, &PF::MainWindow::remove_tab_cb), true) );
   viewerNotebook.append_page( *editor, *tabwidget );
   //std::cout<<"MainWindow::open_image(): notebook page appended"<<std::endl;
   free(fullpath);
@@ -1214,22 +1214,27 @@ void PF::MainWindow::update_all_images()
 }
 
 
-void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
+void PF::MainWindow::remove_tab_cb( Gtk::Widget* widget, bool immediate )
+{
+  remove_tab(widget, immediate);
+}
+
+bool PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
 {
   //#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() called."<<std::endl;
   //#endif
   int page = viewerNotebook.page_num( *widget );
-  if( page < 0 ) return;
-  if( page >= viewerNotebook.get_n_pages() ) return;
+  if( page < 0 ) return false;
+  if( page >= viewerNotebook.get_n_pages() ) return false;
 
   Gtk::Widget* tabwidget = viewerNotebook.get_tab_label( *widget );
 
   Gtk::Widget* widget2 = viewerNotebook.get_nth_page( page );
-  if( widget != widget2 ) return;
+  if( widget != widget2 ) return false;
 
   PF::ImageEditor* editor = dynamic_cast<PF::ImageEditor*>( widget );
-  if( !editor ) return;
+  if( !editor ) return false;
 
   g_assert( editor->get_image() != NULL );
   std::cout<<"  editor->get_image()->is_modified(): "<<editor->get_image()->is_modified()<<std::endl;
@@ -1257,14 +1262,14 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
     switch(result) {
     case Gtk::RESPONSE_YES:
       std::cout<<"PF::MainWindow::remove_tab(): response=YES"<<std::endl;
-      if( !on_button_save_clicked() ) return;
+      if( !on_button_save_clicked() ) return false;
       break;
     case Gtk::RESPONSE_NO:
       std::cout<<"PF::MainWindow::remove_tab(): response=NO"<<std::endl;
       break;
     case Gtk::RESPONSE_CANCEL:
       std::cout<<"PF::MainWindow::remove_tab(): response=CANCEL"<<std::endl;
-      return;
+      return false;
       break;
     default:
       break;
@@ -1340,6 +1345,8 @@ void PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
 //#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() page #"<<page<<" removed."<<std::endl;
 //#endif
+
+  return true;
 }
 
 
