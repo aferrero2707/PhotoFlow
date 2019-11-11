@@ -39,7 +39,7 @@ matrix:
             - sudo docker run -it -e "TRAVIS_BUILD_DIR=/sources" -e "TRAVIS_BRANCH=${TRAVIS_BRANCH}" -e "TRAVIS_COMMIT=${TRAVIS_COMMIT}" -v $(pwd):/sources photoflow/docker-buildenv-mingw-manjaro bash -c /sources/windows/package-msys2.sh
             - # check if zip file was successfully created
             - # abort job with failure if not
-            - ls photoflow-w64*.zip
+            - ls *.zip
           after_success:
             - cd $TRAVIS_BUILD_DIR
             - pwd
