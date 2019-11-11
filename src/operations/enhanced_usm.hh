@@ -259,9 +259,10 @@ public:
             pout[x+1] = pin[x+1] * R;
             pout[x+2] = pin[x+2] * R;
           } else {
-            pout[x] = 0.5f * (pin[x] * R + pout[x]);
-            pout[x+1] = 0.5f * (pin[x+1] * R + pout[x+1]);
-            pout[x+2] = 0.5f * (pin[x+2] * R + pout[x+2]);
+            R *= 0.6f;
+            pout[x]   = pin[x]   * R + 0.4f * pout[x];
+            pout[x+1] = pin[x+1] * R + 0.4f * pout[x+1];
+            pout[x+2] = pin[x+2] * R + 0.4f * pout[x+2];
           }
 
           if( show_mask ) {
