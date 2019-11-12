@@ -356,8 +356,7 @@ VipsImage* PF::ClonePar::rgb2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
 
   void *profile_data;
   size_t profile_length;
-  if( vips_image_get_blob( srcimg, VIPS_META_ICC_NAME, 
-			   &profile_data, &profile_length ) )
+  if( PF_VIPS_IMAGE_GET_BLOB( srcimg, VIPS_META_ICC_NAME, &profile_data, &profile_length ) )
     profile_data = NULL;
   
   if( profile_data ) {
@@ -424,8 +423,7 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
 
   void *profile_data;
   size_t profile_length;
-  if( vips_image_get_blob( srcimg, VIPS_META_ICC_NAME, 
-			   &profile_data, &profile_length ) )
+  if( PF_VIPS_IMAGE_GET_BLOB( srcimg, VIPS_META_ICC_NAME, &profile_data, &profile_length ) )
     profile_data = NULL;
 
 
@@ -504,8 +502,7 @@ VipsImage* PF::ClonePar::L2rgb(VipsImage* srcimg, unsigned int& level)
 
   void *profile_data;
   size_t profile_length;
-  if( vips_image_get_blob( srcimg, VIPS_META_ICC_NAME, 
-			   &profile_data, &profile_length ) )
+  if( PF_VIPS_IMAGE_GET_BLOB( srcimg, VIPS_META_ICC_NAME, &profile_data, &profile_length ) )
     profile_data = NULL;
 
   // No Lab conversion possible if the input image has no ICC profile

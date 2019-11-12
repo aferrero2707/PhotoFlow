@@ -74,8 +74,7 @@ void PF::ImagePyramid::init( VipsImage* img, int fd )
   {
     size_t exifsz;
     void* exif_data;
-    if( !vips_image_get_blob( img, PF_META_EXIF_NAME,
-        &exif_data,&exifsz ) ) {
+    if( !PF_VIPS_IMAGE_GET_BLOB( img, PF_META_EXIF_NAME, &exif_data,&exifsz ) ) {
       //std::cout<<"ImagePyramid::init(): exif_custom_data found in img("<<img<<")"<<std::endl;
     } else {
       std::cout<<"ImagePyramid::init(): exif_custom_data not found in img("<<img<<")"<<std::endl;

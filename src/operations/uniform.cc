@@ -67,8 +67,7 @@ VipsImage* PF::UniformPar::build(std::vector<VipsImage*>& in, int first,
 
     void *data;
     size_t data_length;
-    if( !vips_image_get_blob( in[0], VIPS_META_ICC_NAME,
-        &data, &data_length ) ) {
+    if( !PF_VIPS_IMAGE_GET_BLOB( in[0], VIPS_META_ICC_NAME, &data, &data_length ) ) {
       cmsHPROFILE wprofile = cmsOpenProfileFromMem( data, data_length );
       if( wprofile ) {
         cmsHTRANSFORM transform = cmsCreateTransform( PF::ICCStore::Instance().get_srgb_profile(PF::PF_TRC_STANDARD),

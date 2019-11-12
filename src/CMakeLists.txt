@@ -389,10 +389,42 @@ else(BUNDLED_LENSFUN)
 endif(BUNDLED_LENSFUN)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPF_HAS_LENSFUN ")
 
+
 include(CheckCXXSourceCompiles)
+
+set(CMAKE_REQUIRED_INCLUDES ${VIPS_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES "")
+foreach(l ${VIPS_LIBRARIES})
+    unset(_l CACHE)
+    if(VIPS_LIBRARY_DIRS)
+        # the NO_DEFAULT_PATH is to make sure we find the lensfun version we
+        # want, and not the system's one (e.g. if we have a custom version
+        # installed in a non-standard location)
+        find_library(_l ${l} PATHS ${VIPS_LIBRARY_DIRS} NO_DEFAULT_PATH)
+    else()
+        # VIPS_LIBRARY_DIRS can be empty if lensfun is installed in the
+        # default path. In this case, adding NO_DEFAULT_PATH would make
+        # find_library fail...
+        find_library(_l ${l})
+    endif()
+    set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${_l})
+endforeach()
+check_cxx_source_compiles(
+    "#include <vips/vips.h>
+int main()
+{
+	VipsImage* image;
+	int* buf;
+	size_t length;
+	vips_image_get_blob( image, \"my-blob\", (const void**)(&buf), &length);
+    return 0;
+}" VIPS_GET_BLOB_REQUIRES_CONST_VOID_POINTER)
+
+
 set(CMAKE_REQUIRED_INCLUDES ${LENSFUN_INCLUDE_DIRS})
 set(CMAKE_REQUIRED_LIBRARIES)
 foreach(l ${LENSFUN_LIBRARIES})
+    unset(_l CACHE)
     if(LENSFUN_LIBRARY_DIRS)
         # the NO_DEFAULT_PATH is to make sure we find the lensfun version we
         # want, and not the system's one (e.g. if we have a custom version
@@ -435,6 +467,8 @@ int main()
 #MESSAGE( STATUS "GEXIV2_LIBRARIES: " ${GEXIV2_LIBRARIES} )
 
 
+
+
 if(WIN32)
   # add icon, version, ... resources for Windows executable
   configure_file("${CMAKE_SOURCE_DIR}/data/pixmaps/phf_logo_128x128.ico" "${CMAKE_BINARY_DIR}/data/pixmaps/phf_logo_128x128.ico" COPYONLY)
@@ -455,6 +489,16 @@ add_custom_command(
 add_custom_target(gmic_film_cluts_download ALL DEPENDS ${CMAKE_BINARY_DIR}/gmic_film_cluts.gmz)
 
 
+IF(LENSFUN_HAS_OVERLOADED_FIND_LENSES)
+	#SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-DLENSFUN_HAS_OVERLOADED_FIND_LENSES=1")
+	add_definitions("-DLENSFUN_HAS_OVERLOADED_FIND_LENSES=1")
+ENDIF(LENSFUN_HAS_LOAD_DIRECTORY)
+
+IF(VIPS_GET_BLOB_REQUIRES_CONST_VOID_POINTER)
+	#SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-DVIPS_GET_BLOB_REQUIRES_CONST_VOID_POINTER=1")
+	add_definitions("-DVIPS_GET_BLOB_REQUIRES_CONST_VOID_POINTER=1")
+ENDIF(VIPS_GET_BLOB_REQUIRES_CONST_VOID_POINTER)
+
 
 add_library (pfbase STATIC
   ${BaseIncludes}
@@ -472,9 +516,6 @@ add_library (pfbase STATIC
 #  ${GMicIncludes}
 #  ${GMicSources}
 )
-IF(LENSFUN_HAS_OVERLOADED_FIND_LENSES)
-	SET_TARGET_PROPERTIES(pfbase PROPERTIES COMPILE_FLAGS "-DLENSFUN_HAS_OVERLOADED_FIND_LENSES=1")
-ENDIF(LENSFUN_HAS_LOAD_DIRECTORY)
 
 
 add_library (pfgmic STATIC

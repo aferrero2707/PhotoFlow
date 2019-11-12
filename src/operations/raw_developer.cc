@@ -221,9 +221,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
   std::vector<VipsImage*> in2;
 
   size_t blobsz;
-  if( vips_image_get_blob( in[0], "raw_image_data",
-			   (void**)&image_data, 
-			   &blobsz ) ) {
+  if( PF_VIPS_IMAGE_GET_BLOB( in[0], "raw_image_data", &image_data, &blobsz ) ) {
     std::cout<<"RawDeveloperPar::build(): could not extract raw_image_data."<<std::endl;
     return NULL;
   }

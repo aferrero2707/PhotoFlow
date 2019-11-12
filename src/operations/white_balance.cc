@@ -168,9 +168,7 @@ VipsImage* PF::WhiteBalancePar::build(std::vector<VipsImage*>& in, int first,
 
   size_t blobsz;
   PF::exif_data_t* exif_data;
-  if( vips_image_get_blob( in[0], PF_META_EXIF_NAME,
-      (void**)&exif_data,
-      &blobsz ) ) {
+  if( PF_VIPS_IMAGE_GET_BLOB( in[0], PF_META_EXIF_NAME, &exif_data, &blobsz ) ) {
     std::cout<<"WhiteBalancePar::build() could not extract exif_custom_data."<<std::endl;
     return NULL;
   }

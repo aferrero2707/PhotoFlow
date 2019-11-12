@@ -130,7 +130,7 @@ dcraw_data_t* PF::get_raw_data( VipsImage* image )
   if( !image ) return NULL;
   dcraw_data_t* raw_data;
   size_t blobsz;
-  if( !vips_image_get_blob( image, "raw_image_data",(void**)&raw_data, &blobsz ) &&
+  if( !PF_VIPS_IMAGE_GET_BLOB( image, "raw_image_data", &raw_data, &blobsz ) &&
       blobsz == sizeof(dcraw_data_t) ) {
     return raw_data;
   }
@@ -1298,8 +1298,7 @@ void PF::RawImage::print_exif()
       <<"      lens: "<<exif_data.exif_lens<<std::endl;
   size_t bufsz;
   PF::exif_data_t* buf;
-  if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
-      (void**)&buf,&bufsz ) ) {
+  if( !PF_VIPS_IMAGE_GET_BLOB( image, PF_META_EXIF_NAME, &buf, &bufsz ) ) {
     if( bufsz == sizeof(PF::exif_data_t) ) {
       std::cout<<"RawImage: (embedded)"<<std::endl
           <<"      camera maker: "<<buf->exif_maker<<std::endl

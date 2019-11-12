@@ -86,7 +86,7 @@ void PF::LensFunConfigGUI::do_update()
   PF::exif_data_t* exif_data = NULL;
   if( inode && inode->image) {
     size_t blobsz;
-    if( vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) ||
+    if( PF_VIPS_IMAGE_GET_BLOB( inode->image, PF_META_EXIF_NAME, &exif_data, &blobsz ) ||
         blobsz != sizeof(PF::exif_data_t) ) {
       exif_data = NULL;
     }

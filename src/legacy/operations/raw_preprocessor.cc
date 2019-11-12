@@ -106,9 +106,7 @@ VipsImage* PF::RawPreprocessorV1Par::build(std::vector<VipsImage*>& in, int firs
     return NULL;
   
   size_t blobsz;
-  if( vips_image_get_blob( in[0], "raw_image_data",
-			   (void**)&image_data, 
-			   &blobsz ) ) {
+  if( PF_VIPS_IMAGE_GET_BLOB( in[0], "raw_image_data", &image_data, &blobsz ) ) {
     std::cout<<"RawPreprocessorV1Par::build(): could not extract raw_image_data."<<std::endl;
     return NULL;
   }
@@ -134,9 +132,7 @@ VipsImage* PF::RawPreprocessorV1Par::build(std::vector<VipsImage*>& in, int firs
     break;
   default: {
     PF::exif_data_t* exif_data;
-    if( vips_image_get_blob( in[0], PF_META_EXIF_NAME,
-        (void**)&exif_data,
-        &blobsz ) ) {
+    if( PF_VIPS_IMAGE_GET_BLOB( in[0], PF_META_EXIF_NAME, &exif_data, &blobsz ) ) {
       std::cout<<"RawPreprocessorV1Par::build() could not extract exif_custom_data."<<std::endl;
       return NULL;
     }

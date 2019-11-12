@@ -275,8 +275,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   {
     size_t exifsz;
     PF::exif_data_t* exif_data;
-    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
-        (void**)&exif_data,&exifsz ) ) {
+    if( !PF_VIPS_IMAGE_GET_BLOB( image, PF_META_EXIF_NAME, &exif_data, &exifsz ) ) {
       std::cout<<"ImageReaderPar::build(): exif_custom_data found in converted image("<<image<<")"<<std::endl;
     } else {
       std::cout<<"ImageReaderPar::build(): exif_custom_data not found in converted image("<<image<<")"<<std::endl;
@@ -285,8 +284,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
   {
     size_t exifsz;
     PF::exif_data_t* exif_data;
-    if( !vips_image_get_blob( out, PF_META_EXIF_NAME,
-        (void**)&exif_data,&exifsz ) ) {
+    if( !PF_VIPS_IMAGE_GET_BLOB( out, PF_META_EXIF_NAME, &exif_data, &exifsz ) ) {
       std::cout<<"ImageReaderPar::build(): exif_custom_data found in out("<<out<<")"<<std::endl;
     } else {
       std::cout<<"ImageReaderPar::build(): exif_custom_data not found in out("<<out<<")"<<std::endl;
@@ -317,8 +315,7 @@ VipsImage* PF::ImageReaderPar::build(std::vector<VipsImage*>& in, int first,
       (profile_mode_t)in_profile_mode.get_enum_value().first == PF::PROF_MODE_EMBEDDED_sRGB ) {
     void *data;
     size_t data_length;
-    if( !vips_image_get_blob( image, VIPS_META_ICC_NAME,
-        &data, &data_length ) ) {
+    if( !PF_VIPS_IMAGE_GET_BLOB( image, VIPS_META_ICC_NAME, &data, &data_length ) ) {
       in_iccprof = PF::ICCStore::Instance().get_profile( data, data_length );
       if( in_iccprof ) {
         cmsHPROFILE in_profile = in_iccprof->get_profile();

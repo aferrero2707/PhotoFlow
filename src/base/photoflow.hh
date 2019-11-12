@@ -64,6 +64,13 @@ GType phf_tile_cache_get_type( void );
 #endif /*__cplusplus*/
 
 
+#ifdef VIPS_GET_BLOB_REQUIRES_CONST_VOID_POINTER
+  #define PF_VIPS_IMAGE_GET_BLOB(a, b, c, d) vips_image_get_blob(a, b, (const void**)(c), d)
+#else
+  #define PF_VIPS_IMAGE_GET_BLOB(a, b, c, d) vips_image_get_blob(a, b, (void**)(c), d)
+#endif
+
+
 namespace PF
 {
 

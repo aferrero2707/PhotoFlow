@@ -443,8 +443,7 @@ image( NULL )
   {
     size_t bufsz;
     void* buf;
-    if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
-        &buf,&bufsz ) ) {
+    if( !PF_VIPS_IMAGE_GET_BLOB( image, PF_META_EXIF_NAME, &buf, &bufsz ) ) {
       //std::cout<<"RasterImage::RasterImage(): exif_custom_data found in image("<<image<<")"<<std::endl;
     } else {
       std::cout<<"RasterImage::RasterImage(): exif_custom_data not found in image("<<image<<")"<<std::endl;
@@ -521,8 +520,7 @@ void PF::RasterImage::print_exif()
       <<"      lens: "<<exif_data.exif_lens<<std::endl;
   size_t bufsz;
   PF::exif_data_t* buf;
-  if( !vips_image_get_blob( image, PF_META_EXIF_NAME,
-      (void**)&buf,&bufsz ) ) {
+  if( !PF_VIPS_IMAGE_GET_BLOB( image, PF_META_EXIF_NAME, &buf, &bufsz ) ) {
     if( bufsz == sizeof(PF::exif_data_t) ) {
       std::cout<<"RasterImage: (embedded)"<<std::endl
           <<"      camera maker: "<<buf->exif_maker<<std::endl
@@ -541,8 +539,7 @@ void PF::RasterImage::print_icc()
 {
   size_t bufsz;
   void* buf;
-  if( !vips_image_get_blob( image, VIPS_META_ICC_NAME,
-      (void**)&buf,&bufsz ) ) {
+  if( !PF_VIPS_IMAGE_GET_BLOB( image, VIPS_META_ICC_NAME, &buf, &bufsz ) ) {
     std::cout<<"RasterImage: ICC profile found"<<std::endl;
   } else {
     std::cout<<"RasterImage: ICC profile not found"<<std::endl;
@@ -554,8 +551,7 @@ void PF::RasterImage::print_icc( VipsImage* img)
 {
   size_t bufsz;
   void* buf;
-  if( !vips_image_get_blob( img, VIPS_META_ICC_NAME,
-      (void**)&buf,&bufsz ) ) {
+  if( !PF_VIPS_IMAGE_GET_BLOB( img, VIPS_META_ICC_NAME, &buf, &bufsz ) ) {
     std::cout<<"RasterImage: ICC profile found in img"<<std::endl;
   } else {
     std::cout<<"RasterImage: ICC profile not found in img"<<std::endl;

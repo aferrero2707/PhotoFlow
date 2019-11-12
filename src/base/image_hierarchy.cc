@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include "image_hierarchy.hh"
+#include "photoflow.hh"
 
 
 void PF::image_hierarchy_free(PF::IHArray* array)
@@ -90,7 +91,7 @@ void PF::image_hierarchy_fill(VipsImage* dest, int padding, std::vector<VipsImag
 
     //std::cout<<"image_hierarchy_fill(): i="<<i<<" array="<<array<<" parents[i]="<<parents[i]<<std::endl;
     if( !parents[i] ) continue;
-    if( vips_image_get_blob( parents[i], "pf-image-hierarchy", (void**)&parray, &length) ) {
+    if( PF_VIPS_IMAGE_GET_BLOB( parents[i], "pf-image-hierarchy", &parray, &length) ) {
       std::cout<<"image_hierarchy_fill(): parent image "<<i<<" does not have hierarchy information"<<std::endl;
       std::cout<<"image_hierarchy_fill(): i="<<i<<" array="<<array<<std::endl;
     } else {
@@ -132,13 +133,13 @@ int PF::image_hierarchy_compare_images(VipsImage* i0, VipsImage* i1)
   PF::IHArray* parray1;
   size_t length;
 
-  if( vips_image_get_blob( i0, "pf-image-hierarchy", (void**)&parray0, &length) ) {
+  if( PF_VIPS_IMAGE_GET_BLOB( i0, "pf-image-hierarchy", &parray0, &length) ) {
     return 1;
   }
   if( parray0 == NULL ) return 1;
   if( length != sizeof(PF::IHArray) ) return 1;
 
-  if( vips_image_get_blob( i1, "pf-image-hierarchy", (void**)&parray1, &length) ) {
+  if( PF_VIPS_IMAGE_GET_BLOB( i1, "pf-image-hierarchy", &parray1, &length) ) {
     return 0;
   }
   if( parray1 == NULL ) return 0;

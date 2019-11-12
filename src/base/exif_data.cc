@@ -37,6 +37,7 @@
 #include <glib.h>
 
 #include "exif_data.hh"
+#include "photoflow.hh"
 
 
 // inspired by ufraw_exiv2.cc:
@@ -369,9 +370,7 @@ PF::exif_data_t* PF::get_exif_data( VipsImage* img )
 {
   size_t blobsz;
   PF::exif_data_t* exif_data = NULL;
-  if( vips_image_get_blob( img, PF_META_EXIF_NAME,
-      (void**)&exif_data,
-      &blobsz ) ) {
+  if( PF_VIPS_IMAGE_GET_BLOB( img, PF_META_EXIF_NAME, &exif_data, &blobsz ) ) {
     std::cout<<"get_exif_data: could not extract exif_custom_data."<<std::endl;
     return NULL;
   }

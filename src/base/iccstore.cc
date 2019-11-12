@@ -1053,8 +1053,7 @@ PF::ICCProfile* PF::get_icc_profile( VipsImage* img )
   if( !img ) return NULL;
   ICCProfileContainer* pc;
   size_t data_size;
-  if( vips_image_get_blob( img, "pf-icc-profile",
-          (void**)(&pc), &data_size ) ) {
+  if( PF_VIPS_IMAGE_GET_BLOB( img, "pf-icc-profile", &pc, &data_size ) ) {
     //std::cout<<"get_icc_profile_data(): cannot find ICC profile data"<<std::endl;
     return( NULL );
   }

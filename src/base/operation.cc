@@ -564,8 +564,7 @@ void PF::print_embedded_profile( VipsImage* image )
 {
   void *data;
   size_t data_length;
-  if( !vips_image_get_blob( image, VIPS_META_ICC_NAME,
-      &data, &data_length ) ) {
+  if( !PF_VIPS_IMAGE_GET_BLOB( image, VIPS_META_ICC_NAME, &data, &data_length ) ) {
     cmsHPROFILE in_profile = cmsOpenProfileFromMem( data, data_length );
     if( in_profile ) {
       char tstr[1024];

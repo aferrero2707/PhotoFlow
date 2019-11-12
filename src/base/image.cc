@@ -1396,8 +1396,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       try {
         PF::exiv2_data_t* exiv2_buf;
         size_t exiv2_buf_length;
-        if( vips_image_get_blob( outimg, PF_META_EXIV2_NAME,
-            (void**)(&exiv2_buf), &exiv2_buf_length ) )
+        if( PF_VIPS_IMAGE_GET_BLOB( outimg, PF_META_EXIV2_NAME, (&exiv2_buf), &exiv2_buf_length ) )
           exiv2_buf = NULL;
         if( exiv2_buf && (exiv2_buf_length==sizeof(PF::exiv2_data_t)) && exiv2_buf->image.get() != NULL ) {
           Exiv2::BasicIo::AutoPtr file (new Exiv2::FileIo (filename));
@@ -1409,8 +1408,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
             void *iccdata;
             size_t iccdata_length;
 
-            if( !vips_image_get_blob( outimg, VIPS_META_ICC_NAME,
-                                     &iccdata, &iccdata_length ) ) {
+            if( !PF_VIPS_IMAGE_GET_BLOB( outimg, VIPS_META_ICC_NAME, &iccdata, &iccdata_length ) ) {
               Exiv2::byte *iccdata2 = (Exiv2::byte *)iccdata;
               Exiv2::DataBuf iccbuf(iccdata2, iccdata_length);
               exiv2_image->setIccProfile( iccbuf, true );
@@ -1587,8 +1585,7 @@ void PF::Image::export_merged_to_mem( PF::ImageBuffer* imgbuf, void* out_iccdata
 
     void *iccdata;
     size_t iccsize;
-    if( !vips_image_get_blob( outimg, VIPS_META_ICC_NAME,
-        &iccdata, &iccsize ) ) {
+    if( !PF_VIPS_IMAGE_GET_BLOB( outimg, VIPS_META_ICC_NAME, &iccdata, &iccsize ) ) {
       imgbuf->iccdata = malloc(iccsize);
       if( imgbuf->iccdata ) {
         imgbuf->iccsize = iccsize;

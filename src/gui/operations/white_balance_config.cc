@@ -495,7 +495,7 @@ void PF::WhiteBalanceConfigGUI::do_update()
     if( inode && inode->image) {
       size_t blobsz;
       PF::exif_data_t* exif_data = NULL;
-      if( !vips_image_get_blob( inode->image, PF_META_EXIF_NAME,(void**)&exif_data,&blobsz ) &&
+      if( !PF_VIPS_IMAGE_GET_BLOB( inode->image, PF_META_EXIF_NAME, &exif_data, &blobsz ) &&
           blobsz == sizeof(PF::exif_data_t) ) {
         //char makermodel[1024];
         //char *tmodel = makermodel;
@@ -927,8 +927,7 @@ void PF::WhiteBalanceConfigGUI::color_spot_wb( double x, double y )
   // We need to retrieve the input ICC profile for the Lab conversion later on
   void *data;
   size_t data_length;
-  if( vips_image_get_blob( image, VIPS_META_ICC_NAME, 
-      &data, &data_length ) )
+  if( PF_VIPS_IMAGE_GET_BLOB( image, VIPS_META_ICC_NAME, &data, &data_length ) )
     return;
 
   cmsHPROFILE profile_in = cmsOpenProfileFromMem( data, data_length );
