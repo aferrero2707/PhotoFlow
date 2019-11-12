@@ -47,6 +47,8 @@ namespace PF {
   public:
     GuidedFilterConfigGUI( Layer* l );
     
+    bool is_perceptual() { return perceptual_cbox.get_active(); }
+
     bool has_preview() { return true; }
   };
 
