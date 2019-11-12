@@ -265,7 +265,7 @@ public:
   std::string get_backup_filename() { return backup_file_name; }
   bool save_backup();
 
-  bool save( std::string filename, bool do_clear=true );
+  bool save( std::string filename, bool do_clear=true, bool update_filename=true );
   bool export_merged( std::string filename, image_export_opt_t* export_opt=NULL );
   void do_export_merged( std::string filename, image_export_opt_t* export_opt=NULL );
   void export_merged_to_mem( ImageBuffer* imgbuf, void* gimp_iccdata, size_t gimp_iccsize );

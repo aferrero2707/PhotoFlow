@@ -1062,7 +1062,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
 }
 
 
-bool PF::Image::save( std::string filename, bool do_clear )
+bool PF::Image::save( std::string filename, bool do_clear, bool update_filename )
 {
   std::string ext;
   if( getFileExtension( "/", filename, ext ) &&
@@ -1074,7 +1074,7 @@ bool PF::Image::save( std::string filename, bool do_clear )
     of<<"<image version=\""<<PF_FILE_VERSION<<"\">"<<std::endl;
     layer_manager.save( of );
     of<<"</image>"<<std::endl;
-    file_name = filename;
+    if(update_filename) file_name = filename;
     if(do_clear) clear_modified();
     return true;
   } else {
@@ -1321,7 +1321,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
             "trellis_quant", trellis_quant, "optimize_scans", optimize_scans, NULL ) == 0 ) {
           if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
               !(PF::PhotoFlow::Instance().is_plugin()) ) {
-            save(filename+".pfi", false);
+            save(filename+".pfi", false, false);
           }
           saved = true;
         }
@@ -1383,7 +1383,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
           //vips_image_write_to_file( outimg, filename.c_str(), NULL );
           if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
               !(PF::PhotoFlow::Instance().is_plugin()) ) {
-            save(filename+".pfi", false);
+            save(filename+".pfi", false, false);
           }
           saved = true;
         }
