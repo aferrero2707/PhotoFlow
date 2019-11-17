@@ -1665,6 +1665,7 @@ void PF::RawDeveloperConfigGUI::spot_wb( double x, double y )
 
       //node_par->set_wb( wbRedSlider.get_adjustment()->get_value(), wbGreenSlider.get_adjustment()->get_value(), wbBlueSlider.get_adjustment()->get_value() );
 
+      node_par->set_modified();
       img->update( pipeline, true );
       //img->unlock();
     }
@@ -1809,6 +1810,9 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
   float wb_red_mul_prev = 1;
   float wb_green_mul_prev = 1;
   float wb_blue_mul_prev = 1;
+
+  PF::RawDeveloperPar* node_par = dynamic_cast<PF::RawDeveloperPar*>( node->processor->get_par() );
+  if( !node_par ) return;
 
   par->set_caching( false );
 
@@ -2123,6 +2127,7 @@ void PF::RawDeveloperConfigGUI::color_spot_wb( double x, double y )
 
     //bool async = img->is_async();
     //img->set_async( false );
+    par->set_modified();
     img->update( pipeline, true );
     //img->update( NULL, true );
     //img->unlock();

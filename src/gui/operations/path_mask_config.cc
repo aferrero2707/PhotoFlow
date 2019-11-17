@@ -261,6 +261,7 @@ bool PF::PathMaskConfigGUI::pointer_release_event( int button, double sx, double
   PF::Image* image = layer->get_image();
   if( !image ) return false;
 
+  par->set_modified();
   image->update();
 
   return false;
