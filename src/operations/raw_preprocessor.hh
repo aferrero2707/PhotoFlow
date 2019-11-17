@@ -152,6 +152,18 @@ namespace PF
 
       hlreco_mode_t hlreco_mode = rdpar->get_hlreco_mode();
 
+      float cam_wb[4] = {
+          rdpar->get_image_data()->color.cam_mul[0],
+          rdpar->get_image_data()->color.cam_mul[1],
+          rdpar->get_image_data()->color.cam_mul[2],
+          rdpar->get_image_data()->color.cam_mul[1]
+      };
+      float cam_wb_max = MAX3(cam_wb[0], cam_wb[1], cam_wb[2]);
+      cam_wb[0] /= cam_wb_max;
+      cam_wb[1] /= cam_wb_max;
+      cam_wb[2] /= cam_wb_max;
+      cam_wb[3] /= cam_wb_max;
+
       //std::cout<<"RawPreprocessor::render(): rdpar->get_wb_mode()="<<rdpar->get_wb_mode()<<std::endl;
       switch( rdpar->get_wb_mode() ) {
       case WB_SPOT:
@@ -241,9 +253,12 @@ namespace PF
             //pout[x] = __CLIP( (p[x]-black[0]) * sat_corr * mul[0] - black[0]);
             //pout[x+1] = __CLIP(p[x+1] * sat_corr * mul[1] - black[1]);
             //pout[x+2] = __CLIP(p[x+2] * sat_corr * mul[2] - black[2]);
-            pout[x] = (p[x]-black[0]) * mul[0] / (white[0]-black[0]);
-            pout[x+1] = (p[x+1]-black[1]) * mul[1] / (white[1]-black[1]);
-            pout[x+2] = (p[x+2]-black[2]) * mul[2] / (white[2]-black[2]);
+            //pout[x] = (p[x]-black[0]) * mul[0] / (white[0]-black[0]);
+            //pout[x+1] = (p[x+1]-black[1]) * mul[1] / (white[1]-black[1]);
+            //pout[x+2] = (p[x+2]-black[2]) * mul[2] / (white[2]-black[2]);
+            pout[x]   = p[x]   * mul[0] / cam_wb[0];
+            pout[x+1] = p[x+1] * mul[1] / cam_wb[1];
+            pout[x+2] = p[x+2] * mul[2] / cam_wb[2];
             if( hlreco_mode == HLRECO_CLIP ) {
               pout[x] = CLIP( pout[x] );
               pout[x+1] = CLIP( pout[x+1] );
@@ -274,13 +289,14 @@ namespace PF
             rpout.color(x) = rp.color(x);
             //rpout[x] = __CLIP(rp[x] * sat_corr * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
             int c = rp.icolor(x);
-            rval = (rp[x]-black[c]) / (white[c]-black[c]);
+            //rval = (rp[x]-black[c]) / (white[c]-black[c]);
+            rval = rp[x];
             if( hlreco_mode == HLRECO_CLIP ) {
-              rpout[x] = CLIP( rval * mul[c] );
+              rpout[x] = CLIP( rval * mul[c] / cam_wb[c] );
             } else {
               //if( rval > 65500.f ) rpout[x] = 65535.f;
               //else
-                rpout[x] = rval * mul[c];
+              rpout[x] = rval * mul[c] / cam_wb[c];
             }
             if(false && r->left==0 && r->top==0 && y<4 && x<4)
               std::cout<<"("<<y<<","<<x<<")  c="<<rp.color(x) //c

@@ -49,6 +49,7 @@ typedef uint32_t uint32;
 #include "../rt/rtengine/median.h"
 #include "raw_image.hh"
 
+#include "ca_correct.hh"
 #include "amaze_demosaic.hh"
 #include "fast_demosaic_xtrans.hh"
 
@@ -360,19 +361,42 @@ PF::RawImage::RawImage( const std::string _fname ):
 
   //return;
 
+  std::cout<<"[RawImage::RawImage]: image="<<image<<std::endl;
+
+  unsigned int level = 0;
   int width = image->Xsize;
   int height = image->Ysize;
+  PF::ProcessorBase* ca_correct = PF::new_ca_correct();
+  ca_correct->get_par()->set_image_hints( image );
+  ca_correct->get_par()->set_format( VIPS_FORMAT_FLOAT );
+  //ca_correct->get_par()->set_demand_hint( VIPS_DEMAND_STYLE_FATSTRIP );
+  PF::CACorrectPar* capar = dynamic_cast<PF::CACorrectPar*>( ca_correct->get_par() );
+  VipsImage* out_ca;
+  std::vector<VipsImage*> in2;
+  if( false && capar ) {
+    capar->set_enable_ca( true );
+    capar->set_auto_ca( true );
+    in2.push_back( image );
+    out_ca = ca_correct->get_par()->build( in2, 0, NULL, NULL, level );
+  } else {
+    out_ca = image; g_object_ref(image);
+  }
+
   fast_demosaic = NULL;
   if( is_xtrans() ) fast_demosaic = PF::new_fast_demosaic_xtrans();
-  else fast_demosaic = PF::new_fast_demosaic();
+  //else fast_demosaic = PF::new_fast_demosaic();
+  else fast_demosaic = PF::new_amaze_demosaic();
+  PF::AmazeDemosaicPar* amazepar = dynamic_cast<AmazeDemosaicPar*>(fast_demosaic->get_par());
+  if( amazepar ) {
+    amazepar->set_apply_cam_wb(false);
+  }
   fast_demosaic->get_par()->set_image_hints( image );
   fast_demosaic->get_par()->set_format( VIPS_FORMAT_FLOAT );
   fast_demosaic->get_par()->set_demand_hint( VIPS_DEMAND_STYLE_FATSTRIP );
-  std::vector<VipsImage*> in2;
-  in2.push_back( image );
-  unsigned int level = 0;
+  in2.clear();
+  in2.push_back( out_ca );
   VipsImage* out_demo = fast_demosaic->get_par()->build( in2, 0, NULL, NULL, level );
-  //g_object_unref( image );
+  g_object_unref( out_ca );
 
   VipsImage* out_demo2;
 
@@ -814,8 +838,9 @@ bool PF::RawImage::load_rawspeed()
         raw_hist[hist_id] += 1;
       }
 
+      nval *= ca_cam_mul[color4]/ca_cam_mul_max;
       fptr = (float*)ptr;
-      fptr[0] = val;
+      fptr[0] = nval;
       fptr[1] = color;
       ptr += pxsize;
 
@@ -823,7 +848,7 @@ bool PF::RawImage::load_rawspeed()
         printf("row=%d col=%d c4=%d  rawData[row][col]=%f  scale_mul[c4]=%f  val=%f\n",
             row, col, color4, val, pdata->color.cam_mul[color4], nval);
       }
-      nval *= ca_cam_mul[color4]/ca_cam_mul_max;
+      //nval *= ca_cam_mul[color4]/ca_cam_mul_max;
       rawData[row][col] = nval;
       //rawData[row].color(col) = color;
     }
@@ -1249,15 +1274,17 @@ void PF::RawImage::inverse33 (const double (*rgb_cam)[3], double (*cam_rgb)[3])
 VipsImage* PF::RawImage::get_image(unsigned int& level)
 {
   if( level == 0 ) {
+    VipsImage* out_image = image;
+    //VipsImage* out_image = demo_image;
 #ifndef NDEBUG
     std::cout<<"RawImage::get_image(): checking exif_custom_data for image("<<image<<")"<<std::endl;
 #endif
-    if( image ) {
-      GType type = vips_image_get_typeof(image, PF_META_EXIF_NAME );
+    if( out_image ) {
+      GType type = vips_image_get_typeof(out_image, PF_META_EXIF_NAME );
       if( type ) {
         //std::cout<<"RawImage::get_image(): exif_custom_data found in image("<<image<<")"<<std::endl;
         //print_exif();
-      } else std::cout<<"RawImage::get_image(): exif_custom_data not found in image("<<image<<")"<<std::endl;
+      } else std::cout<<"RawImage::get_image(): exif_custom_data not found in image("<<out_image<<")"<<std::endl;
     }
     /*
 #ifdef DO_WARNINGS
@@ -1270,12 +1297,14 @@ VipsImage* PF::RawImage::get_image(unsigned int& level)
              (VipsCallbackFn) PF::exif_free, buf,
              sizeof(exif_data_t) );
      */
-    PF_REF( image, "RawImage()::get_image(): level 0 ref");
-    return image;
+    std::cout<<"[RawImage::get_image]: returning image="<<out_image<<std::endl;
+    PF_REF( out_image, "RawImage()::get_image(): level 0 ref");
+    return out_image;
   }
 
   PF::PyramidLevel* plevel = pyramid.get_level( level );
   if( plevel ) {
+    std::cout<<"[RawImage::get_image]: returning level="<<level<<std::endl;
     return plevel->image;
   }
   return NULL;
