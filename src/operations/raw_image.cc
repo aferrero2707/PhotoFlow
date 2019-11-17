@@ -386,10 +386,6 @@ PF::RawImage::RawImage( const std::string _fname ):
   if( is_xtrans() ) fast_demosaic = PF::new_fast_demosaic_xtrans();
   //else fast_demosaic = PF::new_fast_demosaic();
   else fast_demosaic = PF::new_amaze_demosaic();
-  PF::AmazeDemosaicPar* amazepar = dynamic_cast<AmazeDemosaicPar*>(fast_demosaic->get_par());
-  if( amazepar ) {
-    amazepar->set_apply_cam_wb(false);
-  }
   fast_demosaic->get_par()->set_image_hints( image );
   fast_demosaic->get_par()->set_format( VIPS_FORMAT_FLOAT );
   fast_demosaic->get_par()->set_demand_hint( VIPS_DEMAND_STYLE_FATSTRIP );
