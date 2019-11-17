@@ -276,6 +276,7 @@ void PF::Image::set_pipeline_level( PF::Pipeline* target_pipeline, int level )
 PF::PipelineNode* PF::Image::get_compatible_node(PF::Layer* layer, PF::Pipeline* pipeline, unsigned int level)
 {
   PF::PipelineNode* node = NULL;
+  return node;
   for(unsigned int pi = 0; pi < pipelines.size(); pi++) {
     PF::Pipeline* p = pipelines[pi];
     if( p == pipeline ) break;
