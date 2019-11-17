@@ -22,9 +22,10 @@ matrix:
             #- bash appimage/package-appimage.sh
             - ls out/*
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/remove.sh
-            - bash ./remove.sh "continuous" "PhotoFlow_git_${TRAVIS_BRANCH}_linux_" ".AppImage"
+            - bash ./remove.sh "continuous" "PhotoFlow_git_${TRAVIS_BRANCH}_linux_" ".AppImage" > /dev/null
+            - bash ./remove.sh "continuous" "PhotoFlow_git_${TRAVIS_BRANCH}_linux_" ".zsync" > /dev/null
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh "continuous" out/*;
+            - bash  ./upload_rotate.sh "continuous" out/* > /dev/null
         - os: linux
           dist: trusty
           compiler: g++
@@ -44,11 +45,11 @@ matrix:
             - cd $TRAVIS_BUILD_DIR
             - pwd
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/remove.sh
-            - bash ./remove.sh "continuous" "PhotoFlow_git_${TRAVIS_BRANCH}_w64_" ".zip"
+            - bash ./remove.sh "continuous" "PhotoFlow_git_${TRAVIS_BRANCH}_w64_" ".zip" > /dev/null
             #- bash ./remove.sh "continuous" "photoflow-w64-*${TRAVIS_BRANCH}-" ".zip"
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
-            - bash  ./upload_rotate.sh "continuous" PhotoFlow_*.zip
+            - bash  ./upload_rotate.sh "continuous" PhotoFlow_*.zip > /dev/null
         - os: osx
           cache: ccache
           osx_image: xcode7.3
@@ -84,7 +85,7 @@ matrix:
             - cd $TRAVIS_BUILD_DIR/osx
             - ./package-photoflow-hb.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/remove.sh
-            - bash ./remove.sh "continuous" "PhotoFlow_git_${TRAVIS_BRANCH}_macos_" ".dmg"
+            - bash ./remove.sh "continuous" "PhotoFlow_git_${TRAVIS_BRANCH}_macos_" ".dmg" > /dev/null
             #- wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
             - wget -c https://github.com/aferrero2707/uploadtool/raw/master/upload_rotate.sh
             - bash  ./upload_rotate.sh "continuous" $HOME/PhotoFlow_*.dmg > /dev/null
