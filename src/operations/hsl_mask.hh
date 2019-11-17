@@ -79,6 +79,8 @@ namespace PF
     bool has_intensity() { return false; }
     bool has_opacity() { return true; }
     bool needs_input() { return false; }
+    bool accepts_colorspace(colorspace_t);
+    bool convert_inputs_on_map_build() { return false; }
 
     bool import_settings( OpParBase* pin );
     void pre_build( rendermode_t mode );

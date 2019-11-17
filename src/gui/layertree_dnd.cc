@@ -99,16 +99,20 @@ static bool check_inputs( std::list<PF::Layer*> layers, std::list<PF::Layer*> pl
   for( std::list<PF::Layer*>::iterator li = list.begin();
        li != list.end(); li++ ) {
     if( (*li) == NULL ) continue;
-    for( unsigned int i = 0; i < (*li)->get_extra_inputs().size(); i++ ) {
-      int32_t id = (*li)->get_extra_inputs()[i].first.first;
-      bool found = false;
+    for( unsigned int i = 0; i < (*li)->get_inputs().size(); i++ ) {
+      int32_t id = (*li)->get_inputs()[i].first.first;
+      // if the input id is negative, it corresponds to the default input of the layer,
+      // so this will be changed according to the new location of the dragged layer
+      bool found = (id < 0);
       std::cout<<"check_inputs(): checking extra input \""<<(*li)->get_name()<<"\"["<<i<<"]="<<id<<std::endl;
-      for( std::list<PF::Layer*>::iterator lj = plist.begin();
-           lj != plist.end(); lj++ ) {
-        if( ((*lj) != NULL) && ((int)((*lj)->get_id()) == id) ) {
-          std::cout<<"check_inputs(): found."<<std::endl;
-          found = true;
-          break;
+      if( !found ) {
+        for( std::list<PF::Layer*>::iterator lj = plist.begin();
+            lj != plist.end(); lj++ ) {
+          if( ((*lj) != NULL) && ((int)((*lj)->get_id()) == id) ) {
+            std::cout<<"check_inputs(): found."<<std::endl;
+            found = true;
+            break;
+          }
         }
       }
       if( !found ) return false;
@@ -154,9 +158,9 @@ static bool check_inputs2( std::list<PF::Layer*> layers, std::list< PF::Layer*> 
   for( std::list<PF::Layer*>::iterator li = plist.begin();
        li != plist.end(); li++ ) {
     if( (*li) == NULL ) continue;
-    for( unsigned int i = 0; i < (*li)->get_extra_inputs().size(); i++ ) {
+    for( unsigned int i = 0; i < (*li)->get_inputs().size(); i++ ) {
       bool found = false;
-      int32_t id = (*li)->get_extra_inputs()[i].first.first;
+      int32_t id = (*li)->get_inputs()[i].first.first;
       std::cout<<"check_inputs2(): checking extra input \""<<(*li)->get_name()<<"\"["<<i<<"]="<<id<<std::endl;
       for( std::list<PF::Layer*>::iterator lj = drag_list.begin();
            lj != drag_list.end(); lj++ ) {

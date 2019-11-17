@@ -62,15 +62,18 @@ namespace PF {
     Gtk::VBox vbox2;
     Gtk::Label label2;
     Gtk::SpinButton image_num;
+    int input_id;
     //NumEntry image_num;
     Glib::RefPtr<Gtk::ListStore> model;
 
     bool inhibit;
 
   public:
-    LayerList(OperationConfigGUI* dialog, std::string label);
+    LayerList(OperationConfigGUI* dialog, std::string label, int input_id = 0, bool compact=false);
 
     ~LayerList() {}
+
+    void set_size(int w, int h) { cbox.set_size_request(w, h); }
 
     void set_inhibit( bool val ) { inhibit = val; }
     void update_model();

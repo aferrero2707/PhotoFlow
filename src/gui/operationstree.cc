@@ -297,6 +297,7 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_color.get_tree().add_op( _("Color Adjustments"), "color_correction" );
   op_color.get_tree().add_op( _("Desaturate"), "desaturate" );
   op_color.get_tree().add_op( _("Curves"), "curves" );
+  op_color.get_tree().add_op( _("Channel selector"), "clone" );
   op_color.get_tree().add_op( _("Relight"), "relight" );
   op_color.get_tree().add_op( _("Shadows/Highlights"), "shadows_highlights_v2" );
   op_color.get_tree().add_op( _("Tone mapping"), "tone_mapping_v2" );
@@ -380,7 +381,6 @@ PF::OperationsTreeDialog::OperationsTreeDialog( Image* img, LayerWidget* lw ):
   op_mask.get_tree().add_op( _("Gradient Norm"), "gmic_gradient_norm" );
 #endif
   op_mask.get_tree().add_op( _("Draw"), "draw" );
-  op_mask.get_tree().add_op( _("Clone layer"), "clone" );
 
 
 

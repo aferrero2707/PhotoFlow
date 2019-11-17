@@ -159,6 +159,7 @@ namespace PF
       if( (id<0) || (id>=(int)nodes.size()) ) return NULL;
       return nodes[id];
     }
+    PipelineNode* get_node( Layer* l );
 
     VipsImage* get_output() { return output; }
     void set_output( VipsImage* img ) { output = img; }

@@ -16,7 +16,7 @@
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="plus.svg"
-   inkscape:export-filename="/Users/aferrero/Projects/Photoflow/Git/Default/PhotoFlow/icons/plus.png"
+   inkscape:export-filename="/Users/aferrero/Projects/Photoflow/Git/SimplifiedPipeline/PhotoFlow/icons-inverted/plus.png"
    inkscape:export-xdpi="2.8099999"
    inkscape:export-ydpi="2.8099999">
   <defs
@@ -29,7 +29,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="245.33446"
+     inkscape:cx="206.07762"
      inkscape:cy="258.28139"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -56,7 +56,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -75,5 +75,13 @@
        id="path4140"
        d="m 418.05111,797.3723 -322.406803,0"
        style="fill:none;fill-rule:evenodd;stroke:#c8c8c8;stroke-width:64;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="opacity:1;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#c8c8c8;stroke-width:20;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect4136"
+       width="480"
+       height="479.99997"
+       x="16"
+       y="556.36218"
+       ry="95.999985" />
   </g>
 </svg>

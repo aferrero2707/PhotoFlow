@@ -39,10 +39,10 @@ static int _phf_operation_serial_id = 0;
 
 int
 vips_layer( int n, VipsImage **out, 
-            PF::ProcessorBase* proc,
-            VipsImage* imap, VipsImage* omap, 
-            VipsDemandStyle demand_hint,
-	    int width, int height, int nbands, int sid, ... );
+    PF::ProcessorBase* proc,
+    VipsImage* imap, VipsImage* omap,
+    VipsDemandStyle demand_hint,
+    int width, int height, int nbands, int sid, ... );
 
 
 
@@ -57,20 +57,19 @@ void PF::OperationConfigUI::open()
 
 
 PF::OpParBase::OpParBase():
-  output_caching_enabled(false),
-	render_mode(PF_RENDER_PREVIEW),
-  map_flag( false ),
-  editing_flag( false ),
-  modified_flag(false),
-  intensity("intensity",this,1),
-  grey_target_channel("grey_target_channel",this,-1,"Grey","Grey"),
-  rgb_target_channel("rgb_target_channel",this,-1,"RGB","RGB"),
-  lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
-  cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
-  mask_enabled("mask_enabled",this,true),
-  file_format_version( PF_FILE_VERSION ),
-  previous_layer_is_input("previous_layer_is_input",this,true),
-  enable_padding( "enable_padding", this, false ), test_padding(64)
+      output_caching_enabled(false),
+      render_mode(PF_RENDER_PREVIEW),
+      map_flag( false ),
+      editing_flag( false ),
+      modified_flag(false),
+      intensity("intensity",this,1),
+      grey_target_channel("grey_target_channel",this,-1,"Grey","Grey"),
+      rgb_target_channel("rgb_target_channel",this,-1,"RGB","RGB"),
+      lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
+      cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
+      mask_enabled("mask_enabled",this,true),
+      file_format_version( PF_FILE_VERSION ),
+      enable_padding( "enable_padding", this, false ), test_padding(64)
 {
   //blend_mode.set_internal(true);
   intensity.set_internal(true);
@@ -79,7 +78,7 @@ PF::OpParBase::OpParBase():
   rgb_target_channel.set_internal(true);
   lab_target_channel.set_internal(true);
   cmyk_target_channel.set_internal(true);
-  
+
   processor = NULL;
   //out = NULL;
   config_ui = NULL;
@@ -103,7 +102,7 @@ PF::OpParBase::OpParBase():
   cmyk_target_channel.add_enum_value(2,"Y","Y");
   cmyk_target_channel.add_enum_value(3,"K","K");
 
-  to_map = NULL; //new_image_to_map();
+  to_map = NULL;
 
   //PF::PropertyBase* prop;
   //prop = new PF::Property<float>("intensity",&intensity);
@@ -132,7 +131,7 @@ PF::PropertyBase* PF::OpParBase::get_property(std::string name)
     //std::cout<<"(*pi)->get_name(): "<<(*pi)->get_name()<<"    name: "<<name<<std::endl;
     if( (*pi)->get_name() == name ) return( *pi );
   }
-  
+
   // If nothing is found, look into our own properties
   for(pi = properties.begin(); pi != properties.end(); pi++) {
     //std::cout<<"(*pi)->get_name(): "<<(*pi)->get_name()<<"    name: "<<name<<std::endl;
@@ -270,7 +269,7 @@ bool PF::OpParBase::import_settings( OpParBase* pin )
   set_editing_flag( pin->is_editing() );
   //set_demand_hint( pin->get_demand_hint() );
   //set_image_hints( pin->get_xsize(), pin->get_ysize(),
-	//	   pin->get_interpretation() );
+  //	   pin->get_interpretation() );
   //set_nbands( pin->get_nbands() );
   //set_coding( pin->get_coding() );
   //set_format( pin->get_format() );
@@ -279,7 +278,7 @@ bool PF::OpParBase::import_settings( OpParBase* pin )
 
 
 VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first, 
-				VipsImage* imap, VipsImage* omap, unsigned int& level)
+    VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
   VipsImage* outnew = NULL;
   VipsImage* invec[100];
@@ -299,30 +298,30 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
   switch( n ) {
   case 0:
     vips_layer( n, &outnew, processor, imap, omap, 
-		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
-		NULL );
+        get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
+        NULL );
     break;
   case 1:
     vips_layer( n, &outnew, processor, imap, omap, 
-		get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
-		"in0", invec[0], NULL );
+        get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
+        "in0", invec[0], NULL );
     break;
   case 2:
     vips_layer( n, &outnew, processor, imap, omap, 
-    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
-    "in0", invec[0], "in1", invec[1], NULL );
+        get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
+        "in0", invec[0], "in1", invec[1], NULL );
     break;
   case 3:
     vips_layer( n, &outnew, processor, imap, omap,
-    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
-    "in0", invec[0], "in1", invec[1],
-    "in2", invec[2], NULL );
+        get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
+        "in0", invec[0], "in1", invec[1],
+        "in2", invec[2], NULL );
     break;
   case 4:
     vips_layer( n, &outnew, processor, imap, omap,
-    get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
-    "in0", invec[0], "in1", invec[1],
-    "in2", invec[2], "in3", invec[3], NULL );
+        get_demand_hint(), get_xsize(), get_ysize(), get_nbands(), _phf_operation_serial_id,
+        "in0", invec[0], "in1", invec[1],
+        "in2", invec[2], "in3", invec[3], NULL );
     break;
   default:
     break;
@@ -330,7 +329,7 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
 
 #ifndef NDEBUG
   std::cout<<"OpParBase::build(): type="<<type<<"  format="<<get_format()<<std::endl
-	   <<"input images:"<<std::endl;
+      <<"input images:"<<std::endl;
   for(int i = 0; i < n; i++) {
     std::cout<<"  "<<(void*)invec[i]<<"   ref_count="<<G_OBJECT( invec[i] )->ref_count<<std::endl;
   }
@@ -348,7 +347,7 @@ VipsImage* PF::OpParBase::build(std::vector<VipsImage*>& in, int first,
 
 
 std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, int first,
-        VipsImage* imap, VipsImage* omap, unsigned int& level)
+    VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
   std::vector<VipsImage*> result;
   VipsImage* out = build( in, first, imap, omap, level );
@@ -371,39 +370,38 @@ std::vector<VipsImage*> PF::OpParBase::build_many(std::vector<VipsImage*>& in, i
     }
     PF_UNREF( out, "OpParBase::build_many(): out unref" );
   }
-  */
+   */
   result.push_back( cached );
   return result;
 }
 
 
 std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage*>& in, int first,
-        VipsImage* imap, VipsImage* omap, unsigned int& level)
+    VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
   std::vector<VipsImage*> in_temp;
-  if( !(previous_layer_is_input.get()) && in.size() > 1 && in[1] ) {
-    for(unsigned int i = 1; i < in.size(); i++) {
-      in_temp.push_back(in[i]);
-    }
-  }
 
-  if( false && convert_inputs_on_load() && is_map() && interpretation == VIPS_INTERPRETATION_B_W ) {
+  if( true && convert_inputs_on_map_build() && is_map() && interpretation == VIPS_INTERPRETATION_B_W ) {
+    if( !to_map ) to_map = new_image_to_map();
     std::vector<VipsImage*> in_temp2;
     std::vector<VipsImage*>* in_ptr = in_temp.empty() ? &in : &in_temp;
     for(unsigned int i = 0; i < in_ptr->size(); i++) {
       VipsImage* img = (*in_ptr)[i];
       if( img == NULL || img->Type == interpretation ) {
         in_temp2.push_back(img);
+        std::cout<<"OpParBase::build_many_internal: op_type="<<get_type()<<"  in_temp2.push_back("<<img<<")"<<std::endl;
+        PF_REF( img, "build_many_internal: img ref" );
       } else {
-        if( interpretation == VIPS_INTERPRETATION_B_W ) {
-          std::vector<VipsImage*> in2; in2.push_back(img);
-          PF::OpParBase* to_map_op = to_map->get_par();
-          to_map_op->set_format(get_format());
-          to_map_op->set_image_hints(img);
-          to_map_op->grayscale_image( img->Xsize, img->Ysize );
-          VipsImage* bwimg = to_map_op->build(in2, 0, NULL, NULL, level);
-          in_temp2.push_back(bwimg);
-        }
+        std::vector<VipsImage*> in2; in2.push_back(img);
+        std::cout<<"OpParBase::build_many_internal: to_map="<<to_map<<std::endl;
+        PF::OpParBase* to_map_op = to_map->get_par();
+        to_map_op->set_format(get_format());
+        //to_map_op->set_image_hints(img);
+        //to_map_op->grayscale_image( img->Xsize, img->Ysize );
+        VipsImage* bwimg = to_map_op->build(in2, 0, NULL, NULL, level);
+        std::cout<<"OpParBase::build_many_internal: bwimg built"<<std::endl;
+        in_temp2.push_back(bwimg);
+        //PF_UNREF( img, "build_many_internal: img unref" );
       }
     }
     in_temp = in_temp2;
@@ -424,57 +422,68 @@ std::vector<VipsImage*> PF::OpParBase::build_many_internal(std::vector<VipsImage
     fill_image_hierarchy( in_temp, imap, omap, result );
 
   // add output caching if needed
-  if( !output_caching_enabled ) return result;
+  if( output_caching_enabled ) {
 
-  std::vector<VipsImage*> result_cached;
-  for( unsigned int i = 0; i < result.size(); i++ ) {
-    bool is_dup = false;
-    VipsImage* out = result[i];
-    for( unsigned int j = 0; j < in.size(); j++ ) {
-      if( out == in[j] ) {
-        is_dup = true;
-        break;
+    std::vector<VipsImage*> result_cached;
+    for( unsigned int i = 0; i < result.size(); i++ ) {
+      bool is_dup = false;
+      VipsImage* out = result[i];
+      for( unsigned int j = 0; j < in.size(); j++ ) {
+        if( out == in[j] ) {
+          is_dup = true;
+          break;
+        }
       }
-    }
-    if( is_dup ) {
-      result_cached.push_back( out );
-      continue;
-    }
+      if( is_dup ) {
+        result_cached.push_back( out );
+        continue;
+      }
 
-    int p = get_output_padding( i );
-    if( p > 32 || needs_caching() ) {
-      VipsAccess acc = VIPS_ACCESS_RANDOM;
-      int threaded = 1, persistent = 1;
-      VipsImage* cached;
-      std::cout<<"OpParBase::build_many_internal(): adding tilecache for output image #"
-          <<i<<", padding="<<p<<std::endl;
-      if( !phf_tilecache(out, &cached,
-          "access", acc, "threaded", threaded,
-          "persistent", persistent, NULL) ) {
-        result_cached.push_back( cached );
-        PF_UNREF( out, "OpParBase::build_many_internal(): out unref" );
-        std::cout<<"OpParBase::build_many_internal(): added tilecache for output image #"
+      int p = get_output_padding( i );
+      if( p > 32 || needs_caching() ) {
+        VipsAccess acc = VIPS_ACCESS_RANDOM;
+        int threaded = 1, persistent = 1;
+        VipsImage* cached;
+        std::cout<<"OpParBase::build_many_internal(): adding tilecache for output image #"
             <<i<<", padding="<<p<<std::endl;
+        if( !phf_tilecache(out, &cached,
+            "access", acc, "threaded", threaded,
+            "persistent", persistent, NULL) ) {
+          result_cached.push_back( cached );
+          PF_UNREF( out, "OpParBase::build_many_internal(): out unref" );
+          std::cout<<"OpParBase::build_many_internal(): added tilecache for output image #"
+              <<i<<", padding="<<p<<std::endl;
+        } else {
+          std::cout<<"OpParBase::build_many_internal(): phf_tilecache() failed."<<std::endl;
+          result_cached.push_back( out );
+        }
       } else {
-        std::cout<<"OpParBase::build_many_internal(): vips_tilecache() failed."<<std::endl;
         result_cached.push_back( out );
       }
-    } else {
-      result_cached.push_back( out );
+    }
+    result = result_cached;
+  }
+
+  if( true && convert_inputs_on_map_build() && is_map() && interpretation == VIPS_INTERPRETATION_B_W ) {
+    std::vector<VipsImage*>* in_ptr = in_temp.empty() ? &in : &in_temp;
+    for(unsigned int i = 0; i < in_ptr->size(); i++) {
+      VipsImage* img = (*in_ptr)[i];
+      PF_UNREF( img, "build_many_internal: img unref" );
+      std::cout<<"OpParBase::build_many_internal: op_type="<<get_type()<<"  "<<img<<" unref"<<std::endl;
     }
   }
 
-    //for(unsigned int i = 0; i < outvec.size(); i++ ) {
+  //for(unsigned int i = 0; i < outvec.size(); i++ ) {
   //  PF_UNREF( outvec[i], "OpParBase::build_many_internal(): previous outputs unref" );
   //}
   //outvec = result;
 
-  return result_cached;
+  return result;
 }
 
 
 void PF::OpParBase::fill_image_hierarchy(std::vector<VipsImage*>& in,
-        VipsImage* imap, VipsImage* omap, std::vector<VipsImage*>& out)
+    VipsImage* imap, VipsImage* omap, std::vector<VipsImage*>& out)
 {
   for( unsigned int i = 0; i < out.size(); i++ ) {
     bool is_dup = false;
@@ -506,7 +515,7 @@ bool PF::OpParBase::save( std::ostream& ostr, int level )
   ostr<<"<operation type=\""<<get_type()<<"\">"<<std::endl;
 
   for( std::list<PropertyBase*>::iterator pi = properties.begin();
-       pi != properties.end(); pi++ ) {
+      pi != properties.end(); pi++ ) {
     if( (*pi)->is_persistent() == false ) continue;
     std::string pvalue = (*pi)->get_str();
     for(int i = 0; i < level+1; i++) ostr<<"  ";
@@ -517,9 +526,9 @@ bool PF::OpParBase::save( std::ostream& ostr, int level )
     for(int i = 0; i < level+1; i++) ostr<<"  ";
     ostr<<"</property>"<<std::endl;
   }
-  
+
   for( std::list<PropertyBase*>::iterator pi = mapped_properties.begin();
-       pi != mapped_properties.end(); pi++ ) {
+      pi != mapped_properties.end(); pi++ ) {
     if( (*pi)->is_persistent() == false ) continue;
     std::string pvalue = (*pi)->get_str();
     for(int i = 0; i < level+1; i++) ostr<<"  ";
@@ -530,7 +539,7 @@ bool PF::OpParBase::save( std::ostream& ostr, int level )
     for(int i = 0; i < level+1; i++) ostr<<"  ";
     ostr<<"</property>"<<std::endl;
   }
-  
+
   for(int i = 0; i < level; i++) ostr<<"  ";
   ostr<<"</operation>"<<std::endl;
 
@@ -554,8 +563,8 @@ int PF::vips_copy_metadata( VipsImage* in, VipsImage* out )
   vips_image_init_fields( out,
       Xsize, Ysize, bands, fmt,
       coding, type, xres, yres
-      );
-return 0;
+  );
+  return 0;
 }
 
 

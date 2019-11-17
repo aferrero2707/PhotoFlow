@@ -271,7 +271,7 @@ void PF::ControlsGroup::collapse_all()
 PF::AuxControlsGroup::AuxControlsGroup( ImageEditor* e ): editor(e), controls(NULL), gui(NULL)
 {
   //set_spacing(10);
-  set_size_request(-1,60);
+  set_size_request(-1,100);
 }
 
 
@@ -317,13 +317,13 @@ void PF::AuxControlsGroup::set_control(PF::Layer* layer, PF::OperationConfigGUI*
 
 
 PF::ControlsDialog::ControlsDialog( ImageEditor* e ):
-    Gtk::Dialog(), editor(e), gui(NULL), close_button(_("Close")), x(-1), y(-1)
+    Gtk::Dialog(), editor(e), gui(NULL), top_box(NULL), close_button(_("Close")), x(-1), y(-1)
 {
-  close_button_box.pack_end( close_button, Gtk::PACK_SHRINK, 5 );
+  //close_button_box.pack_end( close_button, Gtk::PACK_SHRINK, 5 );
 #ifdef GTKMM_3
-  get_content_area()->pack_end( close_button_box, Gtk::PACK_SHRINK );
+  get_content_area()->pack_end( notebook, Gtk::PACK_SHRINK );
 #else
-  get_vbox()->pack_end( close_button_box, Gtk::PACK_SHRINK );
+  get_vbox()->pack_end( notebook, Gtk::PACK_SHRINK );
 #endif
 
   show_all_children();
@@ -341,11 +341,14 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
   bool needs_update = false;
   if( gui && gui->get_frame()) {
     gui->collapse();
+/*
 #ifdef GTKMM_3
     get_content_area()->remove( *(gui->get_frame()) );
 #else
     get_vbox()->remove( *(gui->get_frame()) );
 #endif
+*/
+    for(int pi = 0; pi < notebook.get_n_pages(); pi++) notebook.remove_page(-1);
     PF::OpParBase* par = gui->get_par();
     if( par ) {
       par->set_editing_flag( false );
@@ -382,13 +385,35 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
   Gtk::Widget* controls = gui->get_frame();
   //std::cout<<"ControlsDialog::set_controls(\""<<l->get_name()<<"\"): controls="<<controls<<std::endl;
   if( controls ) {
+/*
 #ifdef GTKMM_3
     get_content_area()->pack_start( *controls, Gtk::PACK_SHRINK );
 #else
     get_vbox()->pack_start( *controls, Gtk::PACK_SHRINK );
 #endif
+*/
+    notebook.append_page(*controls, _("controls"));
+    notebook.append_page(gui->get_blend_box(), _("in/out"));
+    //notebook.append_page(gui->get_input_box(), _("input"));
     //controls->show_all();
   }
+
+  if( top_box ) delete top_box;
+  top_box = new Gtk::HBox();
+
+  top_box->pack_start( gui->get_top_box(), Gtk::PACK_SHRINK, 5 );
+  top_box->pack_end( close_button, Gtk::PACK_SHRINK, 5 );
+  top_box->show_all();
+
+  #ifdef GTKMM_3
+  get_content_area()->pack_start( *top_box, Gtk::PACK_SHRINK );
+#else
+  get_vbox()->pack_start( *top_box, Gtk::PACK_SHRINK );
+#endif
+
+
+  set_title(l->get_processor()->get_par()->get_default_name());
+
 
   //if( needs_update || gui->has_editing_mode() )
   if( needs_update )
@@ -487,7 +512,8 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   buttonPresetSave( _("Save preset") ),
   operationsDialog( image, this ),
   controls_dialog_visible(false), controls_dialog_x(-1), controls_dialog_y(-1),
-  add_button(PF::PhotoFlow::Instance().get_icons_dir()+"/add-layer.png", "", image, this),
+  //add_button(PF::PhotoFlow::Instance().get_icons_dir()+"/add-layer.png", "", image, this),
+  add_button(PF::PhotoFlow::Instance().get_icons_dir()+"/plus.png", "", image, this),
   group_button(PF::PhotoFlow::Instance().get_icons_dir()+"/group.png", "", image, this),
   trash_button(PF::PhotoFlow::Instance().get_icons_dir()+"/trash.png", "", image, this),
   insert_image_button(PF::PhotoFlow::Instance().get_icons_dir()+"/libre-file-image.png", "", image, this),
@@ -549,6 +575,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
 
 
   //LayerTree* view = new LayerTree( editor );
+  hbox.set_spacing(4);
   if( floating_tool_dialogs ) {
     vbox.pack_start( aux_controls_group, Gtk::PACK_SHRINK );
     hbox.pack_start( tool_buttons_box, Gtk::PACK_SHRINK );
@@ -624,6 +651,144 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   top_box.pack_start( main_box, Gtk::PACK_EXPAND_WIDGET );
   //top_box.pack_start( buttonbox, Gtk::PACK_SHRINK );
   pack_start( top_box );
+
+#define ADD_TOOL_ITEM( a, b ) { \
+    Gtk::MenuItem* tool_item = new Gtk::MenuItem( a ); \
+    submenu->append( *tool_item ); \
+    tool_item->signal_activate().connect( \
+        sigc::bind<std::string>( \
+            sigc::mem_fun(*this,&PF::LayerWidget::add_tool), b ) ); \
+}
+
+
+  Gtk::MenuItem* item = new Gtk::MenuItem(_("color"));
+  tools_menu.append( *item );
+  Gtk::Menu* submenu = new Gtk::Menu;
+  item->set_submenu( *submenu );
+  Gtk::MenuItem* tool_item = new Gtk::MenuItem( _("Color profile conversion") );
+  submenu->append( *tool_item );
+  tool_item->signal_activate().connect(
+      sigc::bind<std::string>(
+          sigc::mem_fun(*this,&PF::LayerWidget::add_tool), "convert_colorspace" ) );
+  ADD_TOOL_ITEM(_("White Balance"), "white_balance")
+  ADD_TOOL_ITEM( _("Basic Adjustments"), "basic_adjustments" );
+  ADD_TOOL_ITEM( _("Color Adjustments"), "color_correction" );
+  ADD_TOOL_ITEM( _("Desaturate"), "desaturate" );
+  ADD_TOOL_ITEM( _("Curves"), "curves" );
+  ADD_TOOL_ITEM( _("Channel selector"), "clone" );
+  ADD_TOOL_ITEM( _("Relight"), "relight" );
+  ADD_TOOL_ITEM( _("Shadows/Highlights"), "shadows_highlights_v2" );
+  ADD_TOOL_ITEM( _("Tone mapping"), "tone_mapping_v2" );
+  ADD_TOOL_ITEM( _("Dynamic range compressor"), "dynamic_range_compressor_v2" );
+  ADD_TOOL_ITEM( _("Shadows/Highlights old"), "shadows_highlights" );
+  ADD_TOOL_ITEM( _("Tone mapping old"), "tone_mapping" );
+  ADD_TOOL_ITEM( _("Channel Mixer"), "channel_mixer" );
+  //ADD_TOOL_ITEM( "Brightness/Contrast"), "brightness_contrast" );
+  ADD_TOOL_ITEM( _("Noise"), "noise_generator" );
+  ADD_TOOL_ITEM( _("Clip values"), "clip" );
+  ADD_TOOL_ITEM( _("Apply LUT"), "gmic_emulate_film_user_defined" );
+  ADD_TOOL_ITEM( _("Emulate film [color slide]"), "gmic_emulate_film_colorslide" );
+  ADD_TOOL_ITEM( _("Emulate film [B&W]"), "gmic_emulate_film_bw" );
+  ADD_TOOL_ITEM( _("Emulate film [instant consumer]"), "gmic_emulate_film_instant_consumer" );
+  ADD_TOOL_ITEM( _("Emulate film [instant pro]"), "gmic_emulate_film_instant_pro" );
+  ADD_TOOL_ITEM( _("Emulate film [negative color]"), "gmic_emulate_film_negative_color" );
+  ADD_TOOL_ITEM( _("Emulate film [negative new]"), "gmic_emulate_film_negative_new" );
+  ADD_TOOL_ITEM( _("Emulate film [negative old]"), "gmic_emulate_film_negative_old" );
+  ADD_TOOL_ITEM( _("Emulate film [print films]"), "gmic_emulate_film_print_films" );
+  ADD_TOOL_ITEM( _("Emulate film [various]"), "gmic_emulate_film_various" );
+
+  item = new Gtk::MenuItem(_("detail"));
+  tools_menu.append( *item );
+  submenu = new Gtk::Menu;
+  item->set_submenu( *submenu );
+  ADD_TOOL_ITEM( _("Sharpen"), "sharpen" );
+  ADD_TOOL_ITEM( _("Local contrast"), "local_contrast_v2" );
+  ADD_TOOL_ITEM( _("Gaussian blur"), "gaussblur" );
+  ADD_TOOL_ITEM( _("Guided filter"), "guided_filter" );
+  ADD_TOOL_ITEM( _("Bilateral blur"), "blur_bilateral" );
+  //ADD_TOOL_ITEM( _("Median filter"), "median_filter" );
+  //ADD_TOOL_ITEM( _("CLAHE"), "clahe" );
+  ADD_TOOL_ITEM( _("Gradient Norm"), "gmic_gradient_norm" );
+  ADD_TOOL_ITEM( _("Split Details"), "split_details" );
+  ADD_TOOL_ITEM( _("Defringe"), "defringe" );
+  //ADD_TOOL_ITEM( _("Multi-level decomposition"), "gmic_split_details" );
+  ADD_TOOL_ITEM( _("Noise reduction"), "denoise" );
+
+  item = new Gtk::MenuItem(_("geometry"));
+  tools_menu.append( *item );
+  submenu = new Gtk::Menu;
+  item->set_submenu( *submenu );
+  ADD_TOOL_ITEM( _("Crop image"), "crop" );
+  ADD_TOOL_ITEM( _("Scale & rotate image"), "scale" );
+  ADD_TOOL_ITEM( _("Perspective correction"), "perspective" );
+//#if !defined(__MINGW32__) && !defined(__MINGW64__)
+  ADD_TOOL_ITEM( _("Optical corrections"), "lensfun" );
+//#endif
+
+  //#if !defined(__APPLE__) && !defined(__MACH__)
+#ifndef PF_DISABLE_GMIC
+  item = new Gtk::MenuItem(_("G'MIC"));
+  tools_menu.append( *item );
+  submenu = new Gtk::Menu;
+  item->set_submenu( *submenu );
+  //ADD_TOOL_ITEM( "G'MIC Interpreter"), "gmic" );
+  ADD_TOOL_ITEM( _("Dream Smoothing"), "gmic_dream_smooth" );
+  ADD_TOOL_ITEM( _("Gradient Norm"), "gmic_gradient_norm" );
+  //too generic ADD_TOOL_ITEM( _("Convolve"), "gmic_convolve" );
+  //crashes ADD_TOOL_ITEM( _("Extract Foreground"), "gmic_extract_foreground" );
+  //slow ADD_TOOL_ITEM( _("Inpaint [patch-based]"), "gmic_inpaint" );
+  //RT algorithm is better? ADD_TOOL_ITEM( _("Despeckle"), "gmic_gcd_despeckle" );
+  //crashes? ADD_TOOL_ITEM( _("Iain's Noise Reduction"), "gmic_iain_denoise" );
+  ADD_TOOL_ITEM( _("Sharpen [richardson-lucy]"), "gmic_sharpen_rl" );
+  //ADD_TOOL_ITEM( _("Denoise"), "gmic_denoise" );
+  //ADD_TOOL_ITEM( _("Smooth [non-local means]"), "gmic_smooth_nlmeans" );
+  ADD_TOOL_ITEM( _("Smooth [anisotropic]"), "gmic_smooth_anisotropic" );
+  ADD_TOOL_ITEM( _("Smooth [bilateral]"), "gmic_blur_bilateral" );
+  //ADD_TOOL_ITEM( _("Smooth [diffusion]"), "gmic_smooth_diffusion" );
+  //ADD_TOOL_ITEM( _("Smooth [mean-curvature]"), "gmic_smooth_mean_curvature" );
+  //ADD_TOOL_ITEM( _("Smooth [median]"), "gmic_smooth_median" );
+  //ADD_TOOL_ITEM( _("Smooth [patch-based]"), "gmic_denoise" );
+  //ADD_TOOL_ITEM( _("Smooth [selective gaussian]"), "gmic_smooth_selective_gaussian" );
+  //ADD_TOOL_ITEM( _("Smooth [total variation]"), "gmic_smooth_total_variation" );
+  //ADD_TOOL_ITEM( _("Smooth [wavelets]"), "gmic_smooth_wavelets_haar" );
+  //ADD_TOOL_ITEM( _("Smooth [guided]"), "gmic_smooth_guided" );
+  //ADD_TOOL_ITEM( _("Tone mapping"), "gmic_tone_mapping" );
+  ADD_TOOL_ITEM( _("Transfer colors [advanced]"), "gmic_transfer_colors" );
+  ADD_TOOL_ITEM( _("G'MIC Interpreter"), "gmic" );
+#endif
+
+
+  item = new Gtk::MenuItem(_("mask"));
+  tools_menu.append( *item );
+  submenu = new Gtk::Menu;
+  item->set_submenu( *submenu );
+  ADD_TOOL_ITEM( _("Uniform Fill"), "uniform");
+  ADD_TOOL_ITEM( _("Invert"), "invert" );
+  ADD_TOOL_ITEM( _("Threshold"), "threshold" );
+  ADD_TOOL_ITEM( _("Curves"), "curves" );
+  ADD_TOOL_ITEM( _("Gradient"), "gradient");
+  ADD_TOOL_ITEM( _("Path"), "path_mask");
+  ADD_TOOL_ITEM( _("H/S/L Mask"), "hsl_mask" );
+  ADD_TOOL_ITEM( _("Gaussian blur"), "gaussblur" );
+  //#if !defined(__APPLE__) && !defined(__MACH__)
+#ifndef PF_DISABLE_GMIC
+  ADD_TOOL_ITEM( _("Gradient Norm"), "gmic_gradient_norm" );
+#endif
+  ADD_TOOL_ITEM( _("Draw"), "draw" );
+
+
+
+  item = new Gtk::MenuItem(_("misc"));
+  tools_menu.append( *item );
+  submenu = new Gtk::Menu;
+  item->set_submenu( *submenu );
+  ADD_TOOL_ITEM( _("Draw"), "draw" );
+  //ADD_TOOL_ITEM( _("Clone stamp"), "clone_stamp" );
+  ADD_TOOL_ITEM( _("Channel selector"), "clone" );
+  ADD_TOOL_ITEM( _("Buffer layer"), "buffer" );
+  ADD_TOOL_ITEM( _("Digital watermark"), "gmic_watermark_fourier" );
+
+  tools_menu.show_all();
 
   /*
     Gtk::CellRendererToggle* cell = 
@@ -1350,6 +1515,10 @@ void PF::LayerWidget::controls_dialog_delete( std::list<Layer*>& layers )
 
 void PF::LayerWidget::on_button_add()
 {
+  std::cout<<"LayerWidget::on_button_add: tools_menu.popup()"<<std::endl;
+  tools_menu.popup(1, 0);
+  return;
+
   Gtk::Container* toplevel = get_toplevel();
 #ifdef GTKMM_2
   if( toplevel && toplevel->is_toplevel() && dynamic_cast<Gtk::Window*>(toplevel) )
@@ -1633,6 +1802,41 @@ void PF::LayerWidget::on_button_add_image()
     std::cout << "Unexpected button clicked." << std::endl;
 #endif
     break;
+  }
+}
+
+
+
+void PF::LayerWidget::add_tool( std::string op_type )
+{
+  std::cout<<"OperationsTreeDialog::add_layer(): image="<<image<<std::endl;
+  if( !image ) return;
+
+  PF::LayerManager& layer_manager = image->get_layer_manager();
+  PF::Layer* layer = layer_manager.new_layer();
+  std::cout<<"OperationsTreeDialog::add_layer(): layer="<<layer<<std::endl;
+  if( !layer ) return;
+
+
+  PF::ProcessorBase* processor =
+      PF::PhotoFlow::Instance().new_operation( op_type.c_str(), layer );
+  if( !processor || !processor->get_par() ) return;
+  PF::OperationConfigUI* ui = dynamic_cast<PF::OperationConfigUI*>( processor->get_par()->get_config_ui() );
+  if( processor->get_par()->get_default_name().empty() )
+    layer->set_name( _("New Layer") );
+  else
+    layer->set_name( processor->get_par()->get_default_name() );
+
+  if( processor ) {
+    add_layer( layer );
+    if( ui ) {
+      PF::OperationConfigGUI* dialog = dynamic_cast<PF::OperationConfigGUI*>( ui );
+      if(dialog) {
+        if( dialog ) {
+          dialog->open();
+        }
+      }
+    }
   }
 }
 

@@ -179,6 +179,12 @@ PF::PipelineNode* PF::Pipeline::set_node( Layer* layer, Layer* input_layer )
 }
 
 
+PF::PipelineNode* PF::Pipeline::get_node( PF::Layer* l )
+{
+  return( l ? get_node(l->get_id()) : NULL );
+}
+
+
 void PF::Pipeline::set_image( VipsImage* img, unsigned int id, unsigned int level_real )
 {
   if( id >= nodes.size() ) 

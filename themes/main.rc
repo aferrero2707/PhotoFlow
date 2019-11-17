@@ -49,8 +49,10 @@ style "default" {
   GtkMenuBar::shadow-type = GTK_SHADOW_NONE
   GtkToolbar::shadow-type = GTK_SHADOW_NONE
   GtkMenuBar::internal-padding = 0 #( every window is misaligned for the sake of menus ):
-  GtkMenu::horizontal-padding = 0
+  GtkMenu::horizontal_padding = 0
   GtkMenu::vertical-padding = 0
+  GtkMenu::horizontal-offset = 0 #space menu <-> submenu
+  #GtkMenuItem::ythickness = 10
 
   GtkCheckButton::indicator_spacing = 3
   GtkOptionMenu::indicator_spacing = { 8, 2, 0, 0 }
@@ -709,7 +711,7 @@ style "menu_framed_box" {
 
 style "menu_item" {
   xthickness = 4
-  ythickness = 2
+  ythickness = 4
 
   # HACK: Gtk doesn't actually read this value
   # while rendering the menu items, but Libreoffice
