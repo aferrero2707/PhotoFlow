@@ -61,6 +61,15 @@ void rtengine::RawImageSource::ca_correct(VipsRegion* ir, VipsRegion* oreg, bool
   //std::cout<<"r_img: "<<r_img.width<<","<<r_img.height<<"+"<<r_img.left<<"+"<<r_img.top<<std::endl;
   //VipsRect r_img = {0, 0, ir->im->Xsize, ir->im->Ysize};
 
+  /*for(int i = 0; i < 3; i++) {
+    for(int j = 0; j < 2; j++) {
+      for(int k = 0; k < 16; k++) {
+        printf("%f ", fitparams[i][j][k]);
+      }
+      printf("\n");
+    }
+  }*/
+
   // Output region aligned to Bayer pattern and with pixels border excluded
   VipsRect r_raw = {raw_left, raw_top, raw_right-raw_left+1, raw_bottom-raw_top+1};
   if( (r_raw.width%2) ) r_raw.width += 1;
@@ -77,11 +86,16 @@ void rtengine::RawImageSource::ca_correct(VipsRegion* ir, VipsRegion* oreg, bool
   // Initialization of pixel matrices
   tile_top = ir->valid.top;
   tile_left = ir->valid.left;
-  rawData.init( ir->valid.width, ir->valid.height, ir->valid.top, ir->valid.left );
+  rawData.init( ir->valid.width, ir->valid.height, ir->valid.top, ir->valid.left, true );
   for( y = 0; y < ir->valid.height; y++ ) {
     PF::raw_pixel_t* ptr = ir ? (PF::raw_pixel_t*)VIPS_REGION_ADDR( ir, ir->valid.left, y+ir->valid.top ) : NULL;
-    rawData.set_row( y+ir->valid.top, ptr );
+    //rawData.set_row( y+ir->valid.top, ptr );
+    if(ptr) {
+      PF::raw_pixel_t* optr = rawData[y+ir->valid.top].get_pixels() + ir->valid.left;
+      memcpy(optr, ptr, ir->valid.width*sizeof(PF::raw_pixel_t));
+    }
   }
+  //return;
   //red.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
   //green.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
   //blue.Init( r_raw.width, r_raw.height, r_raw.top, r_raw.left );
