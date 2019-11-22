@@ -35,10 +35,10 @@
 
 PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Convert to profile" ),
-  outProfileModeSelector( this, "profile_mode", _("type: "), 1 ),
+  outProfileModeSelector( this, "profile_mode", _("type: "), 1, 200 ),
   outProfileTypeSelector( this, "profile_type", _("gamut: "), 1 ),
-  outTRCTypeSelector( this, "trc_type", _("encoding: "), 1 ),
-  intentSelector( this, "rendering_intent", _("intent: "), 1 ),
+  outTRCTypeSelector( this, "trc_type", _("encoding: "), 1, 200 ),
+  intentSelector( this, "rendering_intent", _("intent: "), 1, 200 ),
   clip_negative_checkbox( this, "clip_negative", _("clip negative values"), true ),
   clip_overflow_checkbox( this, "clip_overflow", _("clip overflow values"), true ),
   gamut_mapping_frame(_("gamut mapping")),
@@ -51,23 +51,23 @@ PF::ConvertColorspaceConfigGUI::ConvertColorspaceConfigGUI( PF::Layer* layer ):
   outProfOpenButton(Gtk::Stock::OPEN)
 {
 
-  outProfileModeSelectorBox.pack_start( outProfileModeSelector, Gtk::PACK_SHRINK );
+  outProfileModeSelectorBox.pack_end( outProfileModeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outProfileModeSelectorBox, Gtk::PACK_SHRINK );
 
   //outProfileTypeSelectorBox.pack_start( outProfileTypeSelector, Gtk::PACK_SHRINK );
   //outputControlsBox.pack_start( outProfileTypeSelectorBox, Gtk::PACK_SHRINK );
 
-  outTRCTypeSelectorBox.pack_start( outTRCTypeSelector, Gtk::PACK_SHRINK );
+  outTRCTypeSelectorBox.pack_end( outTRCTypeSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( outTRCTypeSelectorBox, Gtk::PACK_SHRINK );
 
   outProfLabel.set_text( _("working profile name:") );
   outProfVBox.pack_start( outProfLabel, Gtk::PACK_SHRINK, 2 );
   outProfVBox.pack_start( outProfFileEntry, Gtk::PACK_SHRINK, 2 );
-  outProfHBox.pack_start( outProfVBox );
-  outProfHBox.pack_start( outProfOpenButton, Gtk::PACK_SHRINK );
+  outProfHBox.pack_end( outProfOpenButton, Gtk::PACK_SHRINK );
+  outProfHBox.pack_end( outProfVBox );
   outputControlsBox.pack_start( outProfHBox, Gtk::PACK_SHRINK, 2 );
 
-  intentSelectorBox.pack_start( intentSelector, Gtk::PACK_SHRINK );
+  intentSelectorBox.pack_end( intentSelector, Gtk::PACK_SHRINK );
   outputControlsBox.pack_start( intentSelectorBox, Gtk::PACK_SHRINK, 2 );
 
 
