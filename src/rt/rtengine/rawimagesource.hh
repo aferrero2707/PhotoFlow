@@ -120,11 +120,11 @@ namespace rtengine {
       }
 
       int color = rawData[rr].color(cc);
-			if( color<0 || color>3)
-				return 0;
-			if( color == 3 ) color = 1;
+      if( color<0 || color>3)
+        return 0;
+      if( color == 3 ) color = 1;
 
-			return color;
+      return color;
 		}
 
 		// Interface layer between Photoflow and RT code

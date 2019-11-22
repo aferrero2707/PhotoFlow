@@ -43,116 +43,117 @@ namespace rtengine {
 SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int winh,
     int tilex, int tiley, int tilew, int tileh, bool autoCA, float cared, float cablue)
 {
-// multithreaded and vectorized by Ingo Weyrich
-    constexpr int ts = 192;
-    constexpr int tsh = ts / 2;
-    //shifts to location of vertical and diagonal neighbors
-    constexpr int v1 = ts, v2 = 2 * ts, v3 = 3 * ts, v4 = 4 * ts; //, p1=-ts+1, p2=-2*ts+2, p3=-3*ts+3, m1=ts+1, m2=2*ts+2, m3=3*ts+3;
+  // multithreaded and vectorized by Ingo Weyrich
+  constexpr int ts = 192;
+  constexpr int tsh = ts / 2;
+  //shifts to location of vertical and diagonal neighbors
+  constexpr int v1 = ts, v2 = 2 * ts, v3 = 3 * ts, v4 = 4 * ts; //, p1=-ts+1, p2=-2*ts+2, p3=-3*ts+3, m1=ts+1, m2=2*ts+2, m3=3*ts+3;
 
-    // Test for RGB cfa
-    for(int i = 0; i < 2; i++)
-        for(int j = 0; j < 2; j++)
-            if(FC(i, j) == 3) {
-                printf("CA correction supports only RGB Colour filter arrays\n");
-                return;
-            }
+  // Test for RGB cfa
+  for(int i = 0; i < 2; i++)
+    for(int j = 0; j < 2; j++)
+      if(FC(i, j) == 3) {
+        printf("CA correction supports only RGB Colour filter arrays\n");
+        return;
+      }
 
-    volatile double progress = 0.0;
+  volatile double progress = 0.0;
 
-    if(plistener) {
-        plistener->setProgress (progress);
-    }
+  if(plistener) {
+    plistener->setProgress (progress);
+  }
 
   //bool autoCA = true;
   //float cared = 0, cablue = 0;
-    // local variables
-    //const int width = W + (W & 1), height = H;
-    const int width = winw + (winw & 1), height = winh;
-    //temporary array to store simple interpolation of G
-    //float *Gtmp = (float (*)) malloc ((height * width) / 2 * sizeof * Gtmp);
-    int top, left;
+  // local variables
+  //const int width = W + (W & 1), height = H;
+  const int width = winw + (winw & 1), height = winh;
+  //temporary array to store simple interpolation of G
+  //float *Gtmp = (float (*)) malloc ((height * width) / 2 * sizeof * Gtmp);
+  int top, left;
 
-    // temporary array to avoid race conflicts, only every second pixel needs to be saved here
-    //float *RawDataTmp = (float*) malloc( (height * width) * sizeof(float) / 2);
-    float *RawDataTmp = (float*) malloc( tileh * tilew * sizeof(float) / 2);
+  // temporary array to avoid race conflicts, only every second pixel needs to be saved here
+  //float *RawDataTmp = (float*) malloc( (height * width) * sizeof(float) / 2);
+  float *RawDataTmp = (float*) malloc( tileh * tilew * sizeof(float) / 2);
 
-    float blockave[2][2] = {{0, 0}, {0, 0}}, blocksqave[2][2] = {{0, 0}, {0, 0}}, blockdenom[2][2] = {{0, 0}, {0, 0}}, blockvar[2][2];
+  float blockave[2][2] = {{0, 0}, {0, 0}}, blocksqave[2][2] = {{0, 0}, {0, 0}}, blockdenom[2][2] = {{0, 0}, {0, 0}}, blockvar[2][2];
 
-    // Because we can't break parallel processing, we need a switch do handle the errors
-    bool processpasstwo = true;
+  // Because we can't break parallel processing, we need a switch do handle the errors
+  bool processpasstwo = true;
 
-    constexpr int border = 8;
-    constexpr int border2 = 16;
+  constexpr int border = 8;
+  constexpr int border2 = 16;
 
-    const int vz1 = (height + border2) % (ts - border2) == 0 ? 1 : 0;
-    const int hz1 = (width + border2) % (ts - border2) == 0 ? 1 : 0;
-    const int vblsz = ceil((float)(height + border2) / (ts - border2) + 2 + vz1);
-    const int hblsz = ceil((float)(width + border2) / (ts - border2) + 2 + hz1);
+  const int vz1 = (height + border2) % (ts - border2) == 0 ? 1 : 0;
+  const int hz1 = (width + border2) % (ts - border2) == 0 ? 1 : 0;
+  const int vblsz = ceil((float)(height + border2) / (ts - border2) + 2 + vz1);
+  const int hblsz = ceil((float)(width + border2) / (ts - border2) + 2 + hz1);
 
-    //block CA shift values and weight assigned to block
-    float* const blockwt = static_cast<float*>(calloc(vblsz * hblsz * (2 * 2 + 1), sizeof(float)));
-    float (*blockshifts)[2][2] = (float (*)[2][2])(blockwt + vblsz * hblsz);
+  //block CA shift values and weight assigned to block
+  float* const blockwt = static_cast<float*>(calloc(vblsz * hblsz * (2 * 2 + 1), sizeof(float)));
+  float (*blockshifts)[2][2] = (float (*)[2][2])(blockwt + vblsz * hblsz);
 
-    //double fitparams[2][2][16];
+  //double fitparams[2][2][16];
 
-    //order of 2d polynomial fit (polyord), and numpar=polyord^2
-    int polyord = 4, numpar = 16;
+  //order of 2d polynomial fit (polyord), and numpar=polyord^2
+  int polyord = 4, numpar = 16;
 
-    constexpr float eps = 1e-5f, eps2 = 1e-10f; //tolerance to avoid dividing by zero
+  constexpr float eps = 1e-5f, eps2 = 1e-10f; //tolerance to avoid dividing by zero
 
-    //#pragma omp parallel
-    {
-        int progresscounter = 0;
+  //#pragma omp parallel
+  {
+    int progresscounter = 0;
 
-        //direction of the CA shift in a tile
-        int GRBdir[2][3];
+    //direction of the CA shift in a tile
+    int GRBdir[2][3];
 
-        int shifthfloor[3], shiftvfloor[3], shifthceil[3], shiftvceil[3];
+    int shifthfloor[3], shiftvfloor[3], shifthceil[3], shiftvceil[3];
 
-        //local quadratic fit to shift data within a tile
-        float   coeff[2][3][2];
-        //measured CA shift parameters for a tile
-        float   CAshift[2][2];
-        //polynomial fit coefficients
-        //residual CA shift amount within a plaquette
-        float   shifthfrac[3], shiftvfrac[3];
-        //per thread data for evaluation of block CA shift variance
-        float   blockavethr[2][2] = {{0, 0}, {0, 0}}, blocksqavethr[2][2] = {{0, 0}, {0, 0}}, blockdenomthr[2][2] = {{0, 0}, {0, 0}};
+    //local quadratic fit to shift data within a tile
+    float   coeff[2][3][2];
+    //measured CA shift parameters for a tile
+    float   CAshift[2][2];
+    //polynomial fit coefficients
+    //residual CA shift amount within a plaquette
+    float   shifthfrac[3], shiftvfrac[3];
+    //per thread data for evaluation of block CA shift variance
+    float   blockavethr[2][2] = {{0, 0}, {0, 0}}, blocksqavethr[2][2] = {{0, 0}, {0, 0}}, blockdenomthr[2][2] = {{0, 0}, {0, 0}};
 
-        // assign working space
-        constexpr int buffersize = sizeof(float) * ts * ts + 8 * sizeof(float) * ts * tsh + 8 * 64 + 63;
-        char *buffer = (char *) malloc(buffersize);
-        char *data = (char*)( ( uintptr_t(buffer) + uintptr_t(63)) / 64 * 64);
+    // assign working space
+    constexpr int buffersize = sizeof(float) * ts * ts + 8 * sizeof(float) * ts * tsh + 8 * 64 + 63;
+    char *buffer = (char *) malloc(buffersize);
+    char *data = (char*)( ( uintptr_t(buffer) + uintptr_t(63)) / 64 * 64);
+    //printf("data size: %d\n", buffersize/sizeof(float));
 
-        // shift the beginning of all arrays but the first by 64 bytes to avoid cache miss conflicts on CPUs which have <=4-way associative L1-Cache
+    // shift the beginning of all arrays but the first by 64 bytes to avoid cache miss conflicts on CPUs which have <=4-way associative L1-Cache
 
-        //rgb data in a tile
-        float* rgb[3];
-        rgb[0]         = (float (*)) data;
-        rgb[1]         = (float (*)) (data + sizeof(float) * ts * tsh + 1 * 64);
-        rgb[2]         = (float (*)) (data + sizeof(float) * (ts * ts + ts * tsh) + 2 * 64);
+    //rgb data in a tile
+    float* rgb[3];
+    rgb[0]         = (float (*)) data;
+    rgb[1]         = (float (*)) (data + sizeof(float) * ts * tsh + 1 * 64);
+    rgb[2]         = (float (*)) (data + sizeof(float) * (ts * ts + ts * tsh) + 2 * 64);
 
-        //high pass filter for R/B in vertical direction
-        float *rbhpfh  = (float (*)) (data + 2 * sizeof(float) * ts * ts + 3 * 64);
-        //high pass filter for R/B in horizontal direction
-        float *rbhpfv  = (float (*)) (data + 2 * sizeof(float) * ts * ts + sizeof(float) * ts * tsh + 4 * 64);
-        //low pass filter for R/B in horizontal direction
-        float *rblpfh  = (float (*)) (data + 3 * sizeof(float) * ts * ts + 5 * 64);
-        //low pass filter for R/B in vertical direction
-        float *rblpfv  = (float (*)) (data + 3 * sizeof(float) * ts * ts + sizeof(float) * ts * tsh + 6 * 64);
-        //low pass filter for colour differences in horizontal direction
-        float *grblpfh = (float (*)) (data + 4 * sizeof(float) * ts * ts + 7 * 64);
-        //low pass filter for colour differences in vertical direction
-        float *grblpfv = (float (*)) (data + 4 * sizeof(float) * ts * ts + sizeof(float) * ts * tsh + 8 * 64);
-        float *grbdiff = rbhpfh; // there is no overlap in buffer usage => share
-        //green interpolated to optical sample points for R/B
-        float *gshift  = rbhpfv; // there is no overlap in buffer usage => share
+    //high pass filter for R/B in vertical direction
+    float *rbhpfh  = (float (*)) (data + 2 * sizeof(float) * ts * ts + 3 * 64);
+    //high pass filter for R/B in horizontal direction
+    float *rbhpfv  = (float (*)) (data + 2 * sizeof(float) * ts * ts + sizeof(float) * ts * tsh + 4 * 64);
+    //low pass filter for R/B in horizontal direction
+    float *rblpfh  = (float (*)) (data + 3 * sizeof(float) * ts * ts + 5 * 64);
+    //low pass filter for R/B in vertical direction
+    float *rblpfv  = (float (*)) (data + 3 * sizeof(float) * ts * ts + sizeof(float) * ts * tsh + 6 * 64);
+    //low pass filter for colour differences in horizontal direction
+    float *grblpfh = (float (*)) (data + 4 * sizeof(float) * ts * ts + 7 * 64);
+    //low pass filter for colour differences in vertical direction
+    float *grblpfv = (float (*)) (data + 4 * sizeof(float) * ts * ts + sizeof(float) * ts * tsh + 8 * 64);
+    float *grbdiff = rbhpfh; // there is no overlap in buffer usage => share
+    //green interpolated to optical sample points for R/B
+    float *gshift  = rbhpfv; // there is no overlap in buffer usage => share
 
 
     // Main algorithm: Tile loop
-//#pragma omp for schedule(dynamic) collapse(2) nowait
+    //#pragma omp for schedule(dynamic) collapse(2) nowait
 
-        int nprocessedtiles = 0;
+    int nprocessedtiles = 0;
 
     //for (top = -border; top < height; top += TS - border2)
     //  for (left = -border; left < width; left += TS - border2) {
@@ -223,7 +224,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
             if ((c & 1) == 0) {
               rgb[1][indx1] = Gtmp[indx >> 1];
             }
-            */
+             */
           }
         }
         /*
@@ -315,7 +316,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
         }
 
         //end of border fill
-        */
+         */
 
 #ifdef __SSE2__
         vfloat onev = F2V(1.f);
@@ -370,7 +371,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
               Gtmp[(row * width + col) >> 1] = rgb[1][indx];
             }
           }
-          */
+           */
         }
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -445,7 +446,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
 
           GRBdir[0][c] = lblockshifts[c>>1][0] > 0 ? 2 : -2;
           GRBdir[1][c] = lblockshifts[c>>1][1] > 0 ? 2 : -2;
-
+          //printf("\n==> c=%d GRBdir0=%d GRBdir1=%d\n", c, GRBdir[0][c], GRBdir[1][c]);
         }
 
 
@@ -504,6 +505,9 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
           int c = FC(rr, cc);
           int GRBdir0 = GRBdir[0][c];
           int GRBdir1 = GRBdir[1][c];
+          //printf("tilex=%d tiley=%d tilew=%d tileh=%d\n", tilex, tiley, tilew, tileh);
+          //printf("rr=%d FC(rr, 2)=%d (FC(rr, 2) & 1)=%d cc=%d c=%d GRBdir0=%d GRBdir1=%d\n",
+          //    rr, (FC(rr, 2)), (FC(rr, 2) & 1), cc, c, GRBdir0, GRBdir1);
 #ifdef __SSE2__
           vfloat shifthfracc = F2V(shifthfrac[c]);
           vfloat shiftvfracc = F2V(shiftvfrac[c]);
@@ -542,7 +546,10 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
             float grbdiffold = rgb[1][indx] - rgb[c][indx >> 1];
 
             //interpolate colour difference from optical R/B locations to grid locations
+            //printf("indx=%d GGRBdir1=%d idx=%d\n", indx, GRBdir1, ((indx - GRBdir1) >> 1));
             float grbdiffinthfloor = intp(shifthfrac[c], grbdiff[(indx - GRBdir1) >> 1], grbdiff[indx >> 1]);
+            //printf("rr=%d GRBdir0=%d cc=%d GRBdir1=%d idx=%d\n", rr, GRBdir0, cc, GRBdir1,
+            //    (((rr - GRBdir0) * ts + cc - GRBdir1) >> 1));
             float grbdiffinthceil = intp(shifthfrac[c], grbdiff[((rr - GRBdir0) * ts + cc - GRBdir1) >> 1], grbdiff[((rr - GRBdir0) * ts + cc) >> 1]);
             //grbdiffint is bilinear interpolation of G-R/G-B at grid point
             float grbdiffint = intp(shiftvfrac[c], grbdiffinthceil, grbdiffinthfloor);
@@ -610,7 +617,7 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
               std::cout<<"(1) row="<<row<<" col="<<cc+left<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
             //image[indx][c] = CLIP((int)(65535.0*rgb[(rr)*TS+cc][c] + 0.5));//for dcraw implementation
           }
-          */
+           */
         }
         /*
       if(plistener) {
@@ -631,17 +638,17 @@ SSEFUNCTION void RawImageSource::CA_correct_RT(int winx, int winy, int winw, int
          */
       }
 
-//#pragma omp barrier
+    //#pragma omp barrier
     // copy temporary image matrix back to image matrix
-//#pragma omp for
+    //#pragma omp for
 
     //for(row = 0; row < height; row++)
     //  for(col = 0 + (FC(row, 0) & 1), indx = (row * width + col) >> 1; col < width; col += 2, indx++) {
     for(int row = 0; row < tileh; row++)
       //for(col = 0 + (FC(row, 0) & 1), indx = ((row+tiley) * width + (col+tilex)) >> 1; col < tilew; col += 2, indx++) {
       for(int col = 0 + (FC(row, 0) & 1), indx = (row * tilew + col) >> 1; col < tilew; col += 2, indx++) {
-    //for(row = tiley; row < tiley+tileh; row++)
-    //  for(col = tilex + (FC(row, 0) & 1), indx = (row * width + col) >> 1; col < tilex+tilew; col += 2, indx++) {
+        //for(row = tiley; row < tiley+tileh; row++)
+        //  for(col = tilex + (FC(row, 0) & 1), indx = (row * width + col) >> 1; col < tilex+tilew; col += 2, indx++) {
         if(false && tiley==8&&tilex==8 && row<16 && col<16)
           std::cout<<"(2) row="<<row<<" col="<<col<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
         rawData[row+tiley][col+tilex] = RawDataTmp[indx];

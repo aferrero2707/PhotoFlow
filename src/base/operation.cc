@@ -56,20 +56,19 @@ void PF::OperationConfigUI::open()
 
 
 
-PF::OpParBase::OpParBase():
-      output_caching_enabled(false),
-      render_mode(PF_RENDER_PREVIEW),
-      map_flag( false ),
-      editing_flag( false ),
-      modified_flag(false),
-      intensity("intensity",this,1),
-      grey_target_channel("grey_target_channel",this,-1,"Grey","Grey"),
-      rgb_target_channel("rgb_target_channel",this,-1,"RGB","RGB"),
-      lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
-      cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
-      mask_enabled("mask_enabled",this,true),
-      file_format_version( PF_FILE_VERSION ),
-      enable_padding( "enable_padding", this, false ), test_padding(64)
+PF::OpParBase::OpParBase(): output_caching_enabled(false),
+    render_mode(PF_RENDER_PREVIEW),
+    map_flag( false ),
+    editing_flag( false ),
+    modified_flag(false),
+    intensity("intensity",this,1),
+    grey_target_channel("grey_target_channel",this,-1,"Grey","Grey"),
+    rgb_target_channel("rgb_target_channel",this,-1,"RGB","RGB"),
+    lab_target_channel("lab_target_channel",this,-1,"Lab","Lab"),
+    cmyk_target_channel("cmyk_target_channel",this,-1,"CMYK","CMYK"),
+    mask_enabled("mask_enabled",this,true),
+    file_format_version( PF_FILE_VERSION ),
+    enable_padding( "enable_padding", this, false ), test_padding(64)
 {
   //blend_mode.set_internal(true);
   intensity.set_internal(true);
