@@ -249,7 +249,7 @@ void ImpulseNR_RTAlgo(VipsRegion** ireg, int n, int in_first,
         pin20 = (T*)VIPS_REGION_ADDR( ireg[0], ir.left+x-2, ir.top + y1 );
         pin21 = (T*)VIPS_REGION_ADDR( ireg[1], ir.left+x-2, ir.top + y1 );
         pin22 = (T*)VIPS_REGION_ADDR( ireg[2], ir.left+x-2, ir.top + y1 );
-        for (x1 = 0, pos1 = 0; x1 <= 5; x1++, pos1 += ireg[0]->im->Bands) {
+        for (x1 = 0, pos1 = 0; x1 < 5; x1++, pos1 += ireg[0]->im->Bands) {
           if( y1 == y && x1 == 2)
             continue;
           if (impish[y1][x+x1-2])
