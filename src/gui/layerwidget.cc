@@ -393,8 +393,8 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
 #endif
 */
     notebook.append_page(*controls, _("controls"));
-    notebook.append_page(gui->get_blend_box(), _("in/out"));
-    //notebook.append_page(gui->get_input_box(), _("input"));
+    notebook.append_page(gui->get_input_box(), _("input"));
+    notebook.append_page(gui->get_blend_box(), _("blend"));
     //controls->show_all();
   }
 

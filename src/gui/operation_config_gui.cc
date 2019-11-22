@@ -304,10 +304,11 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //input_source_expander.add( layer_selector_box );
   //input_source_expander.set_expanded( false );
   //controls_box.pack_end( input_source_expander, Gtk::PACK_SHRINK, 5 );
-  //input_controls_box.pack_start( layer_selector_box, Gtk::PACK_SHRINK, 5 );
-  //input_controls_box.show_all();
-  blend_controls_box.pack_start( hline, Gtk::PACK_SHRINK, 10 );
-  blend_controls_box.pack_start( layer_list, Gtk::PACK_SHRINK, 10 );
+  input_controls_box.pack_start( layer_list, Gtk::PACK_SHRINK, 5 );
+  input_controls_box.show_all();
+
+  //blend_controls_box.pack_start( hline, Gtk::PACK_SHRINK, 10 );
+  //blend_controls_box.pack_start( layer_list, Gtk::PACK_SHRINK, 10 );
 
   blend_controls_box.show_all();
 
