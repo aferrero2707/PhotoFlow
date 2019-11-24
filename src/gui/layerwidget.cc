@@ -697,6 +697,17 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   ADD_TOOL_ITEM( _("Emulate film [print films]"), "gmic_emulate_film_print_films" );
   ADD_TOOL_ITEM( _("Emulate film [various]"), "gmic_emulate_film_various" );
 
+
+#ifdef HAVE_OCIO
+  item = new Gtk::MenuItem(_("OCIO"));
+  tools_menu.append( *item );
+  submenu = new Gtk::Menu;
+  item->set_submenu( *submenu );
+  ADD_TOOL_ITEM( _("OCIO Transform"), "ocio_transform" );
+  ADD_TOOL_ITEM( _("OCIO - Filmic"), "ocio_filmic" );
+  ADD_TOOL_ITEM( _("OCIO - ACES"), "ocio_aces" );
+#endif
+
   item = new Gtk::MenuItem(_("detail"));
   tools_menu.append( *item );
   submenu = new Gtk::Menu;
