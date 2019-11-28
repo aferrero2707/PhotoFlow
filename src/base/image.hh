@@ -127,8 +127,9 @@ class Image: public sigc::trackable
 
   bool force_synced_update;
 
-  GMutex* export_mutex;
-  GCond* export_done;
+  //GMutex* export_mutex;
+  //GCond* export_done;
+  Condition export_done;
   bool export_ok;
 
   GMutex* sample_mutex;
@@ -232,7 +233,7 @@ public:
   void rebuild_done_reset() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.lock(); rebuild_cond.reset(); }
   void rebuild_done_signal() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.signal(); }
   void rebuild_done_wait(bool unlock=true) { /*g_cond_signal( rebuild_done );*/ rebuild_cond.wait(unlock); }
-  void export_done_signal() { g_cond_signal( export_done ); }
+  void export_done_signal() { export_done.signal(); }
   void sample_done_signal() { /*g_cond_signal( sample_done );*/ sample_cond.signal(); }
   void destroy_done_signal() { /*g_cond_signal( sample_done );*/ destroy_cond.signal(); }
   void remove_layer_done_signal() { g_cond_signal( remove_layer_done ); }

@@ -87,7 +87,7 @@ public:
     //signaled = false;
     while( !signaled )
       g_cond_wait( condition, mutex );
-    //signaled = false;
+    signaled = false;
     if(unlk) g_mutex_unlock( mutex );
   }
 };

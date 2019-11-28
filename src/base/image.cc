@@ -110,9 +110,9 @@ PF::Image::Image():
   //g_mutex_lock( rebuild_mutex );
   rebuild_done = vips_g_cond_new();
 
-  export_mutex = vips_g_mutex_new();
+  //export_mutex = vips_g_mutex_new();
   //g_mutex_lock( export_mutex );
-  export_done = vips_g_cond_new();
+  //export_done = vips_g_cond_new();
 
   sample_mutex = vips_g_mutex_new();
   //g_mutex_lock( sample_mutex );
@@ -150,9 +150,9 @@ PF::Image::~Image()
   std::cout<<"[Image::~Image()] freeing rebuild_mutex"<<std::endl;
   vips_g_mutex_free(rebuild_mutex);
   vips_g_cond_free(rebuild_done);
-  std::cout<<"[Image::~Image()] freeing export_mutex"<<std::endl;
-  vips_g_mutex_free(export_mutex);
-  vips_g_cond_free(export_done);
+  //std::cout<<"[Image::~Image()] freeing export_mutex"<<std::endl;
+  //vips_g_mutex_free(export_mutex);
+  //vips_g_cond_free(export_done);
   std::cout<<"[Image::~Image()] freeing sample_mutex"<<std::endl;
   vips_g_mutex_free(sample_mutex);
   vips_g_cond_free(sample_done);
@@ -187,7 +187,8 @@ void PF::Image::export_lock()
   //std::cout<<"+++++++++++++++++++++"<<std::endl;
   //std::cout<<"  LOCKING REBUILD MUTEX"<<std::endl;
   //std::cout<<"+++++++++++++++++++++"<<std::endl;
-  g_mutex_lock( export_mutex);
+  //g_mutex_lock( export_mutex);
+  export_done.lock();
 }
 
 void PF::Image::export_unlock()
@@ -195,7 +196,8 @@ void PF::Image::export_unlock()
   //std::cout<<"---------------------"<<std::endl;
   //std::cout<<"  UNLOCKING REBUILD MUTEX"<<std::endl;
   //std::cout<<"---------------------"<<std::endl;
-  g_mutex_unlock( export_mutex);
+  //g_mutex_unlock( export_mutex);
+  export_done.unlock();
   //std::cout<<"---------------------"<<std::endl;
   //std::cout<<"  REBUILD MUTEX UNLOCKED"<<std::endl;
   //std::cout<<"---------------------"<<std::endl;
@@ -1122,6 +1124,7 @@ bool PF::Image::export_merged( std::string filename, image_export_opt_t* export_
     std::cout<<"PF::Image::export_merged(): locking mutex..."<<std::endl;
 #endif
     //g_mutex_lock( export_mutex );
+    export_done.lock();
 #ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): submitting export request..."<<std::endl;
 #endif
@@ -1131,7 +1134,8 @@ bool PF::Image::export_merged( std::string filename, image_export_opt_t* export_
 #endif
 
     std::cout<<"PF::Image::export_merged(): waiting for export_done...."<<std::endl;
-    g_cond_wait( export_done, export_mutex );
+    //g_cond_wait( export_done, export_mutex );
+    export_done.wait(true);
     std::cout<<"PF::Image::export_merged(): ... export_done received."<<std::endl;
 
     //g_mutex_unlock( export_mutex );
