@@ -1068,17 +1068,17 @@ void PF::ImageEditor::on_image_updated_async()
 {
 #ifndef NDEBUG
   std::cout<<"ImageEditor::on_image_updated_async() called"<<std::endl;
-#endif
   std::cout<<"[ImageEditor::on_image_updated_async] emitting signal_image_updated"<<std::endl;
+#endif
   signal_image_updated.emit();
 }
 
 
 void PF::ImageEditor::on_image_updated()
 {
-//#ifndef NDEBUG
+#ifndef NDEBUG
   std::cout<<"ImageEditor::on_image_updated() called."<<std::endl;
-//#endif
+#endif
   layersWidget.update_controls();
 }
 

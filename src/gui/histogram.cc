@@ -407,7 +407,7 @@ void PF::Histogram::update_histogram()
     }
   }
 
-  std::cout<<"[Histogram::update_histogram] min="<<hist_min<<" max="<<hist_max<<std::endl;
+  //std::cout<<"[Histogram::update_histogram] min="<<hist_min<<" max="<<hist_max<<std::endl;
 
   ulong_p h1 = hist;
   ulong_p h2 = &(hist[65536]);
@@ -437,7 +437,7 @@ void PF::Histogram::update_histogram()
 
   hist_area.hist_min = hist_min;
   hist_area.hist_max = hist_max;
-  std::cout<<"[Histogram::update_histogram] emitting signal_queue_draw"<<std::endl;
+  //std::cout<<"[Histogram::update_histogram] emitting signal_queue_draw"<<std::endl;
   signal_queue_draw.emit();
 }
 
@@ -446,9 +446,9 @@ void PF::Histogram::update( VipsRect* area )
 {
   //PF::Pipeline* pipeline = pf_image->get_pipeline(0);
 
-//#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
   std::cout<<"PF::Histogram::update(): called"<<std::endl;
-//#endif
+#endif
   if( !get_pipeline() ) {
     std::cout<<"Histogram::update(): error: NULL pipeline"<<std::endl;
     return;
@@ -482,12 +482,12 @@ void PF::Histogram::update( VipsRect* area )
   }
   if( do_merged ) {
     image = get_pipeline()->get_output();
-//#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
     std::cout<<"Histogram::update(): image="<<image<<std::endl;
     std::cout<<"                     image->Bands="<<image->Bands<<std::endl;
     std::cout<<"                     image->BandFmt="<<image->BandFmt<<std::endl;
     std::cout<<"                     image size: "<<image->Xsize<<"x"<<image->Ysize<<std::endl;
-//#endif
+#endif
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "Histogram::update(): merged image ref" );
     } else {
@@ -499,12 +499,12 @@ void PF::Histogram::update( VipsRect* area )
     if( !(node->blended) ) return;
 
     image = node->blended;
-//#ifdef DEBUG_DISPLAY
+#ifdef DEBUG_DISPLAY
     std::cout<<"Histogram::update(): node->image("<<node->image<<")->Xsize="<<node->image->Xsize
         <<"    node->image->Ysize="<<node->image->Ysize<<std::endl;
     std::cout<<"Histogram::update(): node->blended("<<node->blended<<")->Xsize="<<node->blended->Xsize
         <<"    node->blended->Ysize="<<image->Ysize<<std::endl;
-//#endif
+#endif
     if( image && (image->Bands!=2) ) {
       PF_REF( image, "Histogram::update(): active image ref" );
     } else {
@@ -512,6 +512,8 @@ void PF::Histogram::update( VipsRect* area )
     }
   }
   if( !image ) return;
+
+  //return;
 
   //std::cout<<"before vips_sink()"<<std::endl;
   //vips_sink( image, histogram_start, histogram_scan, histogram_stop, this, NULL );
