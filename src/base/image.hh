@@ -121,25 +121,25 @@ class Image: public sigc::trackable
 
   bool disable_update;
 
-  GMutex* rebuild_mutex;
-  GCond* rebuild_done;
+  GMutex* image_mutex;
+  //GCond* rebuild_done;
   PF::Condition rebuild_cond;
 
   bool force_synced_update;
 
   //GMutex* export_mutex;
   //GCond* export_done;
-  Condition export_done;
+  Condition export_cond;
   bool export_ok;
 
-  GMutex* sample_mutex;
-  GCond* sample_done;
+  //GMutex* sample_mutex;
+  //GCond* sample_done;
   PF::Condition sample_cond;
 
   PF::Condition destroy_cond;
 
-  GMutex* remove_layer_mutex;
-  GCond* remove_layer_done;
+  //GMutex* remove_layer_mutex;
+  //GCond* remove_layer_done;
   PF::Condition remove_layer_cond;
 
   //ProcessorBase* convert2srgb;
@@ -220,26 +220,26 @@ public:
 
   void lock();
   void unlock();
-  void export_lock();
-  void export_unlock();
-  void sample_lock();
-  void sample_unlock();
-  void destroy_lock();
-  void destroy_unlock();
-  void remove_layer_lock() { g_mutex_lock( remove_layer_mutex); }
-  void remove_layer_unlock() { g_mutex_unlock( remove_layer_mutex); }
-  void rebuild_lock() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.lock(); }
-  void rebuild_unlock() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.unlock(); }
-  void rebuild_done_reset() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.lock(); rebuild_cond.reset(); }
+  //void export_lock();
+  //void export_unlock();
+  //void sample_lock();
+  //void sample_unlock();
+  //void destroy_lock();
+  //void destroy_unlock();
+  //void remove_layer_lock() { g_mutex_lock( remove_layer_mutex); }
+  //void remove_layer_unlock() { g_mutex_unlock( remove_layer_mutex); }
+  //void rebuild_lock() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.lock(); }
+  //void rebuild_unlock() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.unlock(); }
+  void rebuild_done_reset() { /*g_cond_signal( rebuild_done ); rebuild_cond.lock();*/ rebuild_cond.reset(); }
   void rebuild_done_signal() { /*g_cond_signal( rebuild_done );*/ rebuild_cond.signal(); }
-  void rebuild_done_wait(bool unlock=true) { /*g_cond_signal( rebuild_done );*/ rebuild_cond.wait(unlock); }
-  void export_done_signal() { export_done.signal(); }
+  void rebuild_done_wait(bool unlock=true) { /*g_cond_signal( rebuild_done );*/ rebuild_cond.wait(); }
+  void export_done_signal() { export_cond.signal(); }
   void sample_done_signal() { /*g_cond_signal( sample_done );*/ sample_cond.signal(); }
   void destroy_done_signal() { /*g_cond_signal( sample_done );*/ destroy_cond.signal(); }
-  void remove_layer_done_signal() { g_cond_signal( remove_layer_done ); }
-  void remove_layer_reset() { /*g_cond_signal( rebuild_done );*/ remove_layer_cond.lock(); remove_layer_cond.reset(); }
+  //void remove_layer_done_signal() { /*g_cond_signal( remove_layer_done );*/  }
+  void remove_layer_reset() { /*g_cond_signal( rebuild_done ); remove_layer_cond.lock();*/ remove_layer_cond.reset(); }
   void remove_layer_signal() { /*g_cond_signal( rebuild_done );*/ remove_layer_cond.signal(); }
-  void remove_layer_wait(bool unlock=true) { /*g_cond_signal( rebuild_done );*/ remove_layer_cond.wait(unlock); }
+  void remove_layer_wait(bool unlock=true) { /*g_cond_signal( rebuild_done );*/ remove_layer_cond.wait(); }
 
   void set_pipeline_level( PF::Pipeline* pipeline, int level );
 

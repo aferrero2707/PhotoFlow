@@ -106,21 +106,23 @@ PF::Image::Image():
           disable_update( false ),
           force_synced_update( false )
 {
-  rebuild_mutex = vips_g_mutex_new();
+  image_mutex = vips_g_mutex_new();
+
+  //rebuild_mutex = vips_g_mutex_new();
   //g_mutex_lock( rebuild_mutex );
-  rebuild_done = vips_g_cond_new();
+  //rebuild_done = vips_g_cond_new();
 
   //export_mutex = vips_g_mutex_new();
   //g_mutex_lock( export_mutex );
   //export_done = vips_g_cond_new();
 
-  sample_mutex = vips_g_mutex_new();
+  //sample_mutex = vips_g_mutex_new();
   //g_mutex_lock( sample_mutex );
-  sample_done = vips_g_cond_new();
+  //sample_done = vips_g_cond_new();
 
-  remove_layer_mutex = vips_g_mutex_new();
+  //remove_layer_mutex = vips_g_mutex_new();
   //g_mutex_lock( remove_layer_mutex );
-  remove_layer_done = vips_g_cond_new();
+  //remove_layer_done = vips_g_cond_new();
 
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::update_all) );
   layer_manager.signal_modified.connect(sigc::mem_fun(this, &Image::modified) );
@@ -147,18 +149,20 @@ PF::Image::~Image()
       delete pipelines[vi];
   }
    */
-  std::cout<<"[Image::~Image()] freeing rebuild_mutex"<<std::endl;
-  vips_g_mutex_free(rebuild_mutex);
-  vips_g_cond_free(rebuild_done);
+  std::cout<<"[Image::~Image()] freeing image_mutex"<<std::endl;
+  vips_g_mutex_free(image_mutex);
+  //std::cout<<"[Image::~Image()] freeing rebuild_mutex"<<std::endl;
+  //vips_g_mutex_free(rebuild_mutex);
+  //vips_g_cond_free(rebuild_done);
   //std::cout<<"[Image::~Image()] freeing export_mutex"<<std::endl;
   //vips_g_mutex_free(export_mutex);
   //vips_g_cond_free(export_done);
-  std::cout<<"[Image::~Image()] freeing sample_mutex"<<std::endl;
-  vips_g_mutex_free(sample_mutex);
-  vips_g_cond_free(sample_done);
-  std::cout<<"[Image::~Image()] freeing remove_layer_mutex"<<std::endl;
-  vips_g_mutex_free(remove_layer_mutex);
-  vips_g_cond_free(remove_layer_done);
+  //std::cout<<"[Image::~Image()] freeing sample_mutex"<<std::endl;
+  //vips_g_mutex_free(sample_mutex);
+  //vips_g_cond_free(sample_done);
+  //std::cout<<"[Image::~Image()] freeing remove_layer_mutex"<<std::endl;
+  //vips_g_mutex_free(remove_layer_mutex);
+  //vips_g_cond_free(remove_layer_done);
 }
 
 
@@ -167,7 +171,7 @@ void PF::Image::lock()
   //std::cout<<"+++++++++++++++++++++"<<std::endl;
   //std::cout<<"  LOCKING REBUILD MUTEX"<<std::endl;
   //std::cout<<"+++++++++++++++++++++"<<std::endl;
-  g_mutex_lock( rebuild_mutex);
+  g_mutex_lock( image_mutex);
 }
 
 void PF::Image::unlock()
@@ -175,14 +179,14 @@ void PF::Image::unlock()
   //std::cout<<"---------------------"<<std::endl;
   //std::cout<<"  UNLOCKING REBUILD MUTEX"<<std::endl;
   //std::cout<<"---------------------"<<std::endl;
-  g_mutex_unlock( rebuild_mutex);
+  g_mutex_unlock( image_mutex);
   //std::cout<<"---------------------"<<std::endl;
   //std::cout<<"  REBUILD MUTEX UNLOCKED"<<std::endl;
   //std::cout<<"---------------------"<<std::endl;
 }
 
 
-void PF::Image::export_lock()
+/*void PF::Image::export_lock()
 {
   //std::cout<<"+++++++++++++++++++++"<<std::endl;
   //std::cout<<"  LOCKING REBUILD MUTEX"<<std::endl;
@@ -244,7 +248,7 @@ void PF::Image::destroy_unlock()
   //std::cout<<"---------------------"<<std::endl;
   //std::cout<<"  SAMPLE MUTEX UNLOCKED"<<std::endl;
   //std::cout<<"---------------------"<<std::endl;
-}
+}*/
 
 
 
@@ -531,7 +535,7 @@ void PF::Image::sample( int layer_id, std::vector<VipsRect>& areas, bool weighte
     request.areas = areas;
     request.weighted_average = weighted;
 
-    sample_lock(); //g_mutex_lock( sample_mutex );
+    //sample_lock(); //g_mutex_lock( sample_mutex );
 #ifndef NDEBUG
     std::cout<<"PF::Image::sample(): submitting sample request..."<<std::endl;
 #endif
@@ -547,7 +551,7 @@ void PF::Image::sample( int layer_id, std::vector<VipsRect>& areas, bool weighte
     std::cout<<"Image::sample(): waiting for done."<<std::endl;
 #endif
     sample_cond.wait();
-    sample_unlock();
+    //sample_unlock();
 #ifndef NDEBUG
     std::cout<<"Image::sample(): done received."<<std::endl;
 #endif
@@ -870,10 +874,6 @@ void PF::Image::do_remove_layer( PF::Layer* layer )
   std::list<Layer*>* list = layer_manager.get_list( layer );
   if( list )
     remove_layer( layer, *list );
-
-  // The rebuild condition will be cleared and signaled when updating the image
-  //rebuild_done_signal();
-  remove_layer_signal();
 }
 
 
@@ -1124,7 +1124,7 @@ bool PF::Image::export_merged( std::string filename, image_export_opt_t* export_
     std::cout<<"PF::Image::export_merged(): locking mutex..."<<std::endl;
 #endif
     //g_mutex_lock( export_mutex );
-    export_done.lock();
+    //export_done.lock();
 #ifndef NDEBUG
     std::cout<<"PF::Image::export_merged(): submitting export request..."<<std::endl;
 #endif
@@ -1135,7 +1135,7 @@ bool PF::Image::export_merged( std::string filename, image_export_opt_t* export_
 
     std::cout<<"PF::Image::export_merged(): waiting for export_done...."<<std::endl;
     //g_cond_wait( export_done, export_mutex );
-    export_done.wait(true);
+    export_cond.wait();
     std::cout<<"PF::Image::export_merged(): ... export_done received."<<std::endl;
 
     //g_mutex_unlock( export_mutex );

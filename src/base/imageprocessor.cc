@@ -293,9 +293,9 @@ void PF::ImageProcessor::run()
         complete_caching( request.image );
         signal_status_exporting.emit();
         request.image->lock();
-        request.image->export_lock();
+        //request.image->export_lock();
         request.image->do_export_merged( request.filename, (PF::image_export_opt_t*)request.data );
-        request.image->export_unlock();
+        //request.image->export_unlock();
         request.image->unlock();
         request.image->export_done_signal();
         break;
@@ -395,10 +395,10 @@ void PF::ImageProcessor::run()
         if( !request.image ) break;
         if( !request.layer ) break;
         signal_status_processing.emit();
-        request.image->remove_layer_lock();
+        request.image->lock();
         request.image->do_remove_layer( request.layer );
-        request.image->remove_layer_unlock();
-        request.image->remove_layer_done_signal();
+        request.image->remove_layer_signal();
+        request.image->unlock();
         break;
       case IMAGE_DESTROY:
         if( !request.image ) break;

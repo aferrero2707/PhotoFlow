@@ -56,7 +56,7 @@ public:
     vips_g_cond_free(condition);
   }
 
-  void lock()
+  /*void lock()
   {
     g_mutex_lock( mutex );
   }
@@ -64,13 +64,13 @@ public:
   void unlock()
   {
     g_mutex_unlock( mutex );
-  }
+  }*/
 
   void reset()
   {
-    //g_mutex_lock( mutex );
+    g_mutex_lock( mutex );
     signaled = false;
-    //g_mutex_unlock( mutex );
+    g_mutex_unlock( mutex );
   }
 
   void signal()
@@ -81,14 +81,15 @@ public:
     g_mutex_unlock( mutex );
   }
 
-  void wait(bool unlk=true)
+  void wait()
   {
-    //g_mutex_lock( mutex );
+    g_mutex_lock( mutex );
     //signaled = false;
     while( !signaled )
       g_cond_wait( condition, mutex );
     signaled = false;
-    if(unlk) g_mutex_unlock( mutex );
+    //if(unlk)
+    g_mutex_unlock( mutex );
   }
 };
 
