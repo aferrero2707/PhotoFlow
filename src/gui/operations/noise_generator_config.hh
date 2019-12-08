@@ -39,6 +39,7 @@ namespace PF {
 class NoiseGeneratorConfigGUI: public OperationConfigGUI
 {
   Gtk::VBox controlsBox;
+  Gtk::HBox top_hbox;
 
   CheckBox monochrome_checkbox;
   CheckBox perceptual_checkbox;
@@ -46,19 +47,22 @@ class NoiseGeneratorConfigGUI: public OperationConfigGUI
   Slider range_slider;
 
 public:
-  NoiseGeneratorConfigGUI( Layer* l ):
-    OperationConfigGUI( l, "Noise" ),
-    monochrome_checkbox( this, "monochrome", _("monochrome"), true),
-    perceptual_checkbox( this, "perceptual", _("perceptual"), true),
-    center_slider( this, "center", _("center"), 0, 0, 1, 0.01, 0.05, 1),
-    range_slider( this, "range", _("range"), 0, 0, 1, 0.01, 0.05, 1)
-{
-    controlsBox.pack_start( monochrome_checkbox, Gtk::PACK_SHRINK );
-    controlsBox.pack_start( perceptual_checkbox, Gtk::PACK_SHRINK );
+  NoiseGeneratorConfigGUI( Layer* l ): OperationConfigGUI( l, "Noise" ),
+  monochrome_checkbox( this, "monochrome", _("monochrome"), true),
+  perceptual_checkbox( this, "perceptual", _("perceptual"), true),
+  center_slider( this, "center", _("center"), 0, 0, 1, 0.01, 0.05, 1),
+  range_slider( this, "range", _("range"), 0, 0, 1, 0.01, 0.05, 1)
+  {
+    top_hbox.set_spacing(8);
+    top_hbox.pack_end( monochrome_checkbox, Gtk::PACK_SHRINK );
+    top_hbox.pack_end( perceptual_checkbox, Gtk::PACK_SHRINK );
+
+    controlsBox.set_spacing(4);
+    controlsBox.pack_start( top_hbox, Gtk::PACK_SHRINK );
     controlsBox.pack_start( center_slider, Gtk::PACK_SHRINK );
     controlsBox.pack_start( range_slider, Gtk::PACK_SHRINK );
     add_widget( controlsBox );
-}
+  }
 
 
   bool has_preview() { return false; }

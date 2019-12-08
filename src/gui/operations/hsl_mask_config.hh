@@ -62,7 +62,7 @@ namespace PF {
   Gtk::VBox adjustment_box[3];
   Gtk::Notebook adjustments_nb, curves_nb[3];
 
-  LayerList layer_list;
+  //LayerList layer_list;
 
 
 public:

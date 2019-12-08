@@ -84,9 +84,23 @@ class ControlsDialog: public Gtk::Dialog
 {
   ImageEditor* editor;
   PF::OperationConfigGUI* gui;
+  Gtk::Alignment dialog_width_align;
+  Gtk::Alignment spacing1;
+  Gtk::HBox dialog_width_hbox;
+  Gtk::Alignment blend_box_padding_left, blend_box_padding_right;
+  Gtk::HBox blend_box_hbox;
+  Gtk::Alignment input_box_padding_left, input_box_padding_right;
+  Gtk::HBox input_box_hbox;
+  Gtk::Alignment controls_box_padding_left, controls_box_padding_right;
+  Gtk::HBox controls_box_hbox;
+  Gtk::EventBox controls_evbox;
   Gtk::HBox* top_box;
   Gtk::Button close_button;
+  ToggleImageButton frame_close;
   Gtk::Notebook notebook;
+  Gtk::HSeparator hline1, hline2, hline3;
+  Gtk::EventBox top_eb, bottom_eb, controls_eb;
+  Gtk::VBox top_vbox, bottom_vbox, controls_vbox;
   bool visible;
   int x, y;
 public:
@@ -94,6 +108,7 @@ public:
   void set_controls(PF::Layer* l);
   bool is_visible() { return visible; }
   void update();
+  void on_realize();
   void on_hide();
   bool on_delete_event( GdkEventAny* any_event );
   void open();

@@ -34,10 +34,11 @@
 
 PF::ChannelMixerConfigGUI::ChannelMixerConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Channel Mixer" ),
-  red_mix_slider( this, "red_mix", "Red %", 33, -200, 200, 5, 20, 100),
-  green_mix_slider( this, "green_mix", "Green %", 34, -200, 200, 5, 20, 100),
-  blue_mix_slider( this, "blue_mix", "Blue %", 33, -200, 200, 5, 20, 100)
+  red_mix_slider( this, "red_mix", "red %", 33, -200, 200, 5, 20, 100),
+  green_mix_slider( this, "green_mix", "green %", 34, -200, 200, 5, 20, 100),
+  blue_mix_slider( this, "blue_mix", "blue %", 33, -200, 200, 5, 20, 100)
 {
+  controlsBox.set_spacing(4);
   controlsBox.pack_start( red_mix_slider );
   controlsBox.pack_start( green_mix_slider );
   controlsBox.pack_start( blue_mix_slider );

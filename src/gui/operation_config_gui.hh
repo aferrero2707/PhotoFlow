@@ -39,6 +39,7 @@
 #include "widgets/checkbox.hh"
 #include "widgets/slider.hh"
 #include "widgets/selector.hh"
+#include "widgets/percent_selector.hh"
 #include "widgets/exposure_slider.hh"
 #include "widgets/imagebutton.hh"
 #include "widgets/layerlist.hh"
@@ -71,6 +72,7 @@ class OperationConfigGUI: public OperationConfigUI
   Selector blendSelector, blendSelector2, blendSelectorMask, blendSelectorMask2;
   Gtk::HBox intensity_box, opacity_box;
   Slider intensitySlider, intensitySlider2, opacitySlider, opacitySlider2;
+  PercentSelector opacitySelector, opacitySelector2;
   CheckBox imap_enabled_box, omap_enabled_box, test_padding_enable_box;
   Slider shift_x, shift_y;
   bool has_ch_sel;
@@ -122,9 +124,10 @@ class OperationConfigGUI: public OperationConfigUI
   ToggleImageButton frame_close;
   ToggleImageButton frame_expander;
   Gtk::Entry nameEntry, nameEntry2;
-  Gtk::Frame controls_frame;
-  Gtk::EventBox controls_evbox;
+  //Gtk::Frame controls_frame;
+  //Gtk::EventBox controls_evbox;
   Gtk::VBox controls_box;
+  Gtk::Alignment controls_box_top_padding, controls_box_bottom_padding;
   Gtk::VBox blend_controls_box;
   Gtk::VBox input_controls_box;
   Gtk::HSeparator hline, hline2;

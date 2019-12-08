@@ -37,16 +37,17 @@ PF::LocalContrastV2ConfigGUI::LocalContrastV2ConfigGUI( PF::Layer* layer ):
   guidedRadiusSlider( this, "radius", "radius", 1, 0, 1000, 0.05, 0.1, 1),
   guidedThresholdSlider( this, "threshold", "edge threshold", 20, 0.5, 1000.0, 0.5, 5, 200)
 {
-
+  guidedControlsBox.set_spacing(4);
   guidedControlsBox.pack_start( guidedRadiusSlider, Gtk::PACK_SHRINK );
   guidedControlsBox.pack_start( guidedThresholdSlider, Gtk::PACK_SHRINK );
 
-  controlsBox.pack_start( amount_slider, Gtk::PACK_SHRINK, 10 );
+  controlsBox.set_spacing(8);
+  controlsBox.pack_start( amount_slider, Gtk::PACK_SHRINK, 0 );
   //controlsBox.pack_start( white_level_slider, Gtk::PACK_SHRINK, 10 );
-  controlsBox.pack_start( guidedControlsBox, Gtk::PACK_SHRINK, 10 );
+  controlsBox.pack_start( guidedControlsBox, Gtk::PACK_SHRINK, 0 );
 
-  globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
-  add_widget( globalBox );
+  //globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
+  add_widget( controlsBox );
 }
 
 

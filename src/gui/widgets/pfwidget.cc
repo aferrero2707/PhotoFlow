@@ -80,7 +80,7 @@ void PF::PFWidget::changed()
   //std::cout<<"PFWidget::changed(): property="<<property<<" inhibit="<<inhibit<<" passive="<<passive<<std::endl;
   if( property && !inhibit ) {
     set_value();
-    if( !passive ) {
+    if( !passive && property->is_modified() ) {
       value_changed.emit();
       //dialog->get_layer()->set_dirty( true );
       //dialog->get_layer()->get_image()->lock();

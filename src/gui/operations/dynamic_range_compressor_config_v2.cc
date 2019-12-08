@@ -87,8 +87,8 @@ PF::DynamicRangeCompressorConfigV2GUI::DynamicRangeCompressorConfigV2GUI( PF::La
   equalizerBox.pack_start( equalizerPadding, Gtk::PACK_EXPAND_WIDGET );
   //controlsBox.pack_start( equalizerBox, Gtk::PACK_SHRINK );
 
-  globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
-  add_widget( globalBox );
+  //globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
+  add_widget( controlsBox );
 }
 
 

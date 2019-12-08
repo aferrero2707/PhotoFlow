@@ -40,17 +40,19 @@ PF::Selector::Selector( OperationConfigGUI* dialog, std::string pname, std::stri
   cbox.set_model( model );
   cbox.pack_start(columns.col_name);
 
-  pack_end( cbox, Gtk::PACK_SHRINK );
-  pack_end( label, Gtk::PACK_SHRINK );
-
-  //cbox.set_size_request( 100, -1 );
-
   if( width > 0 ) {
+    cbox.set_size_request(width, -1);
+    pack_end( cbox, Gtk::PACK_SHRINK );
+    pack_end( label, Gtk::PACK_SHRINK );
+
     Glib::ListHandle< Gtk::CellRenderer* > cells = cbox.get_cells();
     Glib::ListHandle< Gtk::CellRenderer* >::iterator ci = cells.begin();
     for( ci = cells.begin(); ci != cells.end(); ci++ ) {
       (*ci)->set_fixed_size( width, -1 );
     }
+  } else {
+    pack_end( cbox, Gtk::PACK_EXPAND_WIDGET );
+    pack_end( label, Gtk::PACK_SHRINK );
   }
 
   //pack_start( vbox, Gtk::PACK_SHRINK );
@@ -73,15 +75,19 @@ PF::Selector::Selector( OperationConfigGUI* dialog, PF::ProcessorBase* processor
   cbox.set_model( model );
   cbox.pack_start(columns.col_name);
 
-  pack_start( label, Gtk::PACK_SHRINK );
-  pack_start( cbox, Gtk::PACK_SHRINK );
-
   if( width > 0 ) {
+    cbox.set_size_request(width, -1);
+    pack_end( cbox, Gtk::PACK_SHRINK );
+    pack_end( label, Gtk::PACK_SHRINK );
+
     Glib::ListHandle< Gtk::CellRenderer* > cells = cbox.get_cells();
     Glib::ListHandle< Gtk::CellRenderer* >::iterator ci = cells.begin();
     for( ci = cells.begin(); ci != cells.end(); ci++ ) {
       (*ci)->set_fixed_size( width, -1 );
     }
+  } else {
+    pack_end( cbox, Gtk::PACK_EXPAND_WIDGET );
+    pack_end( label, Gtk::PACK_SHRINK );
   }
 
   //pack_start( vbox, Gtk::PACK_SHRINK );

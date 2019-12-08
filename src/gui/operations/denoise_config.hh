@@ -40,7 +40,10 @@ namespace PF {
   class DenoiseConfigGUI: public OperationConfigGUI
 {
   //#ifdef GTKMM_2
-  Gtk::VBox controlsBox;
+  Gtk::VBox controlsBox, impnr_vbox, nlmeans_vbox;
+  Gtk::HBox impnr_label_hbox, nlmeans_label_hbox;
+  Gtk::Label impnr_label, nlmeans_label;
+  Gtk::Frame impnr_frame, nlmeans_frame;
 
   //Gtk::Label lbrightness, lcontrast;
   //Gtk::Alignment lcontrastAl, lbrightnessAl;

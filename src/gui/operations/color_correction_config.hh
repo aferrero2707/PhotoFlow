@@ -45,6 +45,7 @@ namespace PF {
   Gtk::VBox offs_box, slope_box, pow_box;
   Gtk::Button load_button, save_button;
   Gtk::HBox button_hbox;
+  Gtk::Alignment offs_padding, slope_padding, pow_padding;
 
   Slider offs_slider;
   Slider r_offs_slider;

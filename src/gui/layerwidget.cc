@@ -271,7 +271,7 @@ void PF::ControlsGroup::collapse_all()
 PF::AuxControlsGroup::AuxControlsGroup( ImageEditor* e ): editor(e), controls(NULL), gui(NULL)
 {
   //set_spacing(10);
-  set_size_request(-1,100);
+  set_size_request(-1,50);
 }
 
 
@@ -317,19 +317,24 @@ void PF::AuxControlsGroup::set_control(PF::Layer* layer, PF::OperationConfigGUI*
 
 
 PF::ControlsDialog::ControlsDialog( ImageEditor* e ):
-    Gtk::Dialog(), editor(e), gui(NULL), top_box(NULL), close_button(_("Close")), x(-1), y(-1)
+    Gtk::Dialog(), editor(e), gui(NULL), top_box(NULL), close_button(_("Close")),
+    frame_close(PF::PhotoFlow::Instance().get_icons_dir()+"/close_active.png",PF::PhotoFlow::Instance().get_icons_dir()+"/close_inactive.png"),
+x(-1), y(-1)
 {
   //close_button_box.pack_end( close_button, Gtk::PACK_SHRINK, 5 );
 #ifdef GTKMM_3
-  get_content_area()->pack_end( notebook, Gtk::PACK_SHRINK );
+  //get_content_area()->pack_end( notebook, Gtk::PACK_SHRINK );
 #else
-  get_vbox()->pack_end( notebook, Gtk::PACK_SHRINK );
+  //get_vbox()->pack_end( notebook, Gtk::PACK_SHRINK );
 #endif
 
   show_all_children();
   set_deletable ( false );
 
   close_button.signal_clicked().connect( sigc::mem_fun(*this,
+      &PF::ControlsDialog::close) );
+
+  frame_close.signal_clicked.connect( sigc::mem_fun(*this,
       &PF::ControlsDialog::close) );
 
   add_events(Gdk::KEY_PRESS_MASK | Gdk::KEY_RELEASE_MASK);
@@ -382,34 +387,109 @@ void PF::ControlsDialog::set_controls(PF::Layer* l)
   }
   //if( gui->has_editing_mode() ) needs_update = true;
 
-  Gtk::Widget* controls = gui->get_frame();
-  //std::cout<<"ControlsDialog::set_controls(\""<<l->get_name()<<"\"): controls="<<controls<<std::endl;
-  if( controls ) {
-/*
-#ifdef GTKMM_3
-    get_content_area()->pack_start( *controls, Gtk::PACK_SHRINK );
-#else
-    get_vbox()->pack_start( *controls, Gtk::PACK_SHRINK );
-#endif
-*/
-    notebook.append_page(*controls, _("controls"));
-    notebook.append_page(gui->get_input_box(), _("input"));
-    notebook.append_page(gui->get_blend_box(), _("blend"));
-    //controls->show_all();
-  }
-
   if( top_box ) delete top_box;
   top_box = new Gtk::HBox();
 
-  top_box->pack_start( gui->get_top_box(), Gtk::PACK_SHRINK, 5 );
-  top_box->pack_end( close_button, Gtk::PACK_SHRINK, 5 );
+  top_box->pack_start( gui->get_top_box(), Gtk::PACK_SHRINK, 0 );
+  top_box->pack_end( frame_close, Gtk::PACK_SHRINK, 8 );
+  //top_box->pack_end( close_button, Gtk::PACK_SHRINK, 5 );
   top_box->show_all();
 
-  #ifdef GTKMM_3
-  get_content_area()->pack_start( *top_box, Gtk::PACK_SHRINK );
+  dialog_width_align.set_size_request(300,0);
+  dialog_width_hbox.pack_start(dialog_width_align, Gtk::PACK_EXPAND_WIDGET);
+  dialog_width_hbox.show_all();
+
+  spacing1.set_size_request(0,4);
+  spacing1.show();
+
+  blend_box_padding_left.set_size_request(4,0);
+  blend_box_padding_right.set_size_request(4,0);
+  blend_box_hbox.pack_start(blend_box_padding_left, Gtk::PACK_SHRINK);
+  blend_box_hbox.pack_start(gui->get_blend_box(), Gtk::PACK_EXPAND_WIDGET);
+  blend_box_hbox.pack_start(blend_box_padding_right, Gtk::PACK_SHRINK);
+  blend_box_hbox.show();
+  blend_box_padding_left.show();
+  blend_box_padding_right.show();
+
+  input_box_padding_left.set_size_request(4,0);
+  input_box_padding_right.set_size_request(4,0);
+  input_box_hbox.pack_start(input_box_padding_left, Gtk::PACK_SHRINK);
+  input_box_hbox.pack_start(gui->get_input_box(), Gtk::PACK_EXPAND_WIDGET);
+  input_box_hbox.pack_start(input_box_padding_right, Gtk::PACK_SHRINK);
+  input_box_hbox.show();
+  input_box_padding_left.show();
+  input_box_padding_right.show();
+
+#ifdef GTKMM_3
+  get_content_area()->pack_end( *top_box, Gtk::PACK_SHRINK );
+  get_content_area()->pack_start( blend_box_hbox, Gtk::PACK_SHRINK );
+  get_content_area()->pack_start( hline1, Gtk::PACK_SHRINK );
 #else
+  get_vbox()->pack_start( dialog_width_hbox, Gtk::PACK_SHRINK );
+  //top_vbox.pack_start(gui->get_blend_box(), Gtk::PACK_SHRINK, 10);
+  //top_eb.add(top_vbox);
+  //top_eb.show_all();
+  //Gdk::Color bgd;
+  //bgd.set_rgb_p(0.5, 0.5, 0.5);
+  //bgd.set_rgb(65535, 65535, 65535);
+  //top_eb.modify_bg(Gtk::STATE_NORMAL, bgd);
+  //get_vbox()->pack_start( top_eb, Gtk::PACK_SHRINK, 0 );
   get_vbox()->pack_start( *top_box, Gtk::PACK_SHRINK );
+  get_vbox()->pack_start( hline1, Gtk::PACK_SHRINK, 4 );
+  get_vbox()->pack_start( blend_box_hbox, Gtk::PACK_SHRINK );
+  get_vbox()->pack_start( spacing1, Gtk::PACK_SHRINK );
+  get_vbox()->pack_start( hline2, Gtk::PACK_SHRINK );
+  get_vbox()->pack_end( input_box_hbox, Gtk::PACK_SHRINK );
+  get_vbox()->pack_end( hline3, Gtk::PACK_SHRINK );
+  //get_vbox()->set_spacing(4);
 #endif
+  hline1.show();
+  hline2.show();
+  hline3.show();
+
+  Gtk::Widget* controls = gui->get_frame();
+  //std::cout<<"ControlsDialog::set_controls(\""<<l->get_name()<<"\"): controls="<<controls<<std::endl;
+  if( controls ) {
+
+    controls_box_padding_left.set_size_request(4,0);
+    controls_box_padding_right.set_size_request(4,0);
+    controls_box_hbox.pack_start(controls_box_padding_left, Gtk::PACK_SHRINK);
+    controls_box_hbox.pack_start(*controls, Gtk::PACK_EXPAND_WIDGET);
+    controls_box_hbox.pack_start(controls_box_padding_right, Gtk::PACK_SHRINK);
+    controls_box_hbox.show();
+    controls_box_padding_left.show();
+    controls_box_padding_right.show();
+    /**/
+#ifdef GTKMM_2
+    Gdk::Color bg;
+    bg.set_grey_p(0.15);
+    controls_evbox.modify_bg( Gtk::STATE_NORMAL, bg );
+
+    //bg.set_grey_p(0.22);
+    //nameEntry.modify_base( Gtk::STATE_NORMAL, bg );
+    //nameEntry.set_alignment(1);
+#endif
+    /**/
+    controls_evbox.add(controls_box_hbox);
+    controls_evbox.show();
+    /**/
+#ifdef GTKMM_3
+    get_content_area()->pack_end( controls_evbox, Gtk::PACK_SHRINK );
+#else
+    //controls_vbox.pack_start(*controls, Gtk::PACK_SHRINK, 10);
+    //controls_eb.add(controls_vbox);
+    //Gdk::Color bgd; bgd.set_rgb_p(0.05, 0.05, 0.05);
+    //controls_eb.modify_bg(Gtk::STATE_NORMAL, bgd);
+    //get_vbox()->pack_end( controls_eb, Gtk::PACK_SHRINK );
+    //controls_eb.show_all();
+    get_vbox()->pack_start( controls_evbox, Gtk::PACK_SHRINK );
+#endif
+/**/
+    //notebook.append_page(*controls, _("controls"));
+    //notebook.append_page(gui->get_input_box(), _("input"));
+    //notebook.append_page(gui->get_blend_box(), _("blend"));
+    //controls->show_all();
+  }
 
 
   set_title(l->get_processor()->get_par()->get_default_name());
@@ -429,9 +509,16 @@ void PF::ControlsDialog::update()
   editor->get_image()->lock();
   gui->update();
   editor->get_image()->unlock();
+  //resize(-1, -1);
 #ifndef NDEBUG
   std::cout<<"ControlsDialog::update() finished"<<std::endl;
 #endif
+}
+
+
+void PF::ControlsDialog::on_realize()
+{
+  Gtk::Dialog::on_realize();
 }
 
 
@@ -686,7 +773,11 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //ADD_TOOL_ITEM( "Brightness/Contrast"), "brightness_contrast" );
   ADD_TOOL_ITEM( _("Noise"), "noise_generator" );
   ADD_TOOL_ITEM( _("Clip values"), "clip" );
-  ADD_TOOL_ITEM( _("Apply LUT"), "gmic_emulate_film_user_defined" );
+
+  item = new Gtk::MenuItem(_("film emulations"));
+  tools_menu.append( *item );
+  submenu = new Gtk::Menu;
+  item->set_submenu( *submenu );
   ADD_TOOL_ITEM( _("Emulate film [color slide]"), "gmic_emulate_film_colorslide" );
   ADD_TOOL_ITEM( _("Emulate film [B&W]"), "gmic_emulate_film_bw" );
   ADD_TOOL_ITEM( _("Emulate film [instant consumer]"), "gmic_emulate_film_instant_consumer" );
@@ -696,6 +787,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   ADD_TOOL_ITEM( _("Emulate film [negative old]"), "gmic_emulate_film_negative_old" );
   ADD_TOOL_ITEM( _("Emulate film [print films]"), "gmic_emulate_film_print_films" );
   ADD_TOOL_ITEM( _("Emulate film [various]"), "gmic_emulate_film_various" );
+  ADD_TOOL_ITEM( _("Apply LUT"), "gmic_emulate_film_user_defined" );
 
 
 #ifdef HAVE_OCIO

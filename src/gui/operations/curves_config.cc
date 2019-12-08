@@ -29,7 +29,7 @@
 
 #include "curves_config.hh"
 
-#define CURVE_SIZE 206
+#define CURVE_SIZE 300
 
 PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   PF::OperationConfigGUI( layer, "Curves Configuration", false ),
@@ -91,8 +91,6 @@ PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
   cmykCurveSelector.set_active(0);
 #endif
 
-  add_widget( selectorsBox );
-
   /*
     rgbCurveEditor.init();
     RCurveEditor.init();
@@ -103,6 +101,8 @@ PF::CurvesConfigGUI::CurvesConfigGUI(PF::Layer* layer):
     aCurveEditor.init();
     bCurveEditor.init();
   */
+
+  add_widget( selectorsBox );
 
   add_widget( curvesBox );
   switch_curve();
@@ -187,7 +187,7 @@ void PF::CurvesConfigGUI::activate_curve( PF::CurveEditor& curve )
       curvesBox.remove( KCurveEditor );
 
     if( curve.get_parent() != (&curvesBox) ) {
-      curvesBox.pack_start( curve, Gtk::PACK_EXPAND_PADDING );
+      curvesBox.pack_start( curve, Gtk::PACK_EXPAND_WIDGET );
       curve.show();
     }
   }
@@ -332,17 +332,18 @@ void PF::CurvesConfigGUI::do_update()
       //greychSelector.show();
       break;
     case PF_COLORSPACE_RGB:
-      selectorsBox.pack_start( rgbCurveSelector, Gtk::PACK_SHRINK );
+      selectorsBox.set_spacing(8);
+      selectorsBox.pack_start( rgbCurveSelector, Gtk::PACK_EXPAND_WIDGET );
       selectorsBox.pack_start( RGB_is_linear_check, Gtk::PACK_SHRINK );
       rgbCurveSelector.show();
       RGB_is_linear_check.show();
       break;
     case PF_COLORSPACE_LAB:
-      selectorsBox.pack_start( labCurveSelector, Gtk::PACK_SHRINK );
+      selectorsBox.pack_start( labCurveSelector, Gtk::PACK_EXPAND_WIDGET );
       labCurveSelector.show();
       break;
     case PF_COLORSPACE_CMYK:
-      selectorsBox.pack_start( cmykCurveSelector, Gtk::PACK_SHRINK );
+      selectorsBox.pack_start( cmykCurveSelector, Gtk::PACK_EXPAND_WIDGET );
       cmykCurveSelector.show();
       break;
     default:

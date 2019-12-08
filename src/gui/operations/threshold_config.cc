@@ -37,8 +37,8 @@ PF::ThresholdConfigGUI::ThresholdConfigGUI( PF::Layer* layer ):
   threshold_slider( this, "threshold", _("threshold"), 100, 0, 100, 2, 10, 100 ),
   invert_checkbox( this, "invert", _("invert"), false )
 {
-  controlsBox.pack_start( threshold_slider );
   controlsBox.pack_start( invert_checkbox );
+  controlsBox.pack_start( threshold_slider );
   
   add_widget( controlsBox );
 }

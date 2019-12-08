@@ -36,7 +36,7 @@
 
 PF::LensFunConfigGUI::LensFunConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Optical corrections" ),
-  auto_matching_checkbox( this, "auto_matching", _("auto matching"), true ),
+  auto_matching_checkbox( this, "auto_matching", _("use exif data"), true ),
   auto_crop_checkbox( this, "auto_crop", _("auto cropping"), true ),
   lf_selector( this, "camera_maker", "camera_model", "lens" ),
   enable_distortion_button( this, "enable_distortion", _("distortion"), false ),
@@ -44,16 +44,19 @@ PF::LensFunConfigGUI::LensFunConfigGUI( PF::Layer* layer ):
   enable_vignetting_button( this, "enable_vignetting", _("vignetting"), false ),
   enable_all_button( this, "enable_all", _("all corrections"), false )
 {
+  controlsBox.pack_start( auto_matching_checkbox );
+
   controlsBox.pack_start( lf_selector );
   
-  hbox.pack_start( auto_matching_checkbox );
-  hbox.pack_start( enable_all_button );
-  controlsBox.pack_start( hbox );
-  controlsBox.pack_start( auto_crop_checkbox );
-
+  //hbox.pack_start( auto_matching_checkbox );
+  //hbox.pack_start( enable_all_button );
+  //controlsBox.pack_start( hbox );
+  controlsBox.pack_start( enable_all_button );
   controlsBox.pack_start( enable_vignetting_button );
   controlsBox.pack_start( enable_distortion_button );
   controlsBox.pack_start( enable_tca_button );
+
+  controlsBox.pack_start( auto_crop_checkbox );
 
   add_widget( controlsBox );
 }

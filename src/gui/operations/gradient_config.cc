@@ -30,7 +30,7 @@
 #include "gradient_config.hh"
 
 
-#define CURVE_SIZE 192
+#define CURVE_SIZE 300
 
 static std::ostream& operator <<( std::ostream& str, const VipsRect& r )
 {
@@ -45,10 +45,10 @@ static std::ostream& operator <<( std::ostream& str, const VipsRect& r )
 PF::GradientConfigGUI::GradientConfigGUI( PF::Layer* layer ):
       OperationConfigGUI( layer, _("Gradient tool") ),
       typeSelector( this, "gradient_type", _("Type: "), 1 ),
-      invert_box( this, "invert", _("Invert"), true ),
-      perceptual_box( this, "perceptual", "Perceptual", true ),
-      center_x( this, "gradient_center_x", _("Center X (%)"), 100, 0, 100, 1, 10, 100),
-      center_y( this, "gradient_center_y", _("Center Y (%)"), 100, 0, 100, 1, 10, 100),
+      invert_box( this, "invert", _("invert"), true ),
+      perceptual_box( this, "perceptual", "perceptual", true ),
+      center_x( this, "gradient_center_x", _("center X (%)"), 100, 0, 100, 1, 10, 100),
+      center_y( this, "gradient_center_y", _("center Y (%)"), 100, 0, 100, 1, 10, 100),
       greyCurveEditor( this, "grey_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
       rgbCurveEditor( this, "RGB_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
       RCurveEditor( this, "R_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),

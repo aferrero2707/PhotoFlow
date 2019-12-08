@@ -37,7 +37,6 @@
 PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
     CurveArea* ca, float _xmin, float _xmax, float _ymin, float _ymax,
     int width, int height, int border_size ):
-    Gtk::HBox(),
     PF::PFWidget( dialog, pname ),
     xlabel( _("in: ") ),
     ylabel( _("out: ") ),

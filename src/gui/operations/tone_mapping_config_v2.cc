@@ -254,12 +254,14 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
           local_contrast_radius_slider( this, "local_contrast_radius", _("radius"), 1, 0, 100, 0.5, 5, 10 ),
           local_contrast_threshold_slider( this, "local_contrast_threshold", _("threshold"), 1, 0.5, 100, 0.5, 5, 1000 )
 {
-  controlsBox.pack_start( curve_area_box, Gtk::PACK_SHRINK, 2 );
+  controlsBox.set_spacing(4);
+  controlsBox.pack_start( curve_area_box, Gtk::PACK_SHRINK, 0 );
 
   //LE_gain.set_conversion_functions(LE_gain_slider_to_prop, LE_gain_prop_to_slider);
   //shadows_box.pack_start( LE_gain, Gtk::PACK_SHRINK );
 
-  tc_box.pack_start( preset_selector, Gtk::PACK_SHRINK, 4 );
+  tc_box.set_spacing(4);
+  tc_box.pack_start( preset_selector, Gtk::PACK_SHRINK, 0 );
   tc_box.pack_start( LE_gain, Gtk::PACK_SHRINK );
   tc_box.pack_start( LE_slope, Gtk::PACK_SHRINK );
   //tc_box.pack_start( LE_compression, Gtk::PACK_SHRINK );
@@ -269,7 +271,7 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
   tc_box.pack_start( LE_shoulder_slope, Gtk::PACK_SHRINK );
   tc_box.pack_start( LE_knee_strength, Gtk::PACK_SHRINK );
   //tc_frame.add( tc_box );
-  controlsBox.pack_start( tc_box, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( tc_box, Gtk::PACK_SHRINK, 0 );
 
   local_contrast_box.pack_start( local_contrast_slider, Gtk::PACK_SHRINK );
   local_contrast_box.pack_start( local_contrast_radius_slider, Gtk::PACK_SHRINK );
@@ -277,20 +279,20 @@ PF::ToneMappingConfigGUI_V2::ToneMappingConfigGUI_V2( PF::Layer* layer ):
   local_contrast_frame.add(local_contrast_box);
   //controlsBox.pack_start( local_contrast_frame, Gtk::PACK_SHRINK, 2 );
 
-  controlsBox.pack_start( controlsBox2, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( separator, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( controlsBox2, Gtk::PACK_SHRINK, 0 );
+  controlsBox.pack_start( separator, Gtk::PACK_SHRINK, 0 );
 
-  curve_area_box.pack_start( curve_area, Gtk::PACK_SHRINK, 10 );
+  curve_area_box.pack_start( curve_area, Gtk::PACK_EXPAND_WIDGET, 0 );
 
   //controlsBox.pack_start( lumi_blend_frac_slider, Gtk::PACK_SHRINK );
   //controlsBox.pack_start( saturation_scaling_slider, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( sh_desaturation_slider, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( hl_desaturation_slider, Gtk::PACK_SHRINK, 2 );
-  controlsBox.pack_start( hue_protection_checkbox, Gtk::PACK_SHRINK, 2 );
+  controlsBox.pack_start( sh_desaturation_slider, Gtk::PACK_SHRINK, 0 );
+  controlsBox.pack_start( hl_desaturation_slider, Gtk::PACK_SHRINK, 0 );
+  controlsBox.pack_start( hue_protection_checkbox, Gtk::PACK_SHRINK, 0 );
 
 
-  globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
-  add_widget( globalBox );
+  //globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
+  add_widget( controlsBox );
 
 
   LE_gain.value_changed.connect(sigc::mem_fun(*this,&PF::ToneMappingConfigGUI_V2::switch_to_custom));

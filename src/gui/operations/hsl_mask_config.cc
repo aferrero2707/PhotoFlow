@@ -33,7 +33,7 @@
 #include "hsl_mask_config.hh"
 
 
-#define CURVE_SIZE 192
+#define CURVE_SIZE 300
 
 class HueEqualizerArea: public PF::CurveArea
 {
@@ -84,14 +84,14 @@ public:
 
 PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, _("HSL Mask") ),
-  hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, 150 ),
-  hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
-  hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, 150 ),
+  hueHeq( this, "H_curve", new HueEqualizerArea(), 0, 360, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  hueSeq( this, "S_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
+  hueLeq( this, "L_curve", new PF::CurveArea(), 0, 100, 0, 100, CURVE_SIZE, CURVE_SIZE ),
   invert( this, "invert", "invert", false ),
   hueHeq_enable( this, "H_curve_enabled", "Enable", true ),
   hueSeq_enable( this, "S_curve_enabled", "Enable", true  ),
-  hueLeq_enable( this, "L_curve_enabled", "Enable", true  ),
-  layer_list( this, _("Layer name:") )
+  hueLeq_enable( this, "L_curve_enabled", "Enable", true  )
+  //layer_list( this, _("Layer name:") )
 {
   curves_nb[0].append_page( hueHeq_hbox, "H curve" );
   curves_nb[0].append_page( hueSeq_hbox, "S curve" );
@@ -116,7 +116,7 @@ PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
 
   controlsBox.pack_start( invert, Gtk::PACK_SHRINK );
   controlsBox.pack_start( curves_nb[0], Gtk::PACK_SHRINK );
-  controlsBox.pack_start( layer_list, Gtk::PACK_SHRINK );
+  //controlsBox.pack_start( layer_list, Gtk::PACK_SHRINK );
   /*
   controlsBox.pack_start( adjustments_nb );
 
@@ -192,7 +192,7 @@ PF::HSLMaskConfigGUI::HSLMaskConfigGUI( PF::Layer* layer ):
 
 void PF::HSLMaskConfigGUI::do_update()
 {
-  if( get_layer() && get_layer()->get_image() &&
+  /*if( get_layer() && get_layer()->get_image() &&
       get_layer()->get_processor() &&
       get_layer()->get_processor()->get_par() ) {
     if( get_layer()->get_processor()->get_par()->is_map() ) {
@@ -206,14 +206,14 @@ void PF::HSLMaskConfigGUI::do_update()
         controlsBox.remove( layer_list );
       }
     }
-  }
+  }*/
   OperationConfigGUI::do_update();
 }
 
 
 void PF::HSLMaskConfigGUI::init()
 {
-  layer_list.update_model();
+  //layer_list.update_model();
   OperationConfigGUI::init();
 }
 

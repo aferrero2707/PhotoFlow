@@ -37,7 +37,7 @@ PF::GaussBlurConfigGUI::GaussBlurConfigGUI( PF::Layer* layer ):
 	modeSelector( this, "preview_mode", "Preview mode: ", PF_BLUR_FAST ),
   radiusSlider( this, "radius", "Radius", 5, 0, 1000, 0.1, 1, 1)
 {
-  controlsBox.pack_start( modeSelector );
+  //controlsBox.pack_start( modeSelector );
   controlsBox.pack_start( radiusSlider );
   
   add_widget( controlsBox );

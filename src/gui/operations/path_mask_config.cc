@@ -30,7 +30,7 @@
 #include "path_mask_config.hh"
 
 
-#define CURVE_SIZE 192
+#define CURVE_SIZE 300
 
 static std::ostream& operator <<( std::ostream& str, const VipsRect& r )
 {

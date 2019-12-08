@@ -113,7 +113,7 @@ namespace PF {
   };
 
 
-  class CurveEditor: public Gtk::HBox, public PFWidget
+  class CurveEditor: public Gtk::VBox, public PFWidget
   {
     Gtk::VBox box;
     Gtk::Label xlabel, ylabel;

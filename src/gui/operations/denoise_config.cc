@@ -34,10 +34,14 @@
 
 PF::DenoiseConfigGUI::DenoiseConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Noise Reduction" ),
-	//modeSelector( this, "nr_mode", "N.R. mode: ", PF_NR_ANIBLUR ),
-  impulse_nr_enable( this, "impulse_nr_enable", _("impulse NR"), false ),
+  impnr_label(_("impulse NR")),
+  nlmeans_label(_("non-local means")),
+  impnr_frame(_("impulse NR")),
+  nlmeans_frame(_("inon-local means")),
+  //modeSelector( this, "nr_mode", "N.R. mode: ", PF_NR_ANIBLUR ),
+  impulse_nr_enable( this, "impulse_nr_enable", _(""), false ),
   impulse_nr_threshold( this, "impulse_nr_threshold", _("threshold"), 50, 0, 100, 5, 20, 1),
-  nlmeans_enable( this, "nlmeans_enable", _("non-local means"), false ),
+  nlmeans_enable( this, "nlmeans_enable", _(""), false ),
   nlmeans_radius( this, "nlmeans_radius", _("radius"), 2, 1, 10, 1, 2, 1),
   nlmeans_strength( this, "nlmeans_strength", _("strength"), 50, 0, 100, 5, 20, 1),
   nlmeans_luma_frac( this, "nlmeans_luma_frac", _("luma"), 50, 0, 100, 5, 20, 100),
@@ -49,21 +53,32 @@ PF::DenoiseConfigGUI::DenoiseConfigGUI( PF::Layer* layer ):
   alphaSlider( this, "alpha", "Alpha", 1, 0, 10, 0.1, 1, 1),
   sigmaSlider( this, "sigma", "Sigma", 1, 0, 10, 0.1, 1, 1)
 {
-  //controlsBox.pack_start( modeSelector );
-  controlsBox.pack_start( impulse_nr_enable );
-  controlsBox.pack_start( impulse_nr_threshold );
-  controlsBox.pack_start( hline1 );
+  controlsBox.set_spacing(8);
+  //impnr_vbox.pack_start( impulse_nr_enable, Gtk::PACK_SHRINK, 2 );
+  impnr_vbox.pack_start( impulse_nr_threshold, Gtk::PACK_SHRINK, 2 );
+  impnr_frame.add(impnr_vbox);
+  impnr_label_hbox.pack_start(impulse_nr_enable);
+  impnr_label_hbox.pack_start(impnr_label);
+  impnr_label_hbox.set_spacing(2);
+  impnr_frame.set_label_widget(impnr_label_hbox);
+  controlsBox.pack_start( impnr_frame );
 
-  controlsBox.pack_start( nlmeans_enable );
-  controlsBox.pack_start( nlmeans_radius );
-  controlsBox.pack_start( nlmeans_strength );
-  controlsBox.pack_start( nlmeans_luma_frac );
-  controlsBox.pack_start( nlmeans_chroma_frac );
+  //nlmeans_vbox.pack_start( nlmeans_enable, Gtk::PACK_SHRINK, 2 );
+  nlmeans_vbox.pack_start( nlmeans_radius, Gtk::PACK_SHRINK, 2 );
+  nlmeans_vbox.pack_start( nlmeans_strength, Gtk::PACK_SHRINK, 2 );
+  nlmeans_vbox.pack_start( nlmeans_luma_frac, Gtk::PACK_SHRINK, 2 );
+  nlmeans_vbox.pack_start( nlmeans_chroma_frac, Gtk::PACK_SHRINK, 2 );
   //controlsBox.pack_start( amplitudeSlider );
   //controlsBox.pack_start( sharpnessSlider );
   //controlsBox.pack_start( anisotropySlider );
   //controlsBox.pack_start( alphaSlider );
   //controlsBox.pack_start( sigmaSlider );
+  nlmeans_frame.add(nlmeans_vbox);
+  nlmeans_label_hbox.pack_start(nlmeans_enable);
+  nlmeans_label_hbox.pack_start(nlmeans_label);
+  nlmeans_label_hbox.set_spacing(2);
+  nlmeans_frame.set_label_widget(nlmeans_label_hbox);
+  controlsBox.pack_start( nlmeans_frame );
   
   add_widget( controlsBox );
 }

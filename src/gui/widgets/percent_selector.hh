@@ -27,8 +27,8 @@
 
  */
 
-#ifndef SELECTOR_HH
-#define SELECTOR_HH
+#ifndef PERCENT_SELECTOR_HH
+#define PERCENT_SELECTOR_HH
 
 #include <gtkmm.h>
 
@@ -36,7 +36,7 @@
 
 namespace PF {
 
-  class Selector: public Gtk::HBox, public PFWidget
+  class PercentSelector: public Gtk::HBox, public PFWidget
   {
     //Tree model columns:
     class ModelColumns : public Gtk::TreeModel::ColumnRecord
@@ -48,7 +48,7 @@ namespace PF {
       
       Gtk::TreeModelColumn<Glib::ustring> col_name;
       Gtk::TreeModelColumn<int> col_id;
-      Gtk::TreeModelColumn<Glib::ustring> col_value;
+      Gtk::TreeModelColumn<float> col_value;
     };
 
     ModelColumns columns;
@@ -57,12 +57,13 @@ namespace PF {
     Gtk::Label label;
     Gtk::ComboBox cbox;
     Glib::RefPtr<Gtk::ListStore> model;
+    int current_active_id;
 
   public:
-    Selector(OperationConfigGUI* dialog, std::string pname, std::string l, int val, int width=0);
-    Selector(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val, int width=0);
+    PercentSelector(OperationConfigGUI* dialog, std::string pname, std::string l, int val, int width=100);
+    PercentSelector(OperationConfigGUI* dialog, ProcessorBase* processor, std::string pname, std::string l, int val, int width=100);
 
-    ~Selector() {}
+    ~PercentSelector() {}
 
     void set_row_separator_func( const Gtk::ComboBox::SlotRowSeparator& slot )
     {
@@ -73,6 +74,10 @@ namespace PF {
     {
       return true;
     }
+
+    void on_value_changed();
+    void on_entry_activated();
+    bool on_entry_focus_out_event( GdkEventFocus* event );
 
     void get_value();
     void set_value();

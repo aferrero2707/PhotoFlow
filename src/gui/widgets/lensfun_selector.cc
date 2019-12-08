@@ -601,13 +601,15 @@ PF::LFSelector::LFSelector( OperationConfigGUI* dialog, std::string pname, std::
   lens_ebox.add( lens_frame );
   vbox.pack_start(lens_ebox);
 
-  cb_hbox.pack_start(cb, Gtk::PACK_SHRINK);
-  cb_hbox.pack_start(cb_label, Gtk::PACK_SHRINK);
+  cb_hbox.pack_end(cb, Gtk::PACK_SHRINK);
+  cb_hbox.pack_end(cb_label, Gtk::PACK_SHRINK);
   cb_label.set_text(_("match camera"));
   cb.set_active(true);
   vbox.pack_start(cb_hbox);
 
-  pack_start(vbox, Gtk::PACK_EXPAND_WIDGET, 5);
+  vbox.set_spacing(4);
+
+  pack_start(vbox, Gtk::PACK_EXPAND_WIDGET, 0);
 
   fill_cam_menu();
   fill_lens_menu_full();

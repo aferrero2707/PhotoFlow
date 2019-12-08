@@ -44,7 +44,7 @@ PF::LayerList::LayerList( OperationConfigGUI* d, std::string l, int iid, bool co
   image_num.set_range(0,99);
   //image_num.set_value(5);
 
-  set_spacing(5);
+  //set_spacing(5);
 
   model = Gtk::ListStore::create(columns);
   cbox.set_model( model );
@@ -59,7 +59,7 @@ PF::LayerList::LayerList( OperationConfigGUI* d, std::string l, int iid, bool co
   if(!compact) vbox2.pack_start( image_num, Gtk::PACK_SHRINK );
 
   if(!compact) pack_end( vbox2, Gtk::PACK_SHRINK );
-  pack_end( vbox, Gtk::PACK_SHRINK );
+  pack_end( vbox, Gtk::PACK_EXPAND_WIDGET );
   if(compact) pack_end( label, Gtk::PACK_SHRINK );
 
   //image_num.signal_changed().
@@ -199,8 +199,8 @@ void PF::LayerList::update_model()
     }
   }
 
-  std::cout<<"LayerList: lid_prev="<<lid_prev<<"  active_lid="<<active_lid<<"  blended_prev="<<blended_prev
-      <<"  active_blended="<<active_blended<<std::endl;
+  //std::cout<<"LayerList: lid_prev="<<lid_prev<<"  active_lid="<<active_lid<<"  blended_prev="<<blended_prev
+  //    <<"  active_blended="<<active_blended<<std::endl;
   if( lid_prev != active_lid || blended_prev != active_blended ){
     changed();
   }
@@ -241,18 +241,18 @@ void PF::LayerList::changed()
           return;
         }
 
-        //#ifndef NDEBUG
+#ifndef NDEBUG
         std::cout<<"LayerList::changed(): setting extra input of layer \""<<layer->get_name()
 	           <<"\" to \""<<l->get_name()<<"\"("<<l->get_id()<<")"<<std::endl;
-        //#endif
+#endif
         std::string cname = row[columns.col_name];
         cbox.set_tooltip_text(cname);
         label.set_tooltip_text(cname);
         layer->set_input( input_id, l->get_id(), image_num.get_value(), row[columns.col_blended] );
-        //#ifndef NDEBUG
+#ifndef NDEBUG
         std::cout<<"LayerList::changed(): setting dirty flag of layer \""<<layer->get_name()
              <<"\" to true"<<std::endl;
-        //#endif
+#endif
       } else {
         std::string cname = row[columns.col_name];
         cbox.set_tooltip_text(cname);
@@ -262,7 +262,7 @@ void PF::LayerList::changed()
 
       layer->set_dirty( true );
 			if( !inhibit ) {
-				std::cout<<"LayerList::changed(): updating image"<<std::endl;
+				//std::cout<<"LayerList::changed(): updating image"<<std::endl;
 				image->update();
 			}
     }

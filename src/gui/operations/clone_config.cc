@@ -32,7 +32,7 @@
 
 PF::CloneConfigGUI::CloneConfigGUI( PF::Layer* layer ):
   OperationConfigGUI( layer, "Clone layer" ),
-  sourceSelector( this, "source_channel", _("Source channel: "), 1 )
+  sourceSelector( this, "source_channel", _("source channel: "), 1 )
 {
   add_widget( sourceSelector );
 }

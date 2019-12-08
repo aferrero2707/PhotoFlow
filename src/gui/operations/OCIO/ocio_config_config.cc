@@ -92,6 +92,7 @@ bool PF::OCIOCSSelector::my_button_release_event( GdkEventButton* event )
 {
   std::cout<<"OCIOCSSelector::my_button_release_event(): enable="<<enabled<<std::endl;
   if( !enabled ) return false;
+  if( menu == NULL ) return false;
   menu->popup(event->button, event->time);
   return false;
 }
@@ -276,6 +277,7 @@ bool PF::OCIOLookSelector::my_button_release_event( GdkEventButton* event )
 {
   std::cout<<"OCIOLookSelector::my_button_release_event(): enable="<<enabled<<std::endl;
   if( !enabled ) return false;
+  if( menu == NULL ) return false;
   menu->popup(event->button, event->time);
   return false;
 }
@@ -400,12 +402,12 @@ PF::OCIOConfigConfigGUI::OCIOConfigConfigGUI( PF::Layer* layer ):
   openButton(/*Gtk::Stock::OPEN*/),
   csin_frame(_("input colorspace")),
   csin_selector( this, "cs_in_name" ),
-  in_prof_mode_selector( this, "in_profile_mode", _("gamut: "), 1 ),
-  in_trc_type_selector( this, "in_trc_type", _("encoding: "), 1 ),
+  in_prof_mode_selector( this, "in_profile_mode", _("gamut: "), 1, 200 ),
+  in_trc_type_selector( this, "in_trc_type", _("encoding: "), 1, 200 ),
   csout_frame(_("output colorspace")),
   csout_selector( this, "cs_out_name" ),
-  out_prof_mode_selector( this, "out_profile_mode", _("gamut: "), 1 ),
-  out_trc_type_selector( this, "out_trc_type", _("encoding: "), 1 ),
+  out_prof_mode_selector( this, "out_profile_mode", _("gamut: "), 1, 200 ),
+  out_trc_type_selector( this, "out_trc_type", _("encoding: "), 1, 200 ),
   look_frame(_("Look")),
   look_selector( this, "look_name" )
 {
@@ -413,9 +415,9 @@ PF::OCIOConfigConfigGUI::OCIOConfigConfigGUI( PF::Layer* layer ):
   openButton.set_image( img_open );
   fileEntry.set_width_chars(20);
 
-  file_hbox.pack_start( label, Gtk::PACK_SHRINK, 0 );
-  file_hbox.pack_start( fileEntry, Gtk::PACK_SHRINK, 2 );
-  file_hbox.pack_start( openButton, Gtk::PACK_SHRINK, 0 );
+  file_hbox.pack_end( openButton, Gtk::PACK_SHRINK, 0 );
+  file_hbox.pack_end( fileEntry, Gtk::PACK_SHRINK, 2 );
+  file_hbox.pack_end( label, Gtk::PACK_SHRINK, 0 );
   controlsBox.pack_start( file_hbox, Gtk::PACK_SHRINK, 5 );
 
   csin_selector.enable();

@@ -81,11 +81,14 @@ PF::ColorCorrectionConfigGUI::ColorCorrectionConfigGUI( PF::Layer* layer ):
   g_pow_slider( this, "g_pow", _("green"), 0, 0, 100, 0.01, 0.05, 1),
   b_pow_slider( this, "b_pow", _("blue"), 0, 0, 100, 0.01, 0.05, 1),
   saturation_slider( this, "saturation", _("saturation"), 0, 0, 100, 0.01, 0.1, 1),
-  is_log( this, "log_encoding", _("log encoding"), false )
+  is_log( this, "log_encoding", _("log"), false )
 {
+  controlsBox.set_spacing(4);
+
   button_hbox.pack_start(load_button, Gtk::PACK_EXPAND_WIDGET, 5);
   button_hbox.pack_start(save_button, Gtk::PACK_EXPAND_WIDGET, 5);
-  controlsBox.pack_start( button_hbox, Gtk::PACK_SHRINK, 2 );
+  button_hbox.pack_start( is_log, Gtk::PACK_SHRINK, 5 );
+  controlsBox.pack_start( button_hbox, Gtk::PACK_SHRINK, 0 );
 
   load_button.signal_clicked().connect(
       sigc::mem_fun(*this,&PF::ColorCorrectionConfigGUI::on_button_load) );
@@ -102,29 +105,31 @@ PF::ColorCorrectionConfigGUI::ColorCorrectionConfigGUI( PF::Layer* layer ):
   g_pow_slider.set_conversion_functions( &pow_conv, &pow_conv_inv );
   b_pow_slider.set_conversion_functions( &pow_conv, &pow_conv_inv );
 
-  slope_box.pack_start( slope_slider, Gtk::PACK_SHRINK );
-  slope_box.pack_start( r_slope_slider, Gtk::PACK_SHRINK );
-  slope_box.pack_start( g_slope_slider, Gtk::PACK_SHRINK );
-  slope_box.pack_start( b_slope_slider, Gtk::PACK_SHRINK );
+  slope_box.pack_start( slope_slider, Gtk::PACK_SHRINK, 2 );
+  slope_box.pack_start( r_slope_slider, Gtk::PACK_SHRINK, 2 );
+  slope_box.pack_start( g_slope_slider, Gtk::PACK_SHRINK, 2 );
+  slope_box.pack_start( b_slope_slider, Gtk::PACK_SHRINK, 2 );
+  slope_box.pack_start( slope_padding, Gtk::PACK_SHRINK, 2 );
   slope_frame.add(slope_box);
-  controlsBox.pack_start( slope_frame, Gtk::PACK_SHRINK, 4 );
+  controlsBox.pack_start( slope_frame, Gtk::PACK_SHRINK, 0 );
 
-  offs_box.pack_start( offs_slider, Gtk::PACK_SHRINK );
-  offs_box.pack_start( r_offs_slider, Gtk::PACK_SHRINK );
-  offs_box.pack_start( g_offs_slider, Gtk::PACK_SHRINK );
-  offs_box.pack_start( b_offs_slider, Gtk::PACK_SHRINK );
+  offs_box.pack_start( offs_slider, Gtk::PACK_SHRINK, 2 );
+  offs_box.pack_start( r_offs_slider, Gtk::PACK_SHRINK, 2 );
+  offs_box.pack_start( g_offs_slider, Gtk::PACK_SHRINK, 2 );
+  offs_box.pack_start( b_offs_slider, Gtk::PACK_SHRINK, 2 );
+  offs_box.pack_start( offs_padding, Gtk::PACK_SHRINK, 2 );
   offs_frame.add(offs_box);
-  controlsBox.pack_start( offs_frame, Gtk::PACK_SHRINK, 4 );
+  controlsBox.pack_start( offs_frame, Gtk::PACK_SHRINK, 0 );
 
-  pow_box.pack_start( pow_slider, Gtk::PACK_SHRINK );
-  pow_box.pack_start( r_pow_slider, Gtk::PACK_SHRINK );
-  pow_box.pack_start( g_pow_slider, Gtk::PACK_SHRINK );
-  pow_box.pack_start( b_pow_slider, Gtk::PACK_SHRINK );
+  pow_box.pack_start( pow_slider, Gtk::PACK_SHRINK, 2 );
+  pow_box.pack_start( r_pow_slider, Gtk::PACK_SHRINK, 2 );
+  pow_box.pack_start( g_pow_slider, Gtk::PACK_SHRINK, 2 );
+  pow_box.pack_start( b_pow_slider, Gtk::PACK_SHRINK, 2 );
+  pow_box.pack_start( pow_padding, Gtk::PACK_SHRINK, 2 );
   pow_frame.add(pow_box);
-  controlsBox.pack_start( pow_frame, Gtk::PACK_SHRINK, 4 );
+  controlsBox.pack_start( pow_frame, Gtk::PACK_SHRINK, 0 );
 
   controlsBox.pack_start( saturation_slider, Gtk::PACK_SHRINK, 4 );
-  controlsBox.pack_start( is_log, Gtk::PACK_SHRINK );
 
   add_widget( controlsBox );
 }

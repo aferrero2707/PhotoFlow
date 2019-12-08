@@ -32,8 +32,8 @@
 
 PF::SharpenConfigGUI::SharpenConfigGUI( PF::Layer* layer ):
 OperationConfigGUI( layer, "Sharpen" ),
-modeSelector( this, "method", "Sharpen method: ", 0 ),
-usmRadiusSlider( this, "usm_radius", "Radius", 1, 0, 100, 0.05, 0.1, 1),
+modeSelector( this, "method", "method: ", 0 ),
+usmRadiusSlider( this, "usm_radius", "radius", 1, 0, 100, 0.05, 0.1, 1),
 eusmAmountSlider( this, "eusm_amount", "amount", 1, 0, 500, 0.5, 5, 100),
 eusmNScalesSlider( this, "eusm_nscales", "number of scales", 1, 0, 10, 1, 5, 1),
 eusmRadiusSlider( this, "eusm_radius", "radius", 1, 0, 10, 1, 5, 1),
@@ -82,33 +82,52 @@ void PF::SharpenConfigGUI::do_update()
     PropertyBase* prop = par->get_property( "method" );
     if( !prop )  return;
 
-    if( usmControlsBox.get_parent() == &controlsBox )
-      controlsBox.remove( usmControlsBox );
-    if( eusmControlsBox.get_parent() == &controlsBox )
-      controlsBox.remove( eusmControlsBox );
-    if( rlControlsBox.get_parent() == &controlsBox )
-      controlsBox.remove( rlControlsBox );
-    if( textureControlsBox.get_parent() == &controlsBox )
-      controlsBox.remove( textureControlsBox );
-
+    bool do_switch = false;
     switch( prop->get_enum_value().first ) {
     case PF::SHARPEN_USM:
-      controlsBox.pack_start( usmControlsBox, Gtk::PACK_SHRINK );
-      usmControlsBox.show();
+      if( usmControlsBox.get_parent() != &controlsBox ) do_switch = true;
       break;
     case PF::SHARPEN_EUSM:
-      controlsBox.pack_start( eusmControlsBox, Gtk::PACK_SHRINK );
-      eusmControlsBox.show();
+      if( eusmControlsBox.get_parent() != &controlsBox ) do_switch = true;
       break;
     case PF::SHARPEN_DECONV:
-      controlsBox.pack_start( rlControlsBox, Gtk::PACK_SHRINK );
-      rlControlsBox.show();
+      if( rlControlsBox.get_parent() != &controlsBox ) do_switch = true;
       break;
     case PF::SHARPEN_TEXTURE:
-      controlsBox.pack_start( textureControlsBox, Gtk::PACK_SHRINK );
-      textureControlsBox.show();
+      if( textureControlsBox.get_parent() != &controlsBox ) do_switch = true;
       break;
-		}
+    }
+
+    if( do_switch) {
+
+      if( usmControlsBox.get_parent() == &controlsBox )
+        controlsBox.remove( usmControlsBox );
+      if( eusmControlsBox.get_parent() == &controlsBox )
+        controlsBox.remove( eusmControlsBox );
+      if( rlControlsBox.get_parent() == &controlsBox )
+        controlsBox.remove( rlControlsBox );
+      if( textureControlsBox.get_parent() == &controlsBox )
+        controlsBox.remove( textureControlsBox );
+
+      switch( prop->get_enum_value().first ) {
+      case PF::SHARPEN_USM:
+        controlsBox.pack_start( usmControlsBox, Gtk::PACK_SHRINK );
+        usmControlsBox.show();
+        break;
+      case PF::SHARPEN_EUSM:
+        controlsBox.pack_start( eusmControlsBox, Gtk::PACK_SHRINK );
+        eusmControlsBox.show();
+        break;
+      case PF::SHARPEN_DECONV:
+        controlsBox.pack_start( rlControlsBox, Gtk::PACK_SHRINK );
+        rlControlsBox.show();
+        break;
+      case PF::SHARPEN_TEXTURE:
+        controlsBox.pack_start( textureControlsBox, Gtk::PACK_SHRINK );
+        textureControlsBox.show();
+        break;
+      }
+    }
   }
   controlsBox.show_all_children();
 

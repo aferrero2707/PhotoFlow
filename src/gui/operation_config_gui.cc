@@ -104,15 +104,16 @@ static gboolean config_update_cb (PF::OperationConfigGUI * config)
 PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring& title, bool chsel ):
   PF::OperationConfigUI(layer),
   editor( NULL ),
-  blendSelector( this, layer->get_blender(), "blend_mode", _("blend mode: "), PF_BLEND_PASSTHROUGH, 100 ),
-  blendSelector2( this, layer->get_blender(), "blend_mode", _("blend: "), PF_BLEND_PASSTHROUGH, 55 ),
-  blendSelectorMask( this, layer->get_blender(), "mask_blend_mode", _("mode: "), PF_BLEND_NORMAL, 55 ),
-  blendSelectorMask2( this, layer->get_blender(), "mask_blend_mode", _("blend: "), PF_BLEND_NORMAL, 55 ),
+  blendSelector( this, layer->get_blender(), "blend_mode", _("blend: "), PF_BLEND_PASSTHROUGH, 0 ),
+  blendSelector2( this, layer->get_blender(), "blend_mode", _("blend: "), PF_BLEND_PASSTHROUGH, 0 ),
+  blendSelectorMask( this, layer->get_blender(), "mask_blend_mode", _("combine: "), PF_BLEND_NORMAL, 0 ),
+  blendSelectorMask2( this, layer->get_blender(), "mask_blend_mode", _("combine: "), PF_BLEND_NORMAL, 0 ),
   intensitySlider( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   intensitySlider2( this, "intensity", _("Intensity"), 100, 0, 100, 1, 10, 100),
   opacitySlider( this, layer->get_blender(), "opacity", _("opacity: "), 100, 0, 100, 1, 10, 100, 250, 3),
-  //    ( (PF::PhotoFlow::Instance().is_single_win_mode() == true) ? 4 : 3 ) ),
   opacitySlider2( this, layer->get_blender(), "opacity", _(""), 100, 0, 100, 1, 10, 100, 100, 4),
+  opacitySelector( this, layer->get_blender(), "opacity", _(""), 100, 50),
+  opacitySelector2( this, layer->get_blender(), "opacity", _(""), 100, 50),
   imap_enabled_box( this, "mask_enabled", _("Enable mask"), true),
   omap_enabled_box( this, layer->get_blender(), "mask_enabled", _("Enable mask"), true),
   test_padding_enable_box( this, "enable_padding", _("enable padding"), false),
@@ -123,8 +124,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   rgbchSelector( this, "rgb_target_channel", _("Target channel: "), -1 ),
   labchSelector( this, "lab_target_channel", _("Target channel: "), -1 ),
   cmykchSelector( this, "cmyk_target_channel", _("Target channel:"), -1 ),
-  layer_list( this, _("input source:"), 0, false),
-  layer_list2( this, _("input:"), 0, true),
+  layer_list( this, _("input: "), 0, true),
+  layer_list2( this, _("input: "), 0, true),
   //sourceSelector( this, "source_channel", "Source channel: ", 1 ),
   previewButton(_("preview")),
   dialog( NULL ),
@@ -165,7 +166,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame->set_size_request(200,-1);
   frame->set_shadow_type( Gtk::SHADOW_NONE );
 
-  controls_frame.set_shadow_type( Gtk::SHADOW_NONE );
+  //controls_frame.set_shadow_type( Gtk::SHADOW_NONE );
 
   //frame_hbox.pack_start( frame_vbox, Gtk::PACK_EXPAND_WIDGET );
   //frame->add( frame_hbox );
@@ -198,11 +199,13 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   //frame_top_box_1_1.pack_start( frame_redo, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_hbox.pack_start( frame_reset, Gtk::PACK_SHRINK, 5 );
   frame_top_buttons_hbox.pack_start( frame_help, Gtk::PACK_SHRINK, 5 );
+  //frame_top_buttons_hbox.pack_start( frame_top_buttons_alignment, Gtk::PACK_EXPAND_WIDGET, 0 );
+  //frame_top_buttons_hbox.pack_start( frame_close, Gtk::PACK_SHRINK, 0 );
 
-  frame_top_buttons_alignment.add( frame_top_buttons_hbox );
-  frame_top_buttons_alignment.set( 0, 0.5, 0, 0 );
+  //frame_top_buttons_alignment.add( frame_top_buttons_hbox );
+  //frame_top_buttons_alignment.set( 0, 0.5, 0, 0 );
 
-  frame_top_box_1_1.pack_start( frame_top_buttons_alignment, Gtk::PACK_SHRINK );
+  //frame_top_box_1_1.pack_start( frame_top_buttons_hbox, Gtk::PACK_EXPAND_WIDGET );
 
   /********************************************************************************
    * Layer control buttons - aux frame
@@ -210,6 +213,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   nameEntry2.set_has_frame( false );
   aux_top_buttons_hbox.pack_start( frame_mask2, Gtk::PACK_SHRINK, 5 );
   aux_top_buttons_hbox.pack_start( frame_sticky2, Gtk::PACK_SHRINK, 5 );
+  aux_top_buttons_hbox.pack_start( frame_edit2, Gtk::PACK_SHRINK, 5 );
   //aux_top_buttons_hbox.pack_start( frame_reset2, Gtk::PACK_SHRINK, 5 );
   aux_top_buttons_hbox.pack_start( frame_help2, Gtk::PACK_SHRINK, 5 );
 
@@ -227,7 +231,7 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   }
 
   //frame_top_box_1_2.pack_start( frame_expander, Gtk::PACK_SHRINK, 5 );
-  frame_top_box_1_1.pack_start( nameEntry, Gtk::PACK_EXPAND_WIDGET );
+  //frame_top_box_1_1.pack_start( nameEntry, Gtk::PACK_EXPAND_WIDGET );
   //frame_top_box_1_2.pack_start( frame_box_1_padding, Gtk::PACK_EXPAND_WIDGET );
   //frame_top_box_1_1.pack_start( frame_close, Gtk::PACK_SHRINK, 5 );
 
@@ -239,9 +243,10 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 
   //frame_top_box_1_2.pack_start( map_buttons, Gtk::PACK_SHRINK, 5 );
 
-  frame_top_vbox_1.pack_start( frame_top_box_1_1, Gtk::PACK_SHRINK, 4 );
-  frame_top_vbox_1.pack_start( frame_top_box_1_2, Gtk::PACK_SHRINK );
-  frame_top_box_1.pack_start( frame_top_vbox_1, Gtk::PACK_EXPAND_WIDGET );
+  //frame_top_vbox_1.pack_start( frame_top_box_1_1, Gtk::PACK_SHRINK );
+  //frame_top_vbox_1.pack_start( frame_top_box_1_2, Gtk::PACK_SHRINK );
+  //frame_top_box_1.pack_start( frame_top_vbox_1, Gtk::PACK_EXPAND_WIDGET );
+  frame_top_box_1.pack_start( frame_top_buttons_hbox, Gtk::PACK_EXPAND_WIDGET );
 
 
   layer_list2.set_size(160, -1);
@@ -251,20 +256,28 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
     //opacitySlider.set_width( 200 );
     //if( (PF::PhotoFlow::Instance().is_single_win_mode() == true) )
     //  opacity_box.pack_end( opacitySlider, Gtk::PACK_SHRINK, 0 );
-    opacity_box.pack_end( blendSelectorMask, Gtk::PACK_SHRINK, 5 );
-    opacity_box.pack_end( blendSelector, Gtk::PACK_SHRINK, 5 );
-    frame_top_box_2.pack_start( opacity_box, Gtk::PACK_EXPAND_WIDGET );
+    opacity_box.set_spacing(5);
+    opacity_box.pack_start( blendSelectorMask, Gtk::PACK_EXPAND_WIDGET );
+    opacity_box.pack_start( blendSelector, Gtk::PACK_EXPAND_WIDGET );
+    opacity_box.pack_start( opacitySelector, Gtk::PACK_SHRINK );
+    //frame_top_box_2.pack_start( opacity_box, Gtk::PACK_EXPAND_WIDGET );
     //if( (PF::PhotoFlow::Instance().is_single_win_mode() == false) )
       //frame_top_box_2.pack_start( opacitySlider, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_2.pack_start( blendSelector, Gtk::PACK_SHRINK );
 
-    aux_opacity_box.pack_start( blendSelectorMask2, Gtk::PACK_SHRINK, 0 );
-    aux_opacity_box.pack_start( blendSelector2, Gtk::PACK_SHRINK, 0 );
-    aux_opacity_box.pack_start( opacitySlider2, Gtk::PACK_SHRINK, 0 );
-    aux_controls_hbox_3.pack_end( aux_opacity_box, Gtk::PACK_SHRINK );
+    aux_opacity_box.set_spacing(5);
+    aux_opacity_box.pack_start( blendSelectorMask2, Gtk::PACK_EXPAND_WIDGET, 0 );
+    aux_opacity_box.pack_start( blendSelector2, Gtk::PACK_EXPAND_WIDGET, 0 );
+    //aux_opacity_box.pack_start( opacitySlider2, Gtk::PACK_SHRINK, 0 );
+    aux_opacity_box.pack_start( opacitySelector2, Gtk::PACK_SHRINK, 0 );
+    aux_controls_hbox_3.pack_end( aux_opacity_box, Gtk::PACK_EXPAND_WIDGET );
 
-    blend_controls_box.pack_start( frame_top_box_2, Gtk::PACK_SHRINK, 10 );
-    blend_controls_box.pack_start( opacitySlider, Gtk::PACK_SHRINK, 10 );
+    //controls_box.pack_start( opacity_box, Gtk::PACK_SHRINK, 10 );
+
+    //blend_controls_box.pack_start( frame_top_box_2, Gtk::PACK_SHRINK, 10 );
+    blend_controls_box.pack_start( opacity_box, Gtk::PACK_SHRINK, 0 );
+    //blend_controls_box.pack_start( opacitySlider, Gtk::PACK_SHRINK, 10 );
+    //blend_controls_box.pack_start( opacitySelector, Gtk::PACK_SHRINK, 10 );
   }
   //controls_box.pack_start( frame_top_box_2, Gtk::PACK_SHRINK, 0 );
 
@@ -318,21 +331,27 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
 /*
 #ifdef GTKMM_2
   Gdk::Color bg;
-  bg.set_grey_p(0.3);
+  bg.set_grey_p(0.15);
   controls_evbox.modify_bg( Gtk::STATE_NORMAL, bg );
 
-  bg.set_grey_p(0.22);
-  nameEntry.modify_base( Gtk::STATE_NORMAL, bg );
+  //bg.set_grey_p(0.22);
+  //nameEntry.modify_base( Gtk::STATE_NORMAL, bg );
   //nameEntry.set_alignment(1);
 #endif
 */
-  controls_evbox.add( controls_box );
-  controls_frame.add( controls_evbox );
+  //controls_box.set_border_width(4);
+  controls_box_top_padding.set_size_request(0,4);
+  controls_box_bottom_padding.set_size_request(0,4);
+  controls_box.pack_start(controls_box_top_padding);
+  controls_box.pack_end(controls_box_bottom_padding);
+  //controls_evbox.add( controls_box );
+  //controls_frame.add( controls_evbox );
 
 
-  aux_controls_box.pack_start( aux_controls_hbox_1, Gtk::PACK_SHRINK, 5 );
-  aux_controls_box.pack_start( aux_controls_hbox_2, Gtk::PACK_SHRINK, 5 );
-  aux_controls_box.pack_start( aux_controls_hbox_3, Gtk::PACK_SHRINK, 5 );
+  aux_controls_box.set_spacing(0);
+  aux_controls_box.pack_start( aux_controls_hbox_1, Gtk::PACK_SHRINK, 4 );
+  //aux_controls_box.pack_start( aux_controls_hbox_2, Gtk::PACK_SHRINK, 5 );
+  aux_controls_box.pack_start( aux_controls_hbox_3, Gtk::PACK_SHRINK, 0 );
 
   if(false && par && par->has_intensity() ) {
     //aux_controls_box.pack_start( intensitySlider2, Gtk::PACK_SHRINK );
@@ -397,8 +416,8 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   frame_help2.signal_clicked.connect(sigc::mem_fun(*this,
         &OperationConfigGUI::show_help_cb) );
 
-  frame_close.signal_clicked.connect(sigc::mem_fun(*this,
-        &OperationConfigGUI::close_config_cb) );
+  //frame_close.signal_clicked.connect(sigc::mem_fun(*this,
+  //      &OperationConfigGUI::close_config_cb) );
 
   nameEntry.signal_changed().connect(sigc::mem_fun(*this,
       &OperationConfigGUI::on_layer_name_changed) );
@@ -465,14 +484,14 @@ void PF::OperationConfigGUI::expand()
 #ifndef NDEBUG
   std::cout<<"OperationConfigGUI::expand() called."<<std::endl;
 #endif
-  if( controls_frame.get_parent() == NULL ) {
+  if( controls_box.get_parent() == NULL ) {
     //std::cout<<"OperationConfigGUI::expand(): editor="<<editor<<std::endl;
     if( editor ) {
       editor->get_layer_widget().get_controls_group().collapse_all();
     }
-    frame_vbox.pack_start( controls_frame, Gtk::PACK_SHRINK, 0 );
-    controls_frame.show_all_children();
-    controls_frame.show();
+    frame_vbox.pack_start( controls_box, Gtk::PACK_SHRINK, 0 );
+    controls_box.show_all_children();
+    controls_box.show();
     frame_expander.set_active(true);
     if( editor && get_layer()) {
       editor->set_edited_layer( get_layer()->get_id() );
@@ -500,8 +519,8 @@ void PF::OperationConfigGUI::expand()
 void PF::OperationConfigGUI::collapse()
 {
   //std::cout<<"OperationConfigGUI::collapse() called."<<std::endl;
-  if( controls_frame.get_parent() == &frame_vbox ) {
-    frame_vbox.remove( controls_frame );
+  if( controls_box.get_parent() == &frame_vbox ) {
+    frame_vbox.remove( controls_box );
     frame_expander.set_active(false);
     //std::cout<<"OperationConfigGUI::collapse(): controls hidden"<<std::endl;
     //if( editor ) {

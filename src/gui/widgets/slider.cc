@@ -48,14 +48,14 @@ void PF::Slider::create_widgets( std::string l, double val,
   scale.set_digits(0);
   if( sincr < 1 ) { scale.set_digits(1); spinButton.set_digits(1); }
   if( sincr < 0.1 )  { scale.set_digits(2); spinButton.set_digits(2); }
-  scale.set_size_request( size, -1 );
+  scale.set_size_request( /*size*/50, -1 );
   spinButton.set_size_request( 50, -1 );
   spinButton.set_has_frame( false );
 
   //numentry.set_size_request( 30, 50 );
   //numentry.set_has_frame( false );
 
-  //int layout = 3;
+  //int layout = 4;
 
   if( (max-min) < 1000000 ) {
     // Full widget with slider and spin button
@@ -116,7 +116,7 @@ void PF::Slider::create_widgets( std::string l, double val,
       align.add( hbox );
       pack_end( align, Gtk::PACK_SHRINK );
 
-    } else if(layout == 3 ) {
+    } else if(layout == 4 ) {
       // label above the slider
       reset_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
       reset_align.add( reset_button );
@@ -142,12 +142,30 @@ void PF::Slider::create_widgets( std::string l, double val,
       align.add( vbox );
       pack_end( align, Gtk::PACK_EXPAND_WIDGET );
 
-    } else if(layout == 4 ) {
-      hbox.pack_start( label, Gtk::PACK_SHRINK, 5 );
-      hbox.pack_start( numentry, Gtk::PACK_SHRINK, 0 );
-      vbox2.pack_start( reset_button, Gtk::PACK_EXPAND_WIDGET );
-      hbox.pack_start( vbox2, Gtk::PACK_SHRINK );
-      pack_end( hbox, Gtk::PACK_SHRINK );
+    } else if(layout == 3 ) {
+      // label above the slider, with the reset button on its left
+      reset_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
+      reset_align.add( reset_button );
+      label_align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
+      label_align.add( label );
+      hbox.pack_start( reset_align, Gtk::PACK_SHRINK, 4 );
+      hbox.pack_start( label_align, Gtk::PACK_SHRINK, 4 );
+
+      scale.set_draw_value( false );
+      scale_align.set( Gtk::ALIGN_START, Gtk::ALIGN_END, 1, 0 );
+      scale_align.add( scale );
+      numentry_align.set( Gtk::ALIGN_END, Gtk::ALIGN_END, 0, 0 );
+      numentry_align.add( numentry );
+      hbox2.pack_start( scale_align, Gtk::PACK_EXPAND_WIDGET );
+      hbox2.pack_end( numentry_align, Gtk::PACK_SHRINK );
+      vbox.set_spacing(-8);
+      vbox.pack_start( hbox, Gtk::PACK_SHRINK );
+      vbox.pack_start( hbox2, Gtk::PACK_SHRINK );
+      //align.set( Gtk::ALIGN_END, Gtk::ALIGN_CENTER, 0, 0 );
+      //align.set_padding(0,0,1,1);
+      //align.add( vbox );
+      pack_end( vbox, Gtk::PACK_EXPAND_WIDGET );
+
     }
   } else {
     //hbox.pack_start( label, Gtk::PACK_SHRINK );
