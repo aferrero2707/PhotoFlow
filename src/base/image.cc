@@ -820,7 +820,7 @@ void PF::Image::do_destroy()
 
 void PF::Image::remove_layer( PF::Layer* layer )
 {
-  bool sync = false;
+  bool sync = true;
   if( force_synced_update )
     sync = true;
 
