@@ -610,8 +610,6 @@ void PF::LayerTree::update_model()
   if( get_tree_modified() == false )
     return;
 
-  if( !layers ) return;
-
   if( updating ) return;
 
   tree_modified = false;
@@ -623,44 +621,50 @@ void PF::LayerTree::update_model()
   treeModel->clear();
 #ifndef NDEBUG
   std::cout<<"LayerTree::update_model(): after treeModel->clear()"<<std::endl;
-  std::cout<<"LayerTree::update_model(): layers->size()="<<layers->size()<<""<<std::endl;
 #endif
-  std::list<PF::Layer*>::iterator li;
-  for( li = layers->begin(); li != layers->end(); li++ ) {
-    PF::Layer* l = *li;
-    if( !l ) continue;
-    if( !l->get_processor() ) {
-      std::cout<<"LayerTree::update_model(): NULL processor for layer \""<<l->get_name()<<"\""<<std::endl;
-      continue;
-    }
-    if( !l->get_processor()->get_par() ) {
-      std::cout<<"LayerTree::update_model(): NULL operation for layer \""<<l->get_name()<<"\""<<std::endl;
-      continue;
-    }
+
+  if( layers ) {
+
 #ifndef NDEBUG
-    std::cout<<"LayerTree::update_model(): adding layer \""<<l->get_name()<<"\""<<std::endl;
+    std::cout<<"LayerTree::update_model(): layers->size()="<<layers->size()<<""<<std::endl;
 #endif
-    Gtk::TreeModel::iterator iter = treeModel->prepend();
-    Gtk::TreeModel::Row row = *(iter);
-    row[treeModel->columns.col_visible] = l->is_enabled();
-    row[treeModel->columns.col_name] = l->get_name().substr(0,15);
-    row[treeModel->columns.col_layer] = l;
-    update_mask_icons( row, l );
+    std::list<PF::Layer*>::iterator li;
+    for( li = layers->begin(); li != layers->end(); li++ ) {
+      PF::Layer* l = *li;
+      if( !l ) continue;
+      if( !l->get_processor() ) {
+        std::cout<<"LayerTree::update_model(): NULL processor for layer \""<<l->get_name()<<"\""<<std::endl;
+        continue;
+      }
+      if( !l->get_processor()->get_par() ) {
+        std::cout<<"LayerTree::update_model(): NULL operation for layer \""<<l->get_name()<<"\""<<std::endl;
+        continue;
+      }
+#ifndef NDEBUG
+      std::cout<<"LayerTree::update_model(): adding layer \""<<l->get_name()<<"\""<<std::endl;
+#endif
+      Gtk::TreeModel::iterator iter = treeModel->prepend();
+      Gtk::TreeModel::Row row = *(iter);
+      row[treeModel->columns.col_visible] = l->is_enabled();
+      row[treeModel->columns.col_name] = l->get_name().substr(0,15);
+      row[treeModel->columns.col_layer] = l;
+      update_mask_icons( row, l );
 
-    if( l->get_processor() && l->get_processor()->get_par() ) {
-      PF::OperationConfigGUI* ui = dynamic_cast<PF::OperationConfigGUI*>( l->get_processor()->get_par()->get_config_ui() );
-      if( ui ) ui->set_editor( editor );
-    }
+      if( l->get_processor() && l->get_processor()->get_par() ) {
+        PF::OperationConfigGUI* ui = dynamic_cast<PF::OperationConfigGUI*>( l->get_processor()->get_par()->get_config_ui() );
+        if( ui ) ui->set_editor( editor );
+      }
 
-    if( l->is_group() ) {
-      update_model_int( row );
-      Gtk::TreeModel::Path path = treeModel->get_path( iter );
-      if( l->is_expanded() ) {
-        //std::cout<<"LayerTree::update_model(): expanding row"<<std::endl;
-        treeView.expand_row( path, true );
-      } else {
-        //std::cout<<"LayerTree::update_model(): collapsing row"<<std::endl;
-        treeView.collapse_row( path );
+      if( l->is_group() ) {
+        update_model_int( row );
+        Gtk::TreeModel::Path path = treeModel->get_path( iter );
+        if( l->is_expanded() ) {
+          //std::cout<<"LayerTree::update_model(): expanding row"<<std::endl;
+          treeView.expand_row( path, true );
+        } else {
+          //std::cout<<"LayerTree::update_model(): collapsing row"<<std::endl;
+          treeView.collapse_row( path );
+        }
       }
     }
   }
@@ -769,9 +773,15 @@ int PF::LayerTree::get_selected_layer_id()
 
 bool PF::LayerTree::get_row(int id, const Gtk::TreeModel::Children& rows, Gtk::TreeModel::iterator& iter)
 {
+#ifndef NDEBUG
+  std::cout<<"[LayerTree::get_row] looking for layer id "<<id<<std::endl;
+#endif
   for(  Gtk::TreeModel::iterator it = rows.begin();
         it != rows.end(); it++ ) {
     //Gtk::TreeModel::Row row = *it;
+#ifndef NDEBUG
+    std::cout<<"[LayerTree::get_row] getting layer of row \""<<(*it)[treeModel->columns.col_name]<<"\"\n";
+#endif
     PF::Layer* l = (*it)[treeModel->columns.col_layer];
     if(l && ((int)(l->get_id())==id)) {
       iter = it;

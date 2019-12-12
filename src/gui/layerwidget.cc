@@ -644,7 +644,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
 
   tool_buttons_box.pack_start( add_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( group_button, Gtk::PACK_SHRINK, 2 );
-  //tool_buttons_box.pack_start( insert_image_button, Gtk::PACK_SHRINK, 2 );
+  tool_buttons_box.pack_start( insert_image_button, Gtk::PACK_SHRINK, 2 );
   //tool_buttons_box.pack_start( levels_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( basic_edits_button, Gtk::PACK_SHRINK, 2 );
   tool_buttons_box.pack_start( curves_button, Gtk::PACK_SHRINK, 2 );
@@ -1123,31 +1123,6 @@ void PF::LayerWidget::on_selection_changed()
       }
     }
 
-    if( page == 0 ) {
-      selected_layer_id = layer_id;
-      LayerTree* view = layer_views[1];
-      //view->get_tree().signal_row_activated().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_row_activated) );
-
-      //view->get_tree().signal_button_release_event().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_button_event) );
-      //Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = view->get_tree().get_selection();
-      //refTreeSelection->signal_changed().connect(sigc::mem_fun(*this, &PF::LayerWidget::on_selection_changed));
-
-      /*
-      Gtk::CellRendererToggle* cell =
-      dynamic_cast<Gtk::CellRendererToggle*>( view->get_column_cell_renderer(0) );
-      cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerWidget::on_cell_toggled) );
-       */
-
-      view->set_layers( &(l->get_omap_layers()) );
-      view->update_model();
-      //Widget* page = notebook.get_nth_page(-1);
-      //Gtk::Label* label = (Gtk::Label*)notebook.get_tab_label(*page);
-      //label->set_angle(90);
-      //view->show_all();
-      //notebook.set_current_page( 1 );
-      //frame->show();
-    }
-
   } else {
     if( page == 0 )
       selected_layer_id = -1;
@@ -1306,6 +1281,8 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
         //notebook.set_current_page( tab_id );
         return;
       }
+
+      mask_view.set_layers( &(l->get_omap_layers()) );
       switch_to_mask_view();
 /*
       LayerTree* view = new LayerTree( editor, true );
@@ -2390,6 +2367,8 @@ void PF::LayerWidget::remove_layers()
 #endif
     controls_dialog_delete(l);
 
+    if( !(l->get_omap_layers().empty()) ) mask_view.set_tree_modified();
+
 #ifndef NDEBUG
     std::cout<<"LayerWidget::remove_layers(): calling image->remove_layer(\""<<l->get_name()<<"\")"<<std::endl;
 #endif
@@ -2437,6 +2416,7 @@ void PF::LayerWidget::switch_to_layers_view()
   active_view = 0;
   if( mask_view_show_button.get_active() )
     mask_view_show_button.set_active(false);
+  mask_view.set_layers(NULL);
   on_selection_changed();
 }
 
