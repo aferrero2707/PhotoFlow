@@ -1,4 +1,4 @@
-/* 
+  /*
  */
 
 /*
@@ -420,7 +420,7 @@ int main (int argc, char *argv[])
     } else {
       mainWindow->on_button_open_clicked();
     }
-    app->run(*mainWindow);
+    if(mainWindow->get_number_of_images() > 0) app->run(*mainWindow);
   }
 
   if( mainWindow ) delete mainWindow;

@@ -46,7 +46,9 @@ layer_widget(lw)
   event_box.add( button_box );
   event_box.add_events( Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK );
 
-  pack_start( event_box, Gtk::PACK_SHRINK );
+  img_align.set(0.5,0.5,0,0);
+  img_align.add(event_box);
+  pack_start( img_align, Gtk::PACK_EXPAND_WIDGET );
 
   //event_box.signal_button_release_event().connect(sigc::mem_fun(*this,
   //    &ToolButton::on_button_release_event) );

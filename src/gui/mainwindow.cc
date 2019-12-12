@@ -527,7 +527,10 @@ void PF::MainWindow::on_button_exit()
 
   }
 
-  if( remove_all_tabs() ) hide();
+  if( remove_all_tabs() ) {
+    std::cout<<"MainWindow::on_button_exit(): calling hide()"<<std::endl;
+    hide();
+  }
 }
 
 
@@ -587,8 +590,9 @@ PF::MainWindow::open_image( std::string filename )
   //editor->open();
   viewerNotebook.set_current_page( -1 );
 
-  if( viewerNotebook.get_n_pages() > 1 ) viewerNotebook.set_show_tabs(true);
-  else viewerNotebook.set_show_tabs(false);
+  //if( viewerNotebook.get_n_pages() > 1 ) viewerNotebook.set_show_tabs(true);
+  //else
+    viewerNotebook.set_show_tabs(true);
 
   //std::cout<<"MainWindow::open_image(): current notebook page selected"<<std::endl;
   if( editor->get_image() && editor->get_image()->is_modified() )
@@ -1004,7 +1008,10 @@ void PF::MainWindow::on_button_open_clicked()
       }
   case(Gtk::RESPONSE_CANCEL): 
       {
-    std::cout << "Cancel clicked." << std::endl;
+    std::cout << "Cancel clicked, npages=" << viewerNotebook.get_n_pages() << std::endl;
+    if( viewerNotebook.get_n_pages() < 1 ) {
+      on_button_exit();
+    }
     break;
       }
   default: 
@@ -1345,6 +1352,10 @@ bool PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
 //#ifndef NDEBUG
   std::cout<<"PF::MainWindow::remove_tab() page #"<<page<<" removed."<<std::endl;
 //#endif
+
+  if( viewerNotebook.get_n_pages() < 1 ) {
+    on_button_exit();
+  }
 
   return true;
 }

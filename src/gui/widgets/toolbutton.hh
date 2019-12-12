@@ -44,6 +44,7 @@ class LayerWidget;
   {
     Gtk::EventBox event_box;
     Gtk::VBox button_box;
+    Gtk::Alignment img_align;
     Gtk::Image img;
 
     Image* image;

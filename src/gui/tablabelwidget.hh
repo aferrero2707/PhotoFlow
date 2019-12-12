@@ -82,6 +82,7 @@ class HTabLabelWidget: public Gtk::HBox
   Gtk::Image image;
   Gtk::Button button;
   PF::ToolButton button2;
+  Gtk::Alignment label_align, button_align;
   Gtk::Label label;
   Gtk::Widget* widget;
 
@@ -98,8 +99,13 @@ public:
     button.add( image );
     button.set_relief( Gtk::RELIEF_NONE );
     //button.set_size_request(16,16);
+    //label_align.set(0.5, 0.5, 0, 0);
+    //label_align.add(label);
     pack_start( label, Gtk::PACK_SHRINK, 4 );
-    pack_start( button2, Gtk::PACK_SHRINK );
+    button_align.set(0.5, 0.5, 0, 0);
+    button2.set_size_request(16,16);
+    button_align.add(button2);
+    pack_start( button_align, Gtk::PACK_SHRINK );
     //set_size_request(-1,20);
 
     button.signal_clicked().connect( sigc::mem_fun(*this,

@@ -111,6 +111,8 @@ public:
 
   void open_image(std::string filename);
 
+  int get_number_of_images() { return viewerNotebook.get_n_pages(); }
+
   void update_all_images();
 
   void set_image_name(Glib::ustring name);
