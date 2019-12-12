@@ -254,7 +254,7 @@ PF::SettingsDialog::SettingsDialog():
   ui_multiple_tool_dialogs_hbox.pack_start( ui_multiple_tool_dialogs_pad, Gtk::PACK_SHRINK );
   ui_multiple_tool_dialogs_hbox.pack_start( ui_multiple_tool_dialogs_check, Gtk::PACK_SHRINK );
   ui_multiple_tool_dialogs_hbox.pack_start( ui_multiple_tool_dialogs_label, Gtk::PACK_SHRINK );
-  ui_multiple_tool_dialogs_hbox.set_tooltip_text(_(""));
+  ui_multiple_tool_dialogs_hbox.set_tooltip_text("");
   ui_vbox.pack_start( ui_multiple_tool_dialogs_hbox, Gtk::PACK_SHRINK, 2 );
 
   ui_frame.add(ui_vbox);
