@@ -65,6 +65,8 @@ namespace PF {
 
     ~PercentSelector() {}
 
+    void set_sensitive(bool s) { cbox.set_sensitive(s); }
+
     void set_row_separator_func( const Gtk::ComboBox::SlotRowSeparator& slot )
     {
       cbox.set_row_separator_func( slot );

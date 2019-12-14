@@ -83,6 +83,13 @@ namespace PF {
     Glib::RefPtr<Gtk::Adjustment> get_adjustment() { return adjustment; }
 #endif
 
+    void set_sensitive(bool s)
+    {
+      scale.set_sensitive(s);
+      spinButton.set_sensitive(s);
+      numentry.set_sensitive(s);
+    }
+
     void set_editable( bool flag )
     {
       spinButton.set_editable( flag );
