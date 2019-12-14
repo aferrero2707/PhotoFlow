@@ -252,6 +252,22 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   layer_list2.set_size(160, -1);
   aux_controls_hbox_2.pack_start( layer_list2, Gtk::PACK_EXPAND_WIDGET );
 
+  aux_opacity_box.set_spacing(5);
+  aux_opacity_box.pack_start( blendSelectorMask2, Gtk::PACK_EXPAND_WIDGET, 0 );
+  aux_opacity_box.pack_start( blendSelector2, Gtk::PACK_EXPAND_WIDGET, 0 );
+  //aux_opacity_box.pack_start( opacitySlider2, Gtk::PACK_SHRINK, 0 );
+  aux_opacity_box.pack_start( opacitySelector2, Gtk::PACK_SHRINK, 0 );
+  aux_controls_hbox_3.pack_end( aux_opacity_box, Gtk::PACK_EXPAND_WIDGET );
+  if(par && par->has_opacity() ) {
+    blendSelector2.set_sensitive(true);
+    blendSelectorMask2.set_sensitive(true);
+    opacitySelector2.set_sensitive(true);
+  } else {
+    blendSelector2.set_sensitive(false);
+    blendSelectorMask2.set_sensitive(false);
+    opacitySelector2.set_sensitive(false);
+  }
+
   if(par && par->has_opacity() ) {
     //opacitySlider.set_width( 200 );
     //if( (PF::PhotoFlow::Instance().is_single_win_mode() == true) )
@@ -264,13 +280,6 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
     //if( (PF::PhotoFlow::Instance().is_single_win_mode() == false) )
       //frame_top_box_2.pack_start( opacitySlider, Gtk::PACK_EXPAND_WIDGET );
     //frame_top_box_2.pack_start( blendSelector, Gtk::PACK_SHRINK );
-
-    aux_opacity_box.set_spacing(5);
-    aux_opacity_box.pack_start( blendSelectorMask2, Gtk::PACK_EXPAND_WIDGET, 0 );
-    aux_opacity_box.pack_start( blendSelector2, Gtk::PACK_EXPAND_WIDGET, 0 );
-    //aux_opacity_box.pack_start( opacitySlider2, Gtk::PACK_SHRINK, 0 );
-    aux_opacity_box.pack_start( opacitySelector2, Gtk::PACK_SHRINK, 0 );
-    aux_controls_hbox_3.pack_end( aux_opacity_box, Gtk::PACK_EXPAND_WIDGET );
 
     //controls_box.pack_start( opacity_box, Gtk::PACK_SHRINK, 10 );
 
@@ -1427,6 +1436,9 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
   } else if( op_type == "clahe" ) {
     dialog = new PF::OperationConfigGUI( current_layer, "CLAHE" );
+
+  } else if( op_type == "tone_map_fattal02" ) {
+    dialog = new PF::OperationConfigGUI( current_layer, "Fattal02" );
 
 #ifdef HAVE_OCIO
   } else if( op_type == "ocio_filmic" ) {
