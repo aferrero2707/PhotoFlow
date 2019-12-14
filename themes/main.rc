@@ -1083,6 +1083,8 @@ style "entry" {
   #ythickness = 4
   xthickness = 3
   ythickness = 2
+  #xthickness = 1
+  #ythickness = 1
 
   engine "pixmap" {
 
@@ -1091,8 +1093,8 @@ style "entry" {
       state = NORMAL
       detail = "entry"
       file = "assets/entry-bg.png"
-      border = {6, 6, 6, 6}
-      #border = {2, 2, 2, 2}
+      #border = {6, 6, 6, 6}
+      border = {2, 2, 2, 2}
       stretch = TRUE
     }
 
@@ -1101,8 +1103,8 @@ style "entry" {
       state = ACTIVE
       detail = "entry"
       file = "assets/entry-active-bg.png"
-      border = {6, 6, 6, 6}
-      #border = {2, 2, 2, 2}
+      #border = {6, 6, 6, 6}
+      border = {2, 2, 2, 2}
       stretch = TRUE
     }
 
@@ -1111,8 +1113,8 @@ style "entry" {
       state = INSENSITIVE
       detail = "entry"
       file = "assets/entry-disabled-bg.png"
-      border = {6, 6, 6, 6}
-      #border = {2, 2, 2, 2}
+      #border = {6, 6, 6, 6}
+      border = {2, 2, 2, 2}
       stretch = TRUE
     }
 
@@ -1893,8 +1895,8 @@ style "combobox" {
 
 style "combobox_button" {
 
-  xthickness = 3
-  ythickness = 3
+  xthickness = 1
+  ythickness = 1
 
 }
 
