@@ -270,8 +270,6 @@ void PF::ControlsGroup::collapse_all()
 
 PF::AuxControlsGroup::AuxControlsGroup( ImageEditor* e ): editor(e), controls(NULL), gui(NULL)
 {
-  //set_spacing(10);
-  set_size_request(-1,50);
 }
 
 
@@ -329,7 +327,8 @@ x(-1), y(-1)
 #endif
 
   show_all_children();
-  set_deletable ( false );
+  set_deletable( false );
+  set_resizable( false );
 
   close_button.signal_clicked().connect( sigc::mem_fun(*this,
       &PF::ControlsDialog::close) );
@@ -773,6 +772,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   //ADD_TOOL_ITEM( "Brightness/Contrast"), "brightness_contrast" );
   ADD_TOOL_ITEM( _("Noise"), "noise_generator" );
   ADD_TOOL_ITEM( _("Clip values"), "clip" );
+  //ADD_TOOL_ITEM( _("Fattal 02"), "tone_map_fattal02" );
 
   item = new Gtk::MenuItem(_("film emulations"));
   tools_menu.append( *item );
