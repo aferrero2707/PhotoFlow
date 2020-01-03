@@ -825,6 +825,10 @@ cmsFloat32Number PF::perceptual2linear( ICCProfileData* data, cmsFloat32Number v
 */
 
 
+//#define PF_TRC_LUT_SIZE 255
+#define PF_TRC_LUT_SIZE 65535
+
+
 void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat band_fmt,
     cmsUInt32Number _intent, bool _bpc, float _adaptation_state)
 {
@@ -854,9 +858,10 @@ void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat ba
   bool is_matrix = in_profile->is_matrix() && out_profile->is_matrix();
   bool is_parametric = (in_profile->is_linear() || in_profile->is_parametric()) &&
       (out_profile->is_linear() || out_profile->is_parametric());
+  bool is_linear = in_profile->is_linear() && out_profile->is_linear();
 
   if( true && in_profile->is_rgb() && out_profile->is_rgb() &&
-      is_matrix && is_parametric &&
+      is_matrix && is_parametric && is_linear &&
       !bpc && intent==INTENT_RELATIVE_COLORIMETRIC ) {
     // fast path for linear RGB -> RGB matrix conversions
     // get input profile colorants
@@ -908,22 +913,22 @@ void PF::ICCTransform::init(ICCProfile* pin, ICCProfile* pout, VipsBandFormat ba
     is_rgb2rgb = true;
 
     if( !in_profile->is_linear() ) {
-      itrc_lut(256,0);
+      itrc_lut(PF_TRC_LUT_SIZE+1,0);
       itrc_lut.setClip(0);
-      for(int i = 0; i < 256; i++) {
+      for(int i = 0; i < PF_TRC_LUT_SIZE+1; i++) {
         cmsFloat32Number in = i, out;
-        in /= 255;
+        in /= PF_TRC_LUT_SIZE;
         out = cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), in );
         itrc_lut[i] = out;
       }
     }
 
     if( !out_profile->is_linear() ) {
-      trc_lut(256,0);
+      trc_lut(PF_TRC_LUT_SIZE+1,0);
       trc_lut.setClip(0);
-      for(int i = 0; i < 256; i++) {
+      for(int i = 0; i < PF_TRC_LUT_SIZE+1; i++) {
         cmsFloat32Number in = i, out;
-        in /= 255;
+        in /= PF_TRC_LUT_SIZE;
         out = cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), in );
         trc_lut[i] = out;
       }
@@ -967,11 +972,11 @@ void PF::ICCTransform::apply(float* in, float* out, int n)
       float outr, outg, outb;
       if(itrc_lut) {
         r = (r>1) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), r ) :
-            ( (r<0) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), r ) : itrc_lut[r*255] );
+            ( (r<0) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), r ) : itrc_lut[r*PF_TRC_LUT_SIZE] );
         g = (g>1) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), g ) :
-            ( (g<0) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), g ) : itrc_lut[g*255] );
+            ( (g<0) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), g ) : itrc_lut[g*PF_TRC_LUT_SIZE] );
         b = (b>1) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), b ) :
-            ( (b<0) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), b ) : itrc_lut[b*255] );
+            ( (b<0) ? cmsEvalToneCurveFloat( in_profile->get_p2l_trc(), b ) : itrc_lut[b*PF_TRC_LUT_SIZE] );
       }
       outr = rgb2rgb[0][0]*r + rgb2rgb[0][1]*g + rgb2rgb[0][2]*b;
       outg = rgb2rgb[1][0]*r + rgb2rgb[1][1]*g + rgb2rgb[1][2]*b;
@@ -981,11 +986,11 @@ void PF::ICCTransform::apply(float* in, float* out, int n)
       if(std::isnan(outb)) outb = 0;
       if(trc_lut) {
         outr = (outr>1) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outr ) :
-            ( (outr<0) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outr ) : trc_lut[outr*255] );
+            ( (outr<0) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outr ) : trc_lut[outr*PF_TRC_LUT_SIZE] );
         outg = (outg>1) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outg ) :
-            ( (outg<0) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outg ) : trc_lut[outg*255] );
+            ( (outg<0) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outg ) : trc_lut[outg*PF_TRC_LUT_SIZE] );
         outb = (outb>1) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outb ) :
-            ( (outb<0) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outb ) : trc_lut[outb*255] );
+            ( (outb<0) ? cmsEvalToneCurveFloat( out_profile->get_l2p_trc(), outb ) : trc_lut[outb*PF_TRC_LUT_SIZE] );
       }
       out2[0] = outr;
       out2[1] = outg;
