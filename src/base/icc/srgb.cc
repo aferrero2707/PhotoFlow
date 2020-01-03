@@ -117,7 +117,6 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
   cmsCIExyY whitepoint = d65_srgb_adobe_specs;
   cmsToneCurve* tone_curve[3] = {NULL};
   switch( type ) {
-  case PF::PF_TRC_STANDARD:
   case PF::PF_TRC_PERCEPTUAL: {
     cmsFloat64Number labl_parameters[5] =
     { 3.0, 0.862076,  0.137924, 0.110703, 0.080002 };
@@ -131,6 +130,7 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
     break;
   }
+  case PF::PF_TRC_STANDARD:
   case PF::PF_TRC_sRGB: {
     /* sRGB TRC */
     cmsFloat64Number srgb_parameters[5] =
@@ -161,7 +161,7 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
   cmsWriteTag(profile, cmsSigProfileDescriptionTag, description);
 
   //if( type == PF::PF_TRC_STANDARD ) {
-  //  const char* filename = "sRGB-elle-V4.icc";
+  //  const char* filename = "/Users/aferrero/Scratch/sRGB-elle-V4-srgbtrc.icc";
   //  cmsSaveProfileToFile(profile, filename);
   //}
 
