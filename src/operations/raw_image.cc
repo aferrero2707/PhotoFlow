@@ -149,7 +149,7 @@ bool PF::check_xtrans( unsigned filters )
 
 PF::RawImage::RawImage( const std::string _fname ):
                 nref(1), file_name( _fname ),
-                image( NULL ), demo_image( NULL ),
+                image( NULL ), demo_image( NULL ), fast_demosaic( NULL ),
                 raw_hist( NULL ), pdata( NULL )
 {
 #ifndef NDEBUG
@@ -192,7 +192,7 @@ PF::RawImage::RawImage( const std::string _fname ):
 
   if( !load_rawspeed() ) {
     std::cout<<"RawImage::RawImage(): failed to load file \""<<file_name<<"\" using RawSpeed"<<std::endl;
-    if( !load_rawtherapee() ) {
+    if( false && !load_rawtherapee() ) {
       std::cout<<"RawImage::RawImage(): failed to load file \""<<file_name<<"\" using RawTherapee"<<std::endl;
       return;
     }
@@ -305,6 +305,9 @@ PF::RawImage::RawImage( const std::string _fname ):
   }
 
 
+  std::cout<<"raw_hist: "<<(void*)raw_hist<<"  image:"<<image<<std::endl;
+
+  if( !image ) return;
 
   //==================================================================
   // Save the raw histogram into the image
@@ -728,6 +731,7 @@ bool PF::RawImage::load_rawspeed()
     return false;
   }
 
+  if(pdata->idata.filters == 1) return false;
 
   //==================================================================
   // Save decoded data to cache file on disk.
@@ -1269,6 +1273,8 @@ void PF::RawImage::inverse33 (const double (*rgb_cam)[3], double (*cam_rgb)[3])
 
 VipsImage* PF::RawImage::get_image(unsigned int& level)
 {
+  if( !image ) return NULL;
+
   if( level == 0 ) {
     VipsImage* out_image = image;
     //VipsImage* out_image = demo_image;
