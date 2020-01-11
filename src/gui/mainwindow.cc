@@ -53,6 +53,30 @@
 
 #include "../base/print_display_profile.hh"
 
+
+static gboolean dialog_show_cb(Gtk::MessageDialog * d)
+{
+  std::cout<<"dialog_show_cb() called"<<std::endl;
+  if( !d ) return FALSE;
+  d->run();
+  delete d;
+  std::cout<<"dialog_show_cb(): dialog deleted"<<std::endl;
+  return FALSE;
+}
+
+void PF::MessangerDialog::show(std::string msg)
+{
+  Gtk::MessageDialog* dialog = new Gtk::MessageDialog(msg,
+      false, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_CLOSE, true);
+  dialog->set_transient_for(*window);
+  //Show the dialog and wait for a user response:
+  //int result = dialog.run();
+  std::cout<<"MessangerDialog::show() called"<<std::endl;
+  gdk_threads_add_idle ((GSourceFunc) dialog_show_cb, dialog);
+}
+
+
+
 typedef struct {
   Gtk::Widget* widget;
 } WidgetDestroyData;

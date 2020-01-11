@@ -110,7 +110,7 @@ static void write_escaped(std::string const& s, std::string& s2) {
 }
 
 PF::PhotoFlow::PhotoFlow(): 
-  active_image( NULL ),
+  active_image( NULL ), messanger( NULL ),
   batch(true), plugin(false),
   single_win_mode(true)
 {

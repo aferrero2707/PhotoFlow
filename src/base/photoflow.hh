@@ -78,6 +78,12 @@ namespace PF
   class Layer;
   class Image;
 
+  class Messanger
+  {
+  public:
+    virtual void show(std::string msg) { std::cout<<""<<msg<<"\n"; }
+  };
+
   class PhotoFlow
   {
     typedef ProcessorBase* (*new_op_func_t)(std::string opname, Layer* current_layer);
@@ -86,6 +92,8 @@ namespace PF
 
     new_op_func_t new_op_func;
     new_op_func_t new_op_func_nogui;
+
+    Messanger* messanger;
 
     std::string presets_dir;
     std::string config_dir;
@@ -117,6 +125,9 @@ namespace PF
 
     void set_new_op_func( new_op_func_t f ) { new_op_func = f; }
     void set_new_op_func_nogui( new_op_func_t f ) { new_op_func_nogui = f; }
+
+    void set_messanger(Messanger* m) { messanger = m; }
+    void show_message(std::string msg) { if(messanger) messanger->show(msg); }
 
     void set_preview_pipeline_id( int id ) { preview_pipeline_id = id; }
     int get_preview_pipeline_id() { return preview_pipeline_id; }

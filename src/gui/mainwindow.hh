@@ -48,6 +48,16 @@
 
 namespace PF {
 
+
+class MessangerDialog: public Messanger
+{
+  Gtk::Window* window;
+public:
+  MessangerDialog(Gtk::Window* w): Messanger(), window(w) {}
+  virtual void show(std::string msg);
+};
+
+
 class MainWindow : public Gtk::Window
 {
 protected:

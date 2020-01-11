@@ -84,6 +84,13 @@ VipsImage* PF::RawLoaderPar::build(std::vector<VipsImage*>& in, int first,
     new_raw_image = new RawImage( file_name.get() );
     if( new_raw_image )
       raw_images.insert( make_pair(file_name.get(), new_raw_image) );
+
+    unsigned int level2 = 0;
+    if( !new_raw_image || !new_raw_image->get_image( level2 ) ) {
+      std::string msg = std::string(_("Could not load image file"));
+      if(new_raw_image) msg += std::string(":\n\"") + new_raw_image->get_file_name() + "\"";
+      PF::PhotoFlow::Instance().show_message(msg);
+    }
   } else {
     new_raw_image = i->second;
     new_raw_image->ref();
