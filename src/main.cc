@@ -323,8 +323,11 @@ int main (int argc, char *argv[])
   PF::PluginWindow* pluginwin = NULL;
   if( is_plugin )
     pluginwin = new PF::PluginWindow();
-  else
+  else {
     mainWindow = new PF::MainWindow();
+    PF::MessangerDialog* msg = new PF::MessangerDialog(mainWindow);
+    PF::PhotoFlow::Instance().set_messanger(msg);
+  }
 #ifdef GTKMM_3
   Gtk::Settings::get_default()->property_gtk_application_prefer_dark_theme().set_value(true);
 #if defined(WIN32)
