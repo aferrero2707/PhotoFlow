@@ -1097,6 +1097,8 @@ void PF::LayerWidget::on_selection_changed()
     bool visible = (*iter)[columns.col_visible];
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
+    if( page == 0 )
+      selected_layer_id = layer_id;
 #ifndef NDEBUG
     std::cout<<"Selected row "<<l->get_name()<<std::endl;
     std::cout<<"LayerWidget::on_selection_changed(): emitting signal_edited_layer_changed("<<layer_id<<")"<<std::endl;
