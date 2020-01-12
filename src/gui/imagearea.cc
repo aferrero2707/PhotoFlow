@@ -1043,7 +1043,8 @@ void PF::ImageArea::update( VipsRect* area )
   bool do_merged = display_merged && (!display_mask);
   displayed_layer = -1;
 #ifdef DEBUG_DISPLAY
-  std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  display_merged="<<display_merged<<"  sticky_layer="<<sticky_layer<<"  display_mask="<<display_mask<<std::endl;
+  std::cout<<"ImageArea::update(): do_merged="<<do_merged<<"  display_merged="<<display_merged
+      <<"  sticky_layer="<<sticky_layer<<"  display_mask="<<display_mask<<"  selected_layer="<<selected_layer<<std::endl;
 #endif
   if( !do_merged ) {
     if( sticky_layer < 0 && (!display_mask) ) do_merged = true;
@@ -1062,7 +1063,7 @@ void PF::ImageArea::update( VipsRect* area )
       if( get_pipeline()->get_image() ) {
         PF::Layer* temp_layer = get_pipeline()->get_image()->get_layer_manager().get_layer( layer_id );
         if( !temp_layer ) do_merged = true;
-        if( !(temp_layer->is_visible()) ) do_merged = true;
+        else if( !(temp_layer->is_visible()) ) do_merged = true;
       }
       if( !do_merged ) displayed_layer = layer_id;
     }
@@ -1218,13 +1219,13 @@ void PF::ImageArea::update( VipsRect* area )
     //std::cout<<"ImageArea::update(): current_display_profile_type="<<current_display_profile_type<<std::endl;
     switch( current_display_profile_type ) {
     case PF_DISPLAY_PROF_sRGB: {
-      current_display_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_sRGB, PF::PF_TRC_STANDARD );
+      current_display_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_sRGB, PF::PF_TRC_sRGB );
       icc_display_profile = current_display_profile->get_profile();
       char tstr[1024];
       cmsGetProfileInfoASCII(icc_display_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-  #ifndef NDEBUG
+  //#ifndef NDEBUG
       std::cout<<"ImageArea::update(): current_display_profile: "<<tstr<<std::endl;
-  #endif
+  //#endif
       break;
     }
     case PF_DISPLAY_PROF_CUSTOM:
@@ -1234,8 +1235,8 @@ void PF::ImageArea::update( VipsRect* area )
         current_display_profile = PF::ICCStore::Instance().get_profile( PF::PROF_TYPE_sRGB, PF::PF_TRC_STANDARD );
       }
       icc_display_profile = current_display_profile->get_profile();
-      //std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
-      //    <<" -> "<<current_display_profile<<std::endl;
+      std::cout<<"ImageArea::update(): opening display profile from disk: "<<options.get_custom_display_profile_name()
+          <<" -> "<<current_display_profile<<std::endl;
       break;
     case PF_DISPLAY_PROF_SYSTEM: {
 #ifdef __APPLE__
