@@ -151,11 +151,84 @@ void PF::CropConfigGUI::do_update()
 }
 
 
-#define HANDLE_SIZE 20
+#define HANDLE_SIZE 40
+
+
+PF::crop_handle_t PF::CropConfigGUI::get_handle(double x, double y)
+{
+  crop_handle_t new_handle;
+  float scale = 1;
+  for( unsigned int l = 1; l <= get_layer()->get_image()->get_pipeline(PREVIEW_PIPELINE_ID)->get_level(); l++ )
+    scale *= 2;
+
+  int crop_left = cropLeftSlider.get_adjustment()->get_value();
+  int crop_top = cropTopSlider.get_adjustment()->get_value();
+  int crop_width = cropWidthSlider.get_adjustment()->get_value();
+  int crop_height = cropHeightSlider.get_adjustment()->get_value();
+  int crop_bottom = crop_top + crop_height - 1;
+  int crop_right = crop_left + crop_width - 1;
+
+  if( x < crop_left || x > crop_right || y < crop_top || y > crop_bottom ) {
+    return CROP_HANDLE_NONE;
+  }
+
+  double dx1 = x - crop_left; dx1 /= scale;
+  double dx2 = x - crop_right; dx2 /= scale;
+  double dy1 = y - crop_top; dy1 /= scale;
+  double dy2 = y - crop_bottom; dy2 /= scale;
+
+  bool is_left = ( (dx1 >= 0) && (dx1 <= HANDLE_SIZE) ) ? true : false;
+  bool is_top = ( (dy1 >= 0) && (dy1 <= HANDLE_SIZE) ) ? true : false;
+  bool is_right = ( (dx2 >= -HANDLE_SIZE) && (dx2 <= 0) ) ? true : false;
+  bool is_bottom = ( (dy2 >= -HANDLE_SIZE) && (dy2 <= 0) ) ? true : false;
+
+  if( is_right && is_bottom )
+    new_handle = CROP_HANDLE_BOTTOMRIGHT;
+  else if( is_left && is_top )
+    new_handle = CROP_HANDLE_TOPLEFT;
+  else if( is_left && is_bottom )
+    new_handle = CROP_HANDLE_BOTTOMLEFT;
+  else if( is_right && is_top )
+    new_handle = CROP_HANDLE_TOPRIGHT;
+  else if( is_left )
+    new_handle = CROP_HANDLE_LEFT;
+  else if( is_top )
+    new_handle = CROP_HANDLE_TOP;
+  else if( is_right )
+    new_handle = CROP_HANDLE_RIGHT;
+  else if( is_bottom )
+    new_handle = CROP_HANDLE_BOTTOM;
+  else if( (x > crop_left) && (x < crop_right) &&
+           (y > crop_top) && (y < crop_bottom) )
+    new_handle = CROP_HANDLE_CENTER;
+
+  return new_handle;
+}
+
+
+void PF::CropConfigGUI::draw_hline(PixelBuffer& buf, int x1, int x2, int y, int w, guint8 val)
+{
+  int w2 = w/2;
+  for(int i = -w2; i <= w2; i++) {
+    buf.draw_line( x1, y+i, x2, y+i, val );
+  }
+}
+
+
+void PF::CropConfigGUI::draw_vline(PixelBuffer& buf, int x, int y1, int y2, int w, guint8 val)
+{
+  int w2 = w/2;
+  for(int i = -w2; i <= w2; i++) {
+    buf.draw_line( x+i, y1, x+i, y2, val );
+  }
+}
+
+
 
 bool PF::CropConfigGUI::pointer_press_event( int button, double sx, double sy, int mod_key )
 {
   if( !get_editing_flag() ) return false;
+  if( !get_layer()->get_image()->get_pipeline(PREVIEW_PIPELINE_ID) ) return false;
 
   if( button != 1 ) return false;
   handle = CROP_HANDLE_NONE;
@@ -204,45 +277,12 @@ bool PF::CropConfigGUI::pointer_press_event( int button, double sx, double sy, i
     return true;
   }
 
-  if( !get_layer()->get_image()->get_pipeline(PREVIEW_PIPELINE_ID) ) return false;
-  float scale = 1;
-  for( unsigned int l = 1; l <= get_layer()->get_image()->get_pipeline(PREVIEW_PIPELINE_ID)->get_level(); l++ )
-    scale *= 2;
+  handle = get_handle(x, y);
 
-  double dx1 = x - crop_left; dx1 /= scale;
-  double dx2 = x - crop_right; dx2 /= scale;
-  double dy1 = y - crop_top; dy1 /= scale;
-  double dy2 = y - crop_bottom; dy2 /= scale;
-
-  bool is_left = ( (dx1 >= 0) && (dx1 <= HANDLE_SIZE) ) ? true : false;
-  bool is_top = ( (dy1 >= 0) && (dy1 <= HANDLE_SIZE) ) ? true : false;
-  bool is_right = ( (dx2 >= -HANDLE_SIZE) && (dx2 <= 0) ) ? true : false;
-  bool is_bottom = ( (dy2 >= -HANDLE_SIZE) && (dy2 <= 0) ) ? true : false;
-
-  if( is_right && is_bottom )
-    handle = CROP_HANDLE_BOTTOMRIGHT;
-  else if( is_left && is_top )
-    handle = CROP_HANDLE_TOPLEFT;
-  else if( is_left && is_bottom )
-    handle = CROP_HANDLE_BOTTOMLEFT;
-  else if( is_right && is_top )
-    handle = CROP_HANDLE_TOPRIGHT;
-  else if( is_left )
-    handle = CROP_HANDLE_LEFT;
-  else if( is_top )
-    handle = CROP_HANDLE_TOP;
-  else if( is_right )
-    handle = CROP_HANDLE_RIGHT;
-  else if( is_bottom )
-    handle = CROP_HANDLE_BOTTOM;
-  else if( (x > crop_left) && (x < crop_right) &&
-           (y > crop_top) && (y < crop_bottom) )
-    handle = CROP_HANDLE_CENTER;
+  std::cout<<"handle: "<<handle<<std::endl;
 
   crop_center_dx = (int)(x - crop_left - crop_width/2);
   crop_center_dy = (int)(y - crop_top - crop_height/2);
-
-  std::cout<<"handle: "<<handle<<std::endl;
 
   return true;
 }
@@ -671,15 +711,19 @@ bool PF::CropConfigGUI::pointer_motion_event( int button, double sx, double sy, 
 {
   if( !get_editing_flag() ) return false;
 
-  if( button != 1 ) return false;
-
   double x = sx, y = sy, w = 1, h = 1;
   screen2layer( x, y, w, h );
 
-  int ix = x;
-  int iy = y;
+  crop_handle_t new_handle = get_handle(x, y);
 
-  move_handle( ix, iy );
+  if( button != 1 && new_handle == handle) return false;
+  if( button != 1 ) handle = new_handle;
+
+  if( button == 1) {
+    int ix = x;
+    int iy = y;
+    move_handle( ix, iy );
+  }
 
   return true;
 }
@@ -688,6 +732,8 @@ bool PF::CropConfigGUI::pointer_motion_event( int button, double sx, double sy, 
 bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_out, 
                                            float scale, int xoffset, int yoffset )
 {
+  //std::cout<<"[CropConfigGUI::modify_preview] called"<<std::endl;
+
   /*
 #if defined(_WIN32) || defined(WIN32)
   if( !is_mapped() )
@@ -729,8 +775,6 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
   
   if( (crop_width == 0) || (crop_height == 0) ) return false;
 
-  // We only draw on top of the preview image if we are mapped
-
   // Resize the output buffer to match the input one
   buf_out.resize( buf_in.get_rect() );
 
@@ -743,6 +787,7 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
 
   int buf_left = buf_out.get_rect().left;
   int buf_right = buf_out.get_rect().left+buf_out.get_rect().width-1;
+  int buf_width = buf_out.get_rect().width;
   int buf_top = buf_out.get_rect().top;
   int buf_bottom = buf_out.get_rect().top+buf_out.get_rect().height-1;
 
@@ -767,31 +812,6 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
       p[0] = p[0]/2;
       p[1] = p[1]/2;
       p[2] = p[2]/2;
-    }
-  }
-
-  if( crop_height > HANDLE_SIZE ) {
-    int left = (crop_left > buf_left) ? crop_left : buf_left;
-    int right = (crop_right < buf_right) ? crop_right : buf_right;
-    if( buf_top < (crop_top+HANDLE_SIZE-1) && buf_bottom > (crop_top+HANDLE_SIZE)) {
-      for( y = HANDLE_SIZE-1; y <= HANDLE_SIZE; y++) {
-        guint8* p = px + rs*(y+crop_top-buf_out.get_rect().top) + (left-buf_left)*bl;
-        for( x = left; x <= right; x++, p += bl ) {
-          p[0] = 255-p[0];
-          p[1] = 255-p[1];
-          p[2] = 255-p[2];
-        }
-      }
-    }
-    if( buf_top < (crop_bottom-HANDLE_SIZE-1) && buf_bottom > (crop_bottom-HANDLE_SIZE) ) {
-      for( y = HANDLE_SIZE-1; y <= HANDLE_SIZE; y++) {
-        guint8* p = px + rs*(crop_bottom-y-buf_out.get_rect().top) + (left-buf_left)*bl;
-        for( x = left; x <= right; x++, p += bl ) {
-          p[0] = 255-p[0];
-          p[1] = 255-p[1];
-          p[2] = 255-p[2];
-        }
-      }
     }
   }
 
@@ -822,59 +842,76 @@ bool PF::CropConfigGUI::modify_preview( PixelBuffer& buf_in, PixelBuffer& buf_ou
     }
   }
 
-  if( crop_width > HANDLE_SIZE ) {
-    int top = (crop_top > buf_top) ? crop_top : buf_top;
-    int bottom = (crop_bottom < buf_bottom) ? crop_bottom : buf_bottom;
-    if( (buf_left < (crop_left+HANDLE_SIZE)) &&
-        (buf_right > (crop_left+HANDLE_SIZE)) ) {
-      for( y = top; y <= bottom; y++ ) {
-        guint8* p = px + rs*(y-buf_out.get_rect().top) + (crop_left+HANDLE_SIZE-1-buf_left)*bl;
-        p[0] = 255-p[0];
-        p[1] = 255-p[1];
-        p[2] = 255-p[2];
-        p[3] = 255-p[3];
-        p[4] = 255-p[4];
-        p[5] = 255-p[5];
-      }
-    }
-    if( (buf_left < (crop_right-HANDLE_SIZE)) &&
-        (buf_right > (crop_right-HANDLE_SIZE)) ) {
-      for( y = top; y <= bottom; y++ ) {
-        guint8* p = px + rs*(y-buf_out.get_rect().top) + (crop_right-HANDLE_SIZE-buf_left)*bl;
-        p[0] = 255-p[0];
-        p[1] = 255-p[1];
-        p[2] = 255-p[2];
-        p[3] = 255-p[3];
-        p[4] = 255-p[4];
-        p[5] = 255-p[5];
-      }
-    }
-  }
-
+  // draw grid lines
   if( crop_width > HANDLE_SIZE*2 && crop_height > HANDLE_SIZE*2 ) {
-    buf_out.draw_line( crop_left + crop_width/3, crop_top+HANDLE_SIZE,
-        crop_left + crop_width/3, crop_bottom-HANDLE_SIZE, buf_in );
-    buf_out.draw_line( crop_left + crop_width*2/3, crop_top+HANDLE_SIZE,
-        crop_left + crop_width*2/3, crop_bottom-HANDLE_SIZE, buf_in );
-    buf_out.draw_line( crop_left+HANDLE_SIZE, crop_top + crop_height/3,
-        crop_right-HANDLE_SIZE, crop_top + crop_height/3, buf_in );
-    buf_out.draw_line( crop_left+HANDLE_SIZE, crop_top + crop_height*2/3,
-        crop_right-HANDLE_SIZE, crop_top + crop_height*2/3, buf_in );
-  }
-  return true;
+    draw_vline(buf_out, crop_left + crop_width/3, crop_top, crop_bottom, 3, 0);
+    draw_vline(buf_out, crop_left + crop_width*2/3, crop_top, crop_bottom, 3, 0);
 
-  // Draw outline of cropped area
-  if( ((crop_top-2) >= buf_top) &&
-      ((crop_top-1) <= buf_bottom) ) {
-    for( y = crop_top-2; y <= crop_top-1; y++ ) {
-      guint8* p = px + rs*(y-buf_out.get_rect().top);
-      for( x = 0; x < buf_out.get_rect().width; x++, p += 3 ) {
-        p[0] = 255-p[0];
-        p[1] = 255-p[1];
-        p[2] = 255-p[2];
-      }
-    }
+    draw_hline(buf_out, crop_left, crop_right, crop_top + crop_height/3, 3, 0);
+    draw_hline(buf_out, crop_left, crop_right, crop_top + crop_height*2/3, 3, 0);
+
+    draw_vline(buf_out, crop_left + crop_width/3, crop_top, crop_bottom, 1, 255);
+    draw_vline(buf_out, crop_left + crop_width*2/3, crop_top, crop_bottom, 1, 255);
+
+    draw_hline(buf_out, crop_left, crop_right, crop_top + crop_height/3, 1, 255);
+    draw_hline(buf_out, crop_left, crop_right, crop_top + crop_height*2/3, 1, 255);
   }
+
+
+  // draw handles
+  int ymin=-1, ymax=-1, xmin=-1, xmax=-1;
+
+  switch(handle) {
+  case CROP_HANDLE_TOP:
+  case CROP_HANDLE_TOPLEFT:
+  case CROP_HANDLE_TOPRIGHT:
+    ymin = crop_top;
+    ymax = crop_top + HANDLE_SIZE;
+    break;
+  case CROP_HANDLE_BOTTOM:
+  case CROP_HANDLE_BOTTOMLEFT:
+  case CROP_HANDLE_BOTTOMRIGHT:
+    ymin = crop_bottom - HANDLE_SIZE;
+    ymax = crop_bottom;
+    break;
+  case CROP_HANDLE_LEFT:
+  case CROP_HANDLE_RIGHT:
+    ymin = crop_top + HANDLE_SIZE;
+    ymax = crop_bottom - HANDLE_SIZE;
+    break;
+  default: break;
+  }
+
+  switch(handle) {
+  case CROP_HANDLE_LEFT:
+  case CROP_HANDLE_TOPLEFT:
+  case CROP_HANDLE_BOTTOMLEFT:
+    xmin = crop_left;
+    xmax = crop_left + HANDLE_SIZE;
+    break;
+  case CROP_HANDLE_RIGHT:
+  case CROP_HANDLE_TOPRIGHT:
+  case CROP_HANDLE_BOTTOMRIGHT:
+    xmin = crop_right - HANDLE_SIZE;
+    xmax = crop_right;
+    break;
+  case CROP_HANDLE_TOP:
+  case CROP_HANDLE_BOTTOM:
+    xmin = crop_left + HANDLE_SIZE;
+    xmax = crop_right - HANDLE_SIZE;
+    break;
+  default: break;
+  }
+
+  draw_hline(buf_out, xmin, xmax, ymin, 3, 0);
+  draw_hline(buf_out, xmin, xmax, ymax, 3, 0);
+  draw_vline(buf_out, xmin, ymin, ymax, 3, 0);
+  draw_vline(buf_out, xmax, ymin, ymax, 3, 0);
+
+  draw_hline(buf_out, xmin, xmax, ymin, 1, 255);
+  draw_hline(buf_out, xmin, xmax, ymax, 1, 255);
+  draw_vline(buf_out, xmin, ymin, ymax, 1, 255);
+  draw_vline(buf_out, xmax, ymin, ymax, 1, 255);
 
   return true;
 }

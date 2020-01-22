@@ -78,6 +78,11 @@ namespace PF {
   void move_bottomleft_handle( int x, int y );
   void move_topright_handle( int x, int y );
 
+  crop_handle_t get_handle(double x, double y);
+
+  void draw_hline(PixelBuffer& buf, int x1, int x2, int y, int w, guint8 val);
+  void draw_vline(PixelBuffer& buf, int x, int y1, int y2, int w, guint8 val);
+
 public:
   CropConfigGUI( Layer* l );
 
