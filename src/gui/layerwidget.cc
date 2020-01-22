@@ -758,7 +758,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
           sigc::mem_fun(*this,&PF::LayerWidget::add_tool), "convert_colorspace" ) );
   ADD_TOOL_ITEM(_("White Balance"), "white_balance")
   ADD_TOOL_ITEM( _("Basic Adjustments"), "basic_adjustments" );
-  ADD_TOOL_ITEM( _("Color Adjustments"), "color_correction" );
+  ADD_TOOL_ITEM( _("Color Correction"), "color_correction" );
   ADD_TOOL_ITEM( _("Desaturate"), "desaturate" );
   ADD_TOOL_ITEM( _("Curves"), "curves" );
   ADD_TOOL_ITEM( _("Channel selector"), "clone" );
