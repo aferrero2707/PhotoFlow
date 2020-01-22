@@ -193,6 +193,7 @@ public:
   void draw_circle( int x0, int y0, int radius, PixelBuffer& inbuf );
 
   void draw_line( int x1, int y1, int x2, int y2, PixelBuffer& inbuf );
+  void draw_line( int x1, int y1, int x2, int y2, guint8 val );
 };
 
 
