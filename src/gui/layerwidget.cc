@@ -2354,6 +2354,8 @@ void PF::LayerWidget::remove_layers()
     PF::LayerTreeModel::LayerTreeColumns& columns = layer_views[page]->get_columns();
     PF::Layer* l = (*iter)[columns.col_layer];
 
+    if( !l ) continue;
+
 #ifndef NDEBUG
     std::cout<<"Calling unset_sticky_and_editing(\""<<l->get_name()<<"\")"<<std::endl;
 #endif
