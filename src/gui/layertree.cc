@@ -615,6 +615,8 @@ void PF::LayerTree::update_model()
   tree_modified = false;
   updating = true;
 
+  int lid = get_selected_layer_id();
+
 #ifndef NDEBUG
   std::cout<<"LayerTree::update_model(): treeModel->clear() called."<<std::endl;
 #endif
@@ -672,6 +674,8 @@ void PF::LayerTree::update_model()
   treeView.columns_autosize();
 
   signal_updated.emit();
+
+  select_row(lid);
 
   updating = false;
 
@@ -763,6 +767,9 @@ int PF::LayerTree::get_selected_layer_id()
   if(iter) {//If anything is selected
     Gtk::TreeModel::Row row = *iter;
     PF::Layer* l = (*iter)[treeModel->columns.col_layer];
+#ifndef NDEBUG
+    std::cout<<"[LayerTree::get_selected_layer_id]: l="<<l<<"  "<<(*iter)[treeModel->columns.col_name]<<std::endl;
+#endif
     if(l) result = l->get_id();
   }
 
@@ -813,6 +820,16 @@ void PF::LayerTree::select_row(int id)
   Gtk::TreeModel::iterator iter;
   if( get_row( id, iter ) ) {
     refTreeSelection->select( iter );
+  } else {
+    Glib::RefPtr<Gtk::TreeStore> model = get_model();
+    const Gtk::TreeModel::Children rows = model->children();
+#ifndef NDEBUG
+    std::cout<<"[LayerTree::select_row]: rows.size()="<<rows.size()<<std::endl;
+#endif
+    if( !rows.empty() ) {
+      Gtk::TreeModel::Children::iterator first_row = rows.begin();
+      refTreeSelection->select( first_row );
+    }
   }
 }
 

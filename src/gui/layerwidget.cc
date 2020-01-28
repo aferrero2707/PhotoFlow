@@ -1009,6 +1009,35 @@ void PF::LayerWidget::update_controls()
 }
 
 
+void PF::LayerWidget::update( bool force_rebuild ) {
+#ifndef NDEBUG
+  std::cout<<"[LayerWidget::update]: called."<<std::endl;
+  if( layer_views.size() > 0 )
+    std::cout<<"layer_views.size() > 0"<<std::endl;
+#endif
+  for(unsigned int i = 0; i < layer_views.size(); i++) {
+    int id = layer_views[i]->get_selected_layer_id();
+#ifndef NDEBUG
+    std::cout<<"[LayerWidget::update]: view #"<<i<<"  selected layer id="<<id<<std::endl;
+#endif
+    if( force_rebuild )
+      layer_views[i]->set_tree_modified();
+#ifndef NDEBUG
+    std::cout<<"[LayerWidget::update]: view #"<<i<<"  before update_model()"<<std::endl;
+#endif
+    layer_views[i]->update_model();
+#ifndef NDEBUG
+    std::cout<<"[LayerWidget::update]: view #"<<i<<"  after update_model()"<<std::endl;
+#endif
+    layer_views[i]->select_row( id );
+#ifndef NDEBUG
+    std::cout<<"[LayerWidget::update]: view #"<<i<<"  after select_row("<<id<<")"<<std::endl;
+#endif
+  }
+}
+
+
+
 
 void PF::LayerWidget::on_map()
 {
@@ -1057,7 +1086,9 @@ void PF::LayerWidget::on_selection_changed()
   int page = active_view;
   if( page < 0 ) return;
 #ifndef NDEBUG
-  std::cout<<"LayerWidget::on_selection_chaged() called, page="<<page<<std::endl;
+  std::cout<<"[LayerWidget::on_selection_changed]: page="<<page<<std::endl;
+  int lid = layers_view.get_selected_layer_id();
+  std::cout<<"[LayerWidget::on_selection_changed]: selected layers_view layer: "<<lid<<std::endl;
 #endif
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
       layer_views[page]->get_tree().get_selection();
@@ -2338,7 +2369,13 @@ void PF::LayerWidget::remove_layers()
 #endif
   // Clear the selection, since we are going to remove all selected layers
   //layer_views[page]->select_row( -1 );
+#ifndef NDEBUG
+    std::cout<<"Before refTreeSelection->unselect_all()"<<std::endl;
+#endif
   refTreeSelection->unselect_all();
+#ifndef NDEBUG
+    std::cout<<"After refTreeSelection->unselect_all()"<<std::endl;
+#endif
 
   /*
   Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
