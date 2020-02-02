@@ -105,7 +105,9 @@ void PF::ImageProcessor::start()
 
 void PF::ImageProcessor::remove_image_from_queue(PF::Image* image)
 {
-  wait_for_processing_completed();
+  if( !PF::PhotoFlow::Instance().is_batch() ) {
+    wait_for_processing_completed();
+  }
 
   // Add any further request in the queue
   int length = g_async_queue_length( requests );

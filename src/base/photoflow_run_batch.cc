@@ -86,6 +86,7 @@ extern "C" {
   extern GType vips_gmic_get_type( void ); 
   extern GType vips_clone_stamp_get_type( void );
   extern GType vips_lensfun_get_type( void );
+  extern void phf_tile_pool_set_size( int );
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
@@ -357,6 +358,9 @@ int PF::PhotoFlow::run_batch(int argc, char *argv[])
   vips__leak = 1;
   struct stat buffer;   
   //#ifndef WIN32
+
+  phf_tile_pool_set_size( PF::PhotoFlow::Instance().get_options().get_tile_cache_size() );
+
 
   PF::Image* image = new PF::Image();
   if( !image ) {
