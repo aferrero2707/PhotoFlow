@@ -1178,10 +1178,9 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
     int tw = 128; //image->Xsize;
     int nt = (image->Xsize/tw + 1);
     VipsAccess acc = VIPS_ACCESS_RANDOM;
-    int threaded = 1, persistent = 0;
+    int threaded = 1, persistent = 1;
     VipsImage* cached;
     if( !phf_tilecache(image, &cached,
-        "tile_width", tw, "tile_height", th, "max_tiles", nt,
         "access", acc, "threaded", threaded, "persistent", persistent, NULL) ) {
       //PF_UNREF( image, "Image::do_export_merged(): image unref" );
       image = cached;
