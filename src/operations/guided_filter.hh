@@ -365,6 +365,14 @@ public:
     float epsilon = opar->get_threshold();
     int subsampling = opar->get_subsampling();
 
+#ifdef GF_DEBUG
+    std::cout<<"[GuidedFilter]: padding = "<<opar->get_padding(0)<<"  subsampling = "<<subsampling<<"  epsilon = "<<epsilon<<std::endl;;
+    std::cout<<"  ireg[0] = "<<ireg[0]<<" -> ("<<ireg[0]->valid.left<<","<<ireg[0]->valid.top<<") x ("<<ireg[0]->valid.width<<","<<ireg[0]->valid.height<<")\n";
+    std::cout<<"  oreg =    "<<oreg<<" -> ("<<oreg->valid.left<<","<<oreg->valid.top<<") x ("<<oreg->valid.width<<","<<oreg->valid.height<<")\n";
+    std::cout<<"  pin[0] =  "<<(void*)VIPS_REGION_ADDR(ireg[0], ireg[0]->valid.left, ireg[0]->valid.top)
+        <<" -> "<<*((float*)VIPS_REGION_ADDR(ireg[0], ireg[0]->valid.left, ireg[0]->valid.top))<<std::endl;
+#endif
+
     profile = opar->get_icc_data();
     if( opar->get_convert_to_perceptual() && profile && profile->is_linear() ) epsilon *= 10;
 
@@ -382,6 +390,7 @@ public:
     int itop = ireg[0]->valid.top + shifty;
     float* p = (float*)VIPS_REGION_ADDR( ireg[0], ileft, itop );
     float* pguide = (n==2 && ireg[1]) ? (float*)VIPS_REGION_ADDR( ireg[1], ileft, itop ) : p;
+    float* pout;
     int rowstride = VIPS_REGION_LSKIP(ireg[0]) / sizeof(float);
     PixelMatrix<float> rgbin(p, rw, rh, rowstride, offsy, offsx);
     PixelMatrix<float> guidein(pguide, rw, rh, rowstride, offsy, offsx);
@@ -399,6 +408,9 @@ public:
         <<"  rh="<<rh<<std::endl;
     */
     if( ireg[0]->im->Bands == 1 ) {
+      //if(true && r->top<150 && r->left<700 && x==0 && y==0)
+      //std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"  l1: "<<l2<<"  l2: "<<l2<<std::endl;
+
       PixelMatrix<float> Lin(rw, rh, offsy, offsx);
       PixelMatrix<float> Lguide(rw, rh, offsy, offsx);
       PixelMatrix<float> Lout(rw, rh, offsy, offsx);
@@ -408,8 +420,7 @@ public:
       //fill_L_matrices( rw, rh, rgbin, guidein, Lin, Lguide );
       fill_L_matrices( rw, rh, rgbin, Lin );
 
-      //std::cout<<"GuidedFilterProc::render: processing RGB channels"<<std::endl;
-      //std::cout<<"                          processing R:"<<std::endl;
+      //std::cout<<"GuidedFilterProc::render: processing L channel"<<std::endl;
       //guidedFilter(Lguide, Lin, Lout, r, epsilon, subsampling);
       guidedFilter(Lin, Lout, r, epsilon, subsampling);
 
@@ -419,15 +430,19 @@ public:
       offsy = oreg->valid.top;
       rw = oreg->valid.width;
       rh = oreg->valid.height;
-      p = (float*)VIPS_REGION_ADDR( oreg, offsx, offsy );
+      pout = (float*)VIPS_REGION_ADDR( oreg, offsx, offsy );
       rowstride = VIPS_REGION_LSKIP(oreg) / sizeof(float);
-      PF::PixelMatrix<float> rgbout(p, rw, rh, rowstride, 0, 0);
+      PF::PixelMatrix<float> rgbout(pout, rw, rh, rowstride, 0, 0);
 
       //std::cout<<"GuidedFilterProc::render: r="<<r<<"  epsilon="<<epsilon<<"  subsampling="<<subsampling
       //    <<"  left="<<oreg->valid.left<<"  top="<<oreg->valid.top
       //    <<"  dx="<<dx<<"  dy="<<dy<<"  rw="<<rw<<"  rh="<<rh<<std::endl;
 
       fill_L_out(rw, rh, dx, dy, rgbout, Lout);
+#ifdef GF_DEBUG
+      std::cout<<"  pout[0] = "<<(void*)VIPS_REGION_ADDR(oreg, oreg->valid.left, oreg->valid.top)
+          <<" -> "<<*((float*)VIPS_REGION_ADDR(oreg, oreg->valid.left, oreg->valid.top))<<std::endl;
+#endif
     }
 
     if( ireg[0]->im->Bands == 3 ) {
