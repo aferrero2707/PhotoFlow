@@ -151,8 +151,23 @@ public:
     float sh_range = opar->get_shadows_range();
     float hl_range = opar->get_highlights_range();
 
-    if(false && r->top==0 && r->left==0)
-    std::cout<<"anchor="<<opar->get_anchor()<<"  sh_range="<<sh_range<<"  hl_range="<<hl_range<<"  sh_scale="<<sh_scale<<"  hl_scale="<<hl_scale<<"  contrast="<<opar->get_contrast()<<"  show_residual="<<opar->get_show_residual()<<std::endl;
+
+#ifndef NDEBUG
+    std::cout<<"[ShadowsHighlightsV2]:\n"<<
+        "  ireg[0] = "<<ireg[0]<<" -> ("<<ireg[0]->valid.left<<","<<ireg[0]->valid.top<<") x ("<<ireg[0]->valid.width<<","<<ireg[0]->valid.height<<")\n"<<
+        "  ireg[1] = "<<ireg[1]<<" -> ("<<ireg[1]->valid.left<<","<<ireg[1]->valid.top<<") x ("<<ireg[1]->valid.width<<","<<ireg[1]->valid.height<<")\n"<<
+        "  ireg[2] = "<<ireg[2]<<" -> ("<<ireg[2]->valid.left<<","<<ireg[2]->valid.top<<") x ("<<ireg[2]->valid.width<<","<<ireg[2]->valid.height<<")\n";
+    std::cout<<"  oreg =    "<<oreg<<" -> ("<<oreg->valid.left<<","<<oreg->valid.top<<") x ("<<oreg->valid.width<<","<<oreg->valid.height<<")\n";
+    std::cout<<"  pin[0] =  "<<(void*)VIPS_REGION_ADDR(ireg[0], ireg[0]->valid.left, ireg[0]->valid.top)
+        <<" -> "<<*((float*)VIPS_REGION_ADDR(ireg[0], ireg[0]->valid.left, ireg[0]->valid.top))<<std::endl;
+    std::cout<<"  pin[1] =  "<<(void*)VIPS_REGION_ADDR(ireg[1], ireg[1]->valid.left, ireg[1]->valid.top)
+        <<" -> "<<*((float*)VIPS_REGION_ADDR(ireg[1], ireg[1]->valid.left, ireg[1]->valid.top))<<std::endl;
+    std::cout<<"  pin[2] =  "<<(void*)VIPS_REGION_ADDR(ireg[2], ireg[2]->valid.left, ireg[2]->valid.top)
+        <<" -> "<<*((float*)VIPS_REGION_ADDR(ireg[2], ireg[2]->valid.left, ireg[2]->valid.top))<<std::endl;
+#endif
+
+    //if(true && r->top<150 && r->left<700)
+    //std::cout<<"anchor="<<opar->get_anchor()<<"  sh_range="<<sh_range<<"  hl_range="<<hl_range<<"  sh_scale="<<sh_scale<<"  hl_scale="<<hl_scale<<"  contrast="<<opar->get_contrast()<<"  show_residual="<<opar->get_show_residual()<<std::endl;
 
     for( y = 0; y < height; y++ ) {
       // original image
@@ -172,11 +187,12 @@ public:
         //l2 = ( l2*SH_LOG_SCALE_RANGE ) + SH_LOG_SCALE_MIN;
         //l2 = xexp10( l2 );
         //out = (l2 > 1) ? pow(l2, hl_scale) : pow(l2, sh_scale);
-        if(false && r->top==0 && r->left==0 && x==0 && y==0)
-        std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"  l1: "<<l2<<"  l2: "<<l2<<std::endl;
+        if(false && r->top<150 && r->left<700 && x==0 && y==0)
+        std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"  pin1="<<pin1<<" pin2="<<pin2<<"  l1="<<l1<<"  l2="<<l2<<std::endl;
+        //continue;
         if( l2 < 0 ) {
           float sh_slope = (1.0f - sh_scale) / (1.0f + l2*l2/sh_range);
-          if(false && r->top==0 && r->left==0 && x==0 && y==0)
+          if(false && r->top<150 && r->left<700 && x==0 && y==0)
           std::cout<<"    sh_scale: "<<sh_scale<<"  sh_range: "<<sh_range<<"  sh_slope: "<<sh_slope<<std::endl;
           l2 *= (1.0f - sh_slope);
           //out = l2 * sh_scale;
@@ -192,7 +208,7 @@ public:
           float hl_slope = hl_frac * scale_delta + sh_scale;
           l2 *= hl_slope;
         }
-        if(false && r->top==0 && r->left==0 && x==0 && y==0)
+        if(false && r->top<150 && r->left<700 && x==0 && y==0)
         std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"  l1: "<<l2<<"  l2: "<<l2<<std::endl;
 
         float delta2 = delta;
@@ -222,7 +238,7 @@ public:
         pout[x+1] = pin0[x+1] * R;
         pout[x+2] = pin0[x+2] * R;
 
-        if(false && r->top==0 && r->left==0 && x==0 && y==0)
+        if(false && r->top<150 && r->left<700 && x==0 && y==0)
         std::cout<<"[x,y]="<<x0+r->left<<","<<y+r->top<<"  pin0: "<<pin0[x]<<"  pin1: "<<pin1[x]<<"  pin2: "<<pin2[x]<<"  delta: "<<delta<<"  scale: "<<scale<<"  lwhite: "<<lwhite<<"  delta2: "<<delta2<<"  R="<<R<<"  pout="<<pout[x]<<std::endl;
 
         if( opar->get_show_residual() ) pout[x] = pout[x+1] = pout[x+2] = l2 * bias;

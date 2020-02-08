@@ -112,6 +112,13 @@ public:
 
     const float bias = 1.0f/profile->perceptual2linear(opar->get_anchor());
 
+#ifndef NDEBUG
+    std::cout<<"[ShaHiLogLumi]:\n  ireg[0] = "<<ireg[0]<<" -> ("<<ireg[0]->valid.left<<","<<ireg[0]->valid.top<<") x ("<<ireg[0]->valid.width<<","<<ireg[0]->valid.height<<")\n";
+    std::cout<<"  oreg =    "<<oreg<<" -> ("<<oreg->valid.left<<","<<oreg->valid.top<<") x ("<<oreg->valid.width<<","<<oreg->valid.height<<")\n";
+    std::cout<<"  pin[0] =  "<<(void*)VIPS_REGION_ADDR(ireg[0], ireg[0]->valid.left, ireg[0]->valid.top)
+        <<" -> "<<*((float*)VIPS_REGION_ADDR(ireg[0], ireg[0]->valid.left, ireg[0]->valid.top))<<std::endl;
+#endif
+
     float L, pL;
     float* pin;
     float* pout;
@@ -127,9 +134,14 @@ public:
         pL = (L>1.0e-16) ? xlog10( L ) : -16;
 
         pout[0] = pL;
+        //if(true && r->top<150 && r->left<700 && x==0 && y==0)
         //std::cout<<"ShaHiLogLumi: [x,y]="<<x+r->left<<","<<y+r->top<<"  pin: "<<pin[0]<<"  L: "<<L<<"  bias: "<<bias<<"  pout="<<pout[0]<<std::endl;
       }
     }
+#ifndef NDEBUG
+    std::cout<<"  pout[0] = "<<(void*)VIPS_REGION_ADDR(oreg, oreg->valid.left, oreg->valid.top)
+        <<" -> "<<*((float*)VIPS_REGION_ADDR(oreg, oreg->valid.left, oreg->valid.top))<<std::endl;
+#endif
   }
 };
 
@@ -180,17 +192,7 @@ static void fill_rv(int* rv, float* tv, float radius, int level)
 
   int r = 1;
   float ts = 1;
-  for( unsigned int l = 1; l <= level; l++ )
-    r *= 2;
 
-  /*
-  for(gi = 0; gi < 1; gi++) {
-    rv[gi] = r;
-    tv[gi] = ts;
-  }
-  r *= 4;
-  ts *= 1.5;
-  */
   for(gi = 0; gi < 9; gi++) {
     if( r >= radius ) break;
     rv[gi] = r;
@@ -198,7 +200,6 @@ static void fill_rv(int* rv, float* tv, float radius, int level)
     ts *= 1.5;
     if( (r*4) > radius ) break;
     r *= 4;
-    //break;
   }
   rv[gi] = radius;
   tv[gi] = ts;
@@ -233,7 +234,6 @@ void PF::ShadowsHighlightsV2Par::compute_padding( VipsImage* full_res, unsigned 
 #endif
     if(rv[gi] == 0) break;
     guidedpar->set_radius( rv[gi] );
-    guidedpar->set_threshold( threshold.get() / threshold_scale[gi] );
     int subsampling = 1;
     while( subsampling <= 16 ) {
       if( (subsampling*8) >= rv[gi] ) break;
@@ -325,7 +325,7 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     if( rv[gi] == 0 ) break;
     guidedpar->set_image_hints( timg );
     guidedpar->set_format( get_format() );
-    //std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="<<rv[gi]<<std::endl;
+    std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  radius="<<rv[gi]<<"  threshold="<<threshold.get() / tv[gi]<<std::endl;
     guidedpar->set_radius( rv[gi] );
     guidedpar->set_threshold(threshold.get() / tv[gi]);
     int subsampling = 1;
@@ -372,6 +372,7 @@ VipsImage* PF::ShadowsHighlightsV2Par::build(std::vector<VipsImage*>& in, int fi
     }
     PF_UNREF(timg, "ShadowsHighlightsV2Par::build(): timg unref");
     timg = smoothed;
+    //std::cout<<"ShadowsHighlightsV2Par::build(): gi="<<gi<<"  logimg="<<logimg<<"  smoothed="<<smoothed<<std::endl;
   }
 
 
