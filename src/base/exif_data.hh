@@ -76,7 +76,7 @@ typedef enum {
 } ExifOrientation;
 
 
-typedef struct _exif_data_t
+struct exif_data_t
 {
   float exif_exposure;
   float exif_aperture;
@@ -93,7 +93,9 @@ typedef struct _exif_data_t
   char camera_alias[64];
   char camera_makermodel[128];
   char camera_legacy_makermodel[128];
-} exif_data_t;
+
+  exif_data_t();
+};
 
 bool exif_read(exif_data_t* data, const char* path);
 

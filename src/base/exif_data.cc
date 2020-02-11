@@ -62,6 +62,23 @@ static void dt_strlcpy_to_utf8(char *dest, size_t dest_max,
   //g_print("dt_strlcpy_to_utf8(): dest=%s\n",dest);
 }
 
+PF::exif_data_t::exif_data_t(): exif_exposure(0),
+    exif_aperture(0),
+    exif_iso(0),
+    exif_focal_length(0),
+    exif_focus_distance(0),
+    exif_crop(0)
+{
+  exif_maker[0] = '\0';
+  exif_model[0] = '\0';
+  exif_lens[0] = '\0';
+  exif_datetime_taken[0] = '\0';
+  camera_maker[0] = '\0';
+  camera_model[0] = '\0';
+  camera_alias[0] = '\0';
+  camera_makermodel[0] = '\0';
+  camera_legacy_makermodel[0] = '\0';
+}
 
 
 bool PF::exif_read(exif_data_t* data, const char* path)

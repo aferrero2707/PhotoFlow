@@ -308,6 +308,7 @@ void PF::Sampler::set_values(float val[4], float lch[3], VipsInterpretation type
 void PF::Sampler::enable_changed()
 {
   enabled = check.get_active();
+  if( enabled ) grabbed = true;
   if( get_pipeline() && get_pipeline()->get_image() ) {
     std::cout<<"Sampler::enable_changed(): get_pipeline()->get_image()->update() called."<<std::endl;
     get_pipeline()->get_image()->update();

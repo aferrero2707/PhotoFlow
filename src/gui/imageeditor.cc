@@ -131,6 +131,100 @@ void PF::ImageSizeUpdater::update( VipsRect* area )
 
 
 
+class HistogramDialog: public Gtk::Dialog
+{
+  PF::ImageEditor* editor;
+  Gtk::Widget* histogram;
+  Gtk::Button close_button;
+  Gtk::HBox close_button_box;
+  bool visible;
+  int x, y;
+public:
+  HistogramDialog( PF::ImageEditor* editor );
+  void set_histogram(Gtk::Widget* samplers);
+  bool is_visible() { return visible; }
+  void on_hide();
+  bool on_delete_event( GdkEventAny* any_event );
+  void open();
+  void close();
+};
+
+
+
+HistogramDialog::HistogramDialog( PF::ImageEditor* e ):
+    Gtk::Dialog(), editor(e), histogram(NULL), close_button(_("Close")), x(-1), y(-1)
+{
+  close_button_box.pack_end( close_button, Gtk::PACK_SHRINK, 5 );
+#ifdef GTKMM_3
+  get_content_area()->pack_end( close_button_box, Gtk::PACK_SHRINK, 5 );
+#else
+  get_vbox()->pack_end( close_button_box, Gtk::PACK_SHRINK, 5 );
+#endif
+  set_deletable ( false );
+  //set_resizable( false );
+  set_gravity( Gdk::GRAVITY_STATIC );
+
+  close_button.signal_clicked().connect( sigc::mem_fun(*this,
+      &HistogramDialog::close) );
+}
+
+
+void HistogramDialog::set_histogram(Gtk::Widget* s)
+{
+  histogram = s;
+  if( s ) {
+#ifdef GTKMM_3
+    get_content_area()->pack_start( *s, Gtk::PACK_EXPAND_WIDGET );
+#else
+    get_vbox()->pack_start( *s, Gtk::PACK_EXPAND_WIDGET );
+#endif
+  }
+}
+
+
+void HistogramDialog::on_hide()
+{
+  std::cout<<"HistogramDialog::on_hide() called."<<std::endl;
+  get_position(x,y);
+  //visible = false;
+  Gtk::Dialog::on_hide();
+}
+
+
+bool HistogramDialog::on_delete_event( GdkEventAny* any_event )
+{
+  std::cout<<"HistogramDialog::on_delete_event() called."<<std::endl;
+  //if(editor) editor->get_layer_widget().controls_dialog_close(gui);
+  close();
+  return true;
+}
+
+
+void HistogramDialog::open()
+{
+  //std::cout<<"HistogramDialog::open(): x="<<x<<"  y="<<y<<std::endl;
+  if(x>=0 && y>=0) move(x,y);
+  show_all_children();
+  show();
+  visible=true;
+}
+
+void HistogramDialog::close()
+{
+  std::cout<<"HistogramDialog::close() called."<<std::endl;
+  if(histogram) {
+#ifdef GTKMM_3
+    get_content_area()->remove( *histogram );
+#else
+    get_vbox()->remove( *histogram );
+#endif
+  }
+  hide();
+  visible=false;
+}
+
+
+
 class SamplersDialog: public Gtk::Dialog
 {
   PF::ImageEditor* editor;
@@ -237,12 +331,19 @@ class Layout2: public Gtk::HBox
   Gtk::Notebook stat_notebook;
 
   Gtk::Widget* histogram_widget;
+  Gtk::Label histogram_label;
+  Gtk::EventBox histogram_label_evbox;
+  Gtk::VBox histogram_vbox;
+  Gtk::ScrolledWindow histogram_scrollwin;
+  HistogramDialog histogram_dialog;
+
   Gtk::Widget* samplers_widget;
   Gtk::Label samplers_label;
   Gtk::EventBox samplers_label_evbox;
   Gtk::VBox samplers_vbox;
   Gtk::ScrolledWindow samplers_scrollwin;
   SamplersDialog samplers_dialog;
+
   Gtk::Widget* image_info_widget;
   Gtk::Widget* snapshots_widget;
   Gtk::Widget* control_buttons_widget;
@@ -315,6 +416,36 @@ class Layout2: public Gtk::HBox
     PF::PhotoFlow::Instance().get_options().set_layerlist_widget_width( allocation.get_width() );
   }
 
+  bool on_histogram_label_button_press_event(GdkEventButton*event)
+  {
+    std::cout<<"on_histogram_label_button_press_event: type="<<event->type<<"  button="<<event->button<<std::endl;
+    if( event->type == GDK_2BUTTON_PRESS && event->button == 1) {
+      std::cout<<"on_histogram_label_button_press_event: double-click detected"<<std::endl;
+      stat_notebook.remove_page(*histogram_widget);
+      histogram_dialog.set_histogram(histogram_widget);
+
+      Gtk::Container* toplevel = get_toplevel();
+      Gtk::Window* toplevelwin = NULL;
+    #ifdef GTKMM_2
+      if( toplevel && toplevel->is_toplevel() )
+    #endif
+    #ifdef GTKMM_3
+        if( toplevel && toplevel->get_is_toplevel() )
+    #endif
+          toplevelwin = dynamic_cast<Gtk::Window*>(toplevel);
+      if(toplevelwin) histogram_dialog.set_transient_for(*toplevelwin);
+      histogram_dialog.open();
+    }
+    return false;
+  }
+
+  void on_histogram_dialog_hide()
+  {
+    std::cout<<"on_histogram_dialog_hide called"<<std::endl;
+    histogram_scrollwin.show_all_children();
+    stat_notebook.insert_page( *histogram_widget, histogram_label_evbox, 1 );
+  }
+
   bool on_samplers_label_button_press_event(GdkEventButton*event)
   {
     std::cout<<"on_samplers_label_button_press_event: type="<<event->type<<"  button="<<event->button<<std::endl;
@@ -344,19 +475,35 @@ class Layout2: public Gtk::HBox
     std::cout<<"on_samplers_dialog_hide called"<<std::endl;
     samplers_vbox.pack_start(*samplers_widget, Gtk::PACK_SHRINK);
     samplers_scrollwin.show_all_children();
-    stat_notebook.append_page( samplers_scrollwin, samplers_label_evbox );
+    stat_notebook.insert_page( samplers_scrollwin, samplers_label_evbox, 2 );
   }
 
 public:
   Layout2(PF::ImageEditor* e, Gtk::Widget* h, Gtk::Widget* s, Gtk::Widget* i, Gtk::Widget* sn, Gtk::Widget* cb, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
-  editor(e), histogram_widget(h), samplers_widget(s), samplers_dialog(editor), samplers_label(_("samplers")), image_info_widget(i), snapshots_widget(sn), control_buttons_widget(cb), buttons_widget(b), layers_widget(l),
+  editor(e), histogram_widget(h), samplers_widget(s),
+  histogram_dialog(editor), samplers_dialog(editor),
+  histogram_label(_("histogram")), samplers_label(_("samplers")),
+  image_info_widget(i), control_buttons_widget(cb), buttons_widget(b), layers_widget(l),
   controls_widget(c), preview_widget(p), old_width(0)
   //paned(Gtk::ORIENTATION_VERTICAL)
   {
     stat_expander.set_label( _("image info") );
     stat_expander.set_expanded(true);
     //stat_expander.add(stat_notebook);
-    stat_notebook.append_page( *histogram_widget, _("histogram") );
+    //stat_notebook.append_page( *histogram_widget, _("histogram") );
+
+    image_info_widget->set_size_request(0,150);
+    stat_notebook.append_page( *image_info_widget, _("info") );
+
+    histogram_label_evbox.add_label( _("histogram") );
+    //histogram_label_evbox.add(histogram_label);
+    histogram_label_evbox.add_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK);
+    histogram_label_evbox.signal_button_press_event().connect( sigc::mem_fun(*this,
+        &Layout2::on_histogram_label_button_press_event) );
+    histogram_dialog.signal_hide().connect( sigc::mem_fun(*this,
+        &Layout2::on_histogram_dialog_hide) );
+    stat_notebook.append_page( *histogram_widget, histogram_label_evbox );
+
     samplers_label_evbox.add_label( _("samplers") );
     //samplers_label_evbox.add(samplers_label);
     samplers_vbox.pack_start(*samplers_widget, Gtk::PACK_SHRINK);
@@ -373,14 +520,12 @@ public:
       //hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
       hbox.pack_start( *layers_widget, Gtk::PACK_EXPAND_WIDGET );
       //vbox.pack_start( *image_info_widget, Gtk::PACK_SHRINK );
-      stat_notebook.append_page( *image_info_widget, _("info") );
     } else {
       paned.add1( *layers_widget );
       paned.add2( *controls_widget );
 
       hbox.pack_start( *buttons_widget, Gtk::PACK_SHRINK );
       hbox.pack_start( paned, Gtk::PACK_EXPAND_WIDGET );
-      stat_notebook.append_page( *image_info_widget, _("info") );
     }
     stat_notebook.append_page( samplers_scrollwin, samplers_label_evbox );
     //stat_notebook.append_page( *snapshots_widget, _("snapshots") );
