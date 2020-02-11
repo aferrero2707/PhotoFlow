@@ -132,10 +132,10 @@ PF::Histogram::Histogram( Pipeline* v ):
   hist = new unsigned long int[65536*3];
   hist_area.hist = hist;
   //std::cout<<"Histogram::Histogram(): hist="<<hist<<std::endl;
-  hist_area.set_size_request( 200, 150 );
+  hist_area.set_size_request( 200, 100 );
   signal_queue_draw.connect(sigc::mem_fun(hist_area, &HistogramArea::queue_draw));
 
-  pack_start(hist_area, Gtk::PACK_SHRINK);
+  pack_start(hist_area, Gtk::PACK_EXPAND_WIDGET);
 
   clip_range_hbox.pack_start(clip_range_check, Gtk::PACK_SHRINK, 0);
   clip_range_hbox.pack_start(clip_range_label, Gtk::PACK_SHRINK, 4);
@@ -421,15 +421,19 @@ void PF::Histogram::update_histogram()
       idx = static_cast<unsigned short int>( (val-hist_min) * 65535 / (hist_max-hist_min) );
       h1[idx] += 1;
     }
-    val = p[1];
-    if( (val > hist_min) && (val < hist_max) ) {
-      idx = static_cast<unsigned short int>( (val-hist_min) * 65535 / (hist_max-hist_min) );
-      h2[idx] += 1;
+    if(image->Bands > 1) {
+      val = p[1];
+      if( (val > hist_min) && (val < hist_max) ) {
+        idx = static_cast<unsigned short int>( (val-hist_min) * 65535 / (hist_max-hist_min) );
+        h2[idx] += 1;
+      }
     }
-    val = p[2];
-    if( (val > hist_min) && (val < hist_max) ) {
-      idx = static_cast<unsigned short int>( (val-hist_min) * 65535 / (hist_max-hist_min) );
-      h3[idx] += 1;
+    if(image->Bands > 2) {
+      val = p[2];
+      if( (val > hist_min) && (val < hist_max) ) {
+        idx = static_cast<unsigned short int>( (val-hist_min) * 65535 / (hist_max-hist_min) );
+        h3[idx] += 1;
+      }
     }
 
     p += image->Bands;
@@ -515,9 +519,9 @@ void PF::Histogram::update( VipsRect* area )
 
   //return;
 
-  //std::cout<<"before vips_sink()"<<std::endl;
+  //std::cout<<"Histogram: before vips_sink()"<<std::endl;
   //vips_sink( image, histogram_start, histogram_scan, histogram_stop, this, NULL );
-  //std::cout<<"after vips_sink()"<<std::endl;
+  //std::cout<<"Histogram: after vips_sink()"<<std::endl;
 
   // write image to memory buffer
   if(mem_array) free(mem_array);
