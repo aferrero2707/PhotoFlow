@@ -244,6 +244,7 @@ class Layout2: public Gtk::HBox
   Gtk::ScrolledWindow samplers_scrollwin;
   SamplersDialog samplers_dialog;
   Gtk::Widget* image_info_widget;
+  Gtk::Widget* snapshots_widget;
   Gtk::Widget* control_buttons_widget;
   Gtk::Widget* buttons_widget;
   Gtk::Widget* layers_widget;
@@ -347,8 +348,8 @@ class Layout2: public Gtk::HBox
   }
 
 public:
-  Layout2(PF::ImageEditor* e, Gtk::Widget* h, Gtk::Widget* s, Gtk::Widget* i, Gtk::Widget* cb, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
-  editor(e), histogram_widget(h), samplers_widget(s), samplers_dialog(editor), samplers_label(_("samplers")), image_info_widget(i), control_buttons_widget(cb), buttons_widget(b), layers_widget(l),
+  Layout2(PF::ImageEditor* e, Gtk::Widget* h, Gtk::Widget* s, Gtk::Widget* i, Gtk::Widget* sn, Gtk::Widget* cb, Gtk::Widget* b, Gtk::Widget* l, Gtk::Widget* c, Gtk::Widget* p ): Gtk::HBox(),
+  editor(e), histogram_widget(h), samplers_widget(s), samplers_dialog(editor), samplers_label(_("samplers")), image_info_widget(i), snapshots_widget(sn), control_buttons_widget(cb), buttons_widget(b), layers_widget(l),
   controls_widget(c), preview_widget(p), old_width(0)
   //paned(Gtk::ORIENTATION_VERTICAL)
   {
@@ -382,6 +383,7 @@ public:
       stat_notebook.append_page( *image_info_widget, _("info") );
     }
     stat_notebook.append_page( samplers_scrollwin, samplers_label_evbox );
+    //stat_notebook.append_page( *snapshots_widget, _("snapshots") );
     vbox.pack_start( *control_buttons_widget, Gtk::PACK_SHRINK );
     vbox.pack_start( stat_notebook, Gtk::PACK_SHRINK );
     stat_notebook.set_current_page(1);
@@ -501,6 +503,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   histogram = new PF::Histogram( image->get_pipeline(HISTOGRAM_PIPELINE_ID) );
   samplers = new PF::SamplerGroup( image->get_pipeline(0) );
   image_info = new PF::ImageInfo( image->get_pipeline(0) );
+  snapshots = new PF::SnapshotsWidget( this );
 
 
   radioBox.pack_start( buttonShowMerged );
@@ -569,7 +572,7 @@ PF::ImageEditor::ImageEditor( std::string fname ):
   //controls_group_vbox.pack_start( stat_expander, Gtk::PACK_SHRINK );
   //controls_group_vbox.pack_start( controls_group_scrolled_window, Gtk::PACK_EXPAND_WIDGET );
 
-  Layout2* layout2 = new Layout2( this, histogram, samplers, image_info, &controlsBox2,
+  Layout2* layout2 = new Layout2( this, histogram, samplers, image_info, snapshots, &controlsBox2,
       &(layersWidget.get_tool_buttons_box()),
       &layersWidget_box, &controls_group_scrolled_window, &imageBox );
   main_panel = layout2;

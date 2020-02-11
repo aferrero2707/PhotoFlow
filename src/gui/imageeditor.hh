@@ -40,6 +40,7 @@
 #include "histogram.hh"
 #include "sampler.hh"
 #include "image_info.hh"
+#include "snapshotswidget.hh"
 #include "layerwidget.hh"
 #include "tablabelwidget.hh"
 #include "softproofdialog.hh"
@@ -107,6 +108,7 @@ class ImageEditor: public Gtk::HBox
   Histogram* histogram;
   SamplerGroup* samplers;
   ImageInfo* image_info;
+  SnapshotsWidget* snapshots;
 
 
   // Boxes for aligning the image area inside the scrolled window.
