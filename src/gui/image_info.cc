@@ -107,16 +107,34 @@ void PF::ImageInfo::update( VipsRect* area )
   if( !exif_data ) return;
 
   std::ostringstream info_text1;
-  info_text1 << exif_data->camera_makermodel << std::endl;
+  if( exif_data->camera_makermodel[0] != '\0' )
+    info_text1 << exif_data->camera_makermodel;
+  else
+    info_text1 << _("UNKNOWN CAMERA");
+  info_text1 << std::endl;
   std::ostringstream info_text2;
-  info_text2 << exif_data->exif_lens << " (at " << exif_data->exif_focal_length << "mm)" << std::endl;
+  if( exif_data->exif_lens[0] != '\0' )
+    info_text2 << exif_data->exif_lens;
+  else
+    info_text2 << _("UNKNOWN LENS");
+  if( exif_data->exif_focal_length > 0 )
+    info_text2 << " (at " << exif_data->exif_focal_length << "mm)";
+  info_text2 << std::endl;
   std::ostringstream info_text3;
-  info_text3 << "f/" << exif_data->exif_aperture << "  ";
+  if( exif_data->exif_aperture > 0 )
+    info_text3 << "f/" << exif_data->exif_aperture << "  ";
+  else
+    info_text3 << "f/--  ";
   if( exif_data->exif_exposure >= 1 )
     info_text3 << exif_data->exif_exposure << "s  ";
-  else
+  else if( exif_data->exif_exposure > 0 )
     info_text3 << "1/" << 1.f / exif_data->exif_exposure << "s  ";
-  info_text3 << "ISO" << exif_data->exif_iso;
+  else
+    info_text3 << "--s  ";
+  if( exif_data->exif_iso > 0 )
+    info_text3 << "ISO" << exif_data->exif_iso;
+  else
+    info_text3 << "ISO--";
 
   Update * update = g_new (Update, 1);
   update->info = this;
