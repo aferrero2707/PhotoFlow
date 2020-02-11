@@ -1352,10 +1352,6 @@ bool PF::MainWindow::remove_tab( Gtk::Widget* widget, bool immediate )
   //}
   //editor->get_file_buttons_box().pack_start(top_box, Gtk::PACK_EXPAND_WIDGET);
 
-
-  if( viewerNotebook.get_n_pages() > 1 ) viewerNotebook.set_show_tabs(true);
-  else viewerNotebook.set_show_tabs(false);
-
   if(immediate) {
     std::cout<<"MainWindow::remove_tab(): deleting image editor "<<editor<<" (image="<<editor->get_image()<<")"<<std::endl;
     delete( widget );
