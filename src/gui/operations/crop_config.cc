@@ -426,7 +426,7 @@ void PF::CropConfigGUI::move_topleft_handle( int x, int y )
 
   if( keep_ar ) {
     int t_w = new_h * ar;
-    if( t_w > new_w ) {
+    if( t_w < new_w ) {
       new_w = t_w;
       new_x = x0+w-new_w;
       if( new_x < 0 ) {
@@ -437,7 +437,7 @@ void PF::CropConfigGUI::move_topleft_handle( int x, int y )
 
     int t_h = new_w / ar;
 
-    if( t_h > new_h ) {
+    if( t_h < new_h ) {
       new_h = t_h;
       new_y = y0+h-new_h;
       if( new_y < 0 ) {
@@ -486,7 +486,7 @@ void PF::CropConfigGUI::move_topright_handle( int x, int y )
 
   if( keep_ar ) {
     int t_w = new_h * ar;
-    if( t_w > new_w ) {
+    if( t_w < new_w ) {
       new_w = t_w;
       if( (x0 + new_w) > node2->blended->Xsize ) {
         new_w = node2->blended->Xsize - x0;
@@ -496,7 +496,7 @@ void PF::CropConfigGUI::move_topright_handle( int x, int y )
 
     int t_h = new_w / ar;
 
-    if( t_h > new_h ) {
+    if( t_h < new_h ) {
       new_h = t_h;
       new_y = y0+h-new_h;
       if( new_y < 0 ) {
