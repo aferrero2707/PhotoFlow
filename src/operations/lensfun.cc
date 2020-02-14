@@ -253,7 +253,7 @@ VipsImage* PF::LensFunParStep::build(std::vector<VipsImage*>& in, int first,
 
   focal_length = exif_data->exif_focal_length;
   aperture = exif_data->exif_aperture;
-  distance = exif_data->exif_focus_distance;
+  distance = exif_data->exif_focus_distance > 0 ? exif_data->exif_focus_distance : 1000;
 
 #ifndef NDEBUG
   std::cout<<"Maker: "<<exif_data->exif_maker<<"  model: "<<exif_data->exif_model
