@@ -441,7 +441,8 @@ LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name, b
 {
     LFLens ret;
     if (data_) {
-        auto found = data_->FindLenses(camera.data_, nullptr, name.c_str());
+        auto found = data_->FindLenses(camera.data_, nullptr, name.c_str(), LF_SEARCH_LOOSE);
+        //std::cout<<"[LFDatabase::findLens()]: name=\""<<name<<"\"  found="<<found<<std::endl;
         for (size_t pos = 0; !found && pos < name.size(); ) {
             // try to split the maker from the model of the lens -- we have to
             // guess a bit here, since there are makers with a multi-word name
@@ -455,6 +456,7 @@ LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name, b
                 make = name.substr(0, i);
                 model = name.substr(i+1);
                 found = data_->FindLenses(camera.data_, make.c_str(), model.c_str());
+                //std::cout<<"[LFDatabase::findLens()]: make=\""<<make<<"\"  model=\""<<model<<"\"  found="<<found<<std::endl;
                 pos = i+1;
             } else {
                 break;
@@ -486,7 +488,9 @@ LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name, b
                   model = name.substr(i+1);
                   tmplens.SetMaker(make.c_str());
                   tmplens.SetModel(model.c_str());
+                  //std::cout<<"LFDatabase::findLens(): searching match for "<<make<<" "<<model<<std::endl;
                   found = data_->FindLenses(&tmplens, LF_SEARCH_LOOSE);
+                  //std::cout<<"LFDatabase::findLens(): found="<<found<<std::endl;
                   pos = i+1;
                 } else {
                   break;
