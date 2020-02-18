@@ -233,13 +233,13 @@ bool PF::exif_read(exif_data_t* data, const char* path)
 #endif
     else if ( (pos=Exiv2::lensName(exifData)) != exifData.end() && pos->size())
     {
-      //g_print("read_exif(): Generic lens found.\n");
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
+      //g_print("read_exif(): Generic lens found: \"%s\"\n", data->exif_lens);
     }
     else if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.Photo.LensModel"))) != exifData.end() && pos->size())
     {
-      //g_print("read_exif(): Generic2 lens found.\n");
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
+      //g_print("read_exif(): Generic2 lens found: \"%s\"\n", data->exif_lens);
     }
     //g_print("read_exif(): lens=%s\n",data->exif_lens);
 

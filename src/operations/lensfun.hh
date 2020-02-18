@@ -68,6 +68,8 @@ class LensFunParStep: public OpParBase
   rtengine::LFLens lflens;
   float focal_length, aperture, distance;
 
+  float gain_vignetting;
+
 public:
   LensFunParStep();
 
@@ -89,6 +91,8 @@ public:
   float get_distance() { return( distance ); }
 
   int get_flags( VipsImage* img );
+
+  float get_gain_vignetting() { return gain_vignetting; }
 
   void set_lfcamera( rtengine::LFCamera c ) { lfcamera = c; }
   void set_lflens( rtengine::LFLens l ) { lflens = l; }
@@ -164,6 +168,8 @@ public:
   float get_distance();
 
   int get_flags( VipsImage* img );
+
+  float get_gain_vignetting();
 
   bool distortion_enabled() { return enable_distortion.get(); }
   bool tca_enabled() { return enable_tca.get(); }

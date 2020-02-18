@@ -253,12 +253,60 @@ VipsImage* PF::LensFunParStep::build(std::vector<VipsImage*>& in, int first,
 
   focal_length = exif_data->exif_focal_length;
   aperture = exif_data->exif_aperture;
-  distance = exif_data->exif_focus_distance;
+  distance = exif_data->exif_focus_distance > 0 ? exif_data->exif_focus_distance : 1000;
 
 #ifndef NDEBUG
   std::cout<<"Maker: "<<exif_data->exif_maker<<"  model: "<<exif_data->exif_model
       <<"  lens: "<<prop_lens<<std::endl;
 #endif
+
+
+
+  gain_vignetting = 1;
+  if( false && enable_vignetting ) {
+    int flags = 0;
+    flags |= LF_MODIFY_VIGNETTING;
+    lfModifier* modifier = new lfModifier( get_lens(), get_camera()->CropFactor,
+        in[0]->Xsize, in[0]->Ysize );
+    int modflags = modifier->Initialize(
+        get_lens(), LF_PF_F32, get_focal_length(),
+        get_aperture(), get_distance(), 1.0, get_lens()->Type,
+        flags, false );
+
+    if( modflags & LF_MODIFY_VIGNETTING ) {
+      float rgb[3] = {1.0, 1.0, 1.0};
+      modifier->ApplyColorModification (rgb, 0, 0, 1, 1, LF_CR_3 (RED, GREEN, BLUE), 0);
+      if(rgb[0] > gain_vignetting) gain_vignetting = rgb[0];
+      if(rgb[1] > gain_vignetting) gain_vignetting = rgb[1];
+      if(rgb[2] > gain_vignetting) gain_vignetting = rgb[2];
+
+      rgb[0] = rgb[1] = rgb[2] = 1.0;
+      modifier->ApplyColorModification (rgb, in[0]->Xsize-1, 0, 1, 1, LF_CR_3 (RED, GREEN, BLUE), 0);
+      if(rgb[0] > gain_vignetting) gain_vignetting = rgb[0];
+      if(rgb[1] > gain_vignetting) gain_vignetting = rgb[1];
+      if(rgb[2] > gain_vignetting) gain_vignetting = rgb[2];
+
+      rgb[0] = rgb[1] = rgb[2] = 1.0;
+      modifier->ApplyColorModification (rgb, 0, in[0]->Ysize-1, 1, 1, LF_CR_3 (RED, GREEN, BLUE), 0);
+      if(rgb[0] > gain_vignetting) gain_vignetting = rgb[0];
+      if(rgb[1] > gain_vignetting) gain_vignetting = rgb[1];
+      if(rgb[2] > gain_vignetting) gain_vignetting = rgb[2];
+
+      rgb[0] = rgb[1] = rgb[2] = 1.0;
+      modifier->ApplyColorModification (rgb, in[0]->Xsize-1, in[0]->Ysize-1, 1, 1, LF_CR_3 (RED, GREEN, BLUE), 0);
+      if(rgb[0] > gain_vignetting) gain_vignetting = rgb[0];
+      if(rgb[1] > gain_vignetting) gain_vignetting = rgb[1];
+      if(rgb[2] > gain_vignetting) gain_vignetting = rgb[2];
+
+      rgb[0] = rgb[1] = rgb[2] = 1.0;
+      modifier->ApplyColorModification (rgb, in[0]->Xsize/2, in[0]->Ysize/2, 1, 1, LF_CR_3 (RED, GREEN, BLUE), 0);
+      if(rgb[0] > gain_vignetting) gain_vignetting = rgb[0];
+      if(rgb[1] > gain_vignetting) gain_vignetting = rgb[1];
+      if(rgb[2] > gain_vignetting) gain_vignetting = rgb[2];
+    }
+
+    delete modifier;
+  }
 
   if( !enable_distortion && !enable_tca && !enable_vignetting ) {
     PF_REF( in[0], "LensFunPar::build(): no LENSFUN corrections requested." );
@@ -443,6 +491,14 @@ int PF::LensFunPar::get_flags( VipsImage* img )
   //PF::LensFunParStep* step1_par = dynamic_cast<PF::LensFunParStep*>( step1->get_par() );
   //if( !step1_par ) return 0;
   //return( step1_par->get_flags(img) );
+}
+
+
+float PF::LensFunPar::get_gain_vignetting()
+{
+  PF::LensFunParStep* step1_par = dynamic_cast<PF::LensFunParStep*>( step1->get_par() );
+  if( !step1_par ) return 0;
+  return( step1_par->get_gain_vignetting() );
 }
 
 
