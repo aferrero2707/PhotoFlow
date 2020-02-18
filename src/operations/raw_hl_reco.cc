@@ -273,7 +273,7 @@ public:
     float* pout;
     int x, y;
 
-    std::cout<<"[RawHLRecoProc::render] mode="<<opar->get_hlreco_mode()<<std::endl;
+    //std::cout<<"[RawHLRecoProc::render] mode="<<opar->get_hlreco_mode()<<std::endl;
 
     for( y = 0; y < height; y++ ) {
       pin = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
@@ -281,7 +281,7 @@ public:
 
       switch( opar->get_hlreco_mode() ) {
       case HLRECO_BLEND: {
-        std::cout<<"[RawHLRecoProc::render] using blend HL reco mode"<<std::endl;
+        //std::cout<<"[RawHLRecoProc::render] using blend HL reco mode"<<std::endl;
         for( x = 0; x < line_size; x+=3 ) {
           pout[x] = pin[x]*mul_corr;
           pout[x+1] = pin[x+1]*mul_corr;
@@ -307,7 +307,7 @@ public:
         }
       }
       }
-      std::cout<<"[RawHLRecoProc::render] pin[0]="<<pin[0]<<"  pout[0]="<<pout[0]<<std::endl;
+      //std::cout<<"[RawHLRecoProc::render] pin[0]="<<pin[0]<<"  pout[0]="<<pout[0]<<std::endl;
     }
   }
 };
