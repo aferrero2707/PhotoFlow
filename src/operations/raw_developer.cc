@@ -44,6 +44,7 @@
 #include "fast_demosaic_xtrans.hh"
 #include "false_color_correction.hh"
 #include "lensfun.hh"
+#include "raw_hl_reco.hh"
 #include "raw_output.hh"
 #include "hotpixels.hh"
 
@@ -94,6 +95,7 @@ PF::RawDeveloperPar::RawDeveloperPar():
   if( xtrans_par ) xtrans_par->set_normalize( true );
   raw_preprocessor = new_raw_preprocessor();
   ca_correct = new_ca_correct();
+  hl_reco = new_raw_hl_reco();
   lensfun = new_lensfun();
   raw_output = new_raw_output();
   hotpixels = new_hotpixels();
@@ -340,8 +342,40 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
     out_demo = image;
   }
 
+
+
+  RawPreprocessorPar* rppar = dynamic_cast<RawPreprocessorPar*>( raw_preprocessor->get_par() );
+
+  RawHLRecoPar* hlpar = dynamic_cast<RawHLRecoPar*>( hl_reco->get_par() );
+  if( !hlpar ) {
+    std::cout<<"RawDeveloperPar::build(): could not get RawHLReco object."<<std::endl;
+    return NULL;
+  }
+  if( rppar && hlpar ) {
+    switch( rppar->get_wb_mode() ) {
+    case WB_SPOT:
+    case WB_COLOR_SPOT:
+      hlpar->set_wb( rppar->get_wb_red(),
+          rppar->get_wb_green(),
+          rppar->get_wb_blue() );
+      break;
+    default:
+      hlpar->set_wb( rppar->get_wb_red()*rppar->get_camwb_corr_red(),
+          rppar->get_wb_green()*rppar->get_camwb_corr_green(),
+          rppar->get_wb_blue()*rppar->get_camwb_corr_blue() );
+      break;
+    }
+  }
+  hlpar->set_hlreco_mode((hlreco_mode_t)hlreco_mode.get_enum_value().first);
+  hlpar->set_image_hints(out_demo);
+  hlpar->set_format( VIPS_FORMAT_FLOAT );
+  in2.clear(); in2.push_back( out_demo );
+  VipsImage* out_hl = hlpar->build( in2, 0, NULL, NULL, level );
+  g_object_unref( out_demo );
+
+
   /**/
-  lensfun->get_par()->set_image_hints( out_demo );
+  lensfun->get_par()->set_image_hints( out_hl );
   lensfun->get_par()->set_format( VIPS_FORMAT_FLOAT );
   lfpar->set_auto_crop_enabled( auto_crop.get() );
   lfpar->set_vignetting_enabled( enable_vignetting.get() || enable_all.get() );
@@ -360,20 +394,21 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
       break;
     }
   }
-  in2.clear(); in2.push_back( out_demo );
+  in2.clear(); in2.push_back( out_hl );
   VipsImage* out_lf = lensfun->get_par()->build( in2, 0, NULL, NULL, level );
-  g_object_unref( out_demo );
+  g_object_unref( out_hl );
 
 
   raw_output->get_par()->set_image_hints( out_lf );
   raw_output->get_par()->set_format( VIPS_FORMAT_FLOAT );
-  RawPreprocessorPar* rppar = dynamic_cast<RawPreprocessorPar*>( raw_preprocessor->get_par() );
   RawOutputPar* ropar = dynamic_cast<RawOutputPar*>( raw_output->get_par() );
   if( rppar && ropar ) {
     switch( rppar->get_wb_mode() ) {
     case WB_SPOT:
     case WB_COLOR_SPOT:
-      ropar->set_wb( rppar->get_wb_red(), rppar->get_wb_green(), rppar->get_wb_blue() );
+      ropar->set_wb( rppar->get_wb_red(),
+          rppar->get_wb_green(),
+          rppar->get_wb_blue() );
       break;
     default:
       ropar->set_wb( rppar->get_wb_red()*rppar->get_camwb_corr_red(),
@@ -384,6 +419,7 @@ VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first,
     rppar->set_hlreco_mode( (hlreco_mode_t)hlreco_mode.get_enum_value().first );
     ropar->set_hlreco_mode( (hlreco_mode_t)hlreco_mode.get_enum_value().first );
   }
+  //ropar->set_output_gain(lfpar->get_gain_vignetting());
 
   in2.clear(); in2.push_back( out_lf );
   VipsImage* out = raw_output->get_par()->build( in2, 0, NULL, NULL, level );

@@ -104,6 +104,7 @@ enum exposure_mode_t {
     PropertyBase exposure_mode;
     Property<float> exposure_clip_amount;
     hlreco_mode_t hlreco_mode;
+    float output_gain;
 
     float wb_red_current, wb_green_current, wb_blue_current, exposure_current;
 
@@ -173,6 +174,9 @@ enum exposure_mode_t {
     }
 
     float get_exposure() { return exposure.get(); }
+
+    void set_output_gain(float g) { output_gain = g; }
+    float get_output_gain() { return output_gain; }
 
     void set_hlreco_mode(hlreco_mode_t m) { hlreco_mode = m; }
     hlreco_mode_t get_hlreco_mode() { return hlreco_mode; }
@@ -501,6 +505,13 @@ enum exposure_mode_t {
           std::cout<<"RawOutput::render(): camera_profile_mode="<<opar->get_camera_profile_mode()<<std::endl;
         }
 
+        for( x = 0; x < line_size; x+=3 ) {
+          line[x] = p[x]*exposure;
+          line[x+1] = p[x+1]*exposure;
+          line[x+2] = p[x+2]*exposure;
+        }
+
+        /*
         switch( opar->get_hlreco_mode() ) {
         case HLRECO_BLEND: {
           for( x = 0; x < line_size; x+=3 ) {
@@ -523,9 +534,12 @@ enum exposure_mode_t {
         }
         case HLRECO_CLIP: {
           for( x = 0; x < line_size; x+=3 ) {
-            line[x] = PF_CLIP( p[x], sat_min )*mul_corr*exposure;
-            line[x+1] = PF_CLIP( p[x+1], sat_min )*mul_corr*exposure;
-            line[x+2] = PF_CLIP( p[x+2], sat_min )*mul_corr*exposure;
+            //line[x] = PF_CLIP( p[x], sat_min )*mul_corr*exposure;
+            //line[x+1] = PF_CLIP( p[x+1], sat_min )*mul_corr*exposure;
+            //line[x+2] = PF_CLIP( p[x+2], sat_min )*mul_corr*exposure;
+            line[x] = p[x]*mul_corr*exposure;
+            line[x+1] = p[x+1]*mul_corr*exposure;
+            line[x+2] = p[x+2]*mul_corr*exposure;
           }
           break;
         }
@@ -537,6 +551,7 @@ enum exposure_mode_t {
           }
         }
         }
+        */
 
 
         if( opar->get_camera_profile_mode() == IN_PROF_ICC ) {

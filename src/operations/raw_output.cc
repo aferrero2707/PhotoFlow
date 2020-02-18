@@ -56,6 +56,7 @@ PF::RawOutputPar::RawOutputPar():
       exposure("exposure",this,1),
       exposure_mode("exposure_mode",this,PF::EXP_NORMAL,"NORMAL","Normal"),
       exposure_clip_amount("exposure_clip_amount",this,0),
+      output_gain(1),
       profile_mode("profile_mode",this,PF::IN_PROF_MATRIX,"MATRIX","MATRIX"),
       //profile_mode("profile_mode",this,PF::IN_PROF_NONE,"NONE","NONE"),
       current_profile_mode( IN_PROF_MATRIX ),

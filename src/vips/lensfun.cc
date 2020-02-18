@@ -112,6 +112,8 @@ typedef struct _VipsLensFun {
    */
   VipsDemandStyle demand_hint;
 
+  float gain;
+
 #ifdef PF_HAS_LENSFUN
   lfDatabase* ldb;
   lfModifier* modifier;
@@ -322,6 +324,9 @@ vips_lensfun_gen_template( VipsRegion *oreg, void *seq, void *a, void *b, gboole
     for( y = 0; y < s.height; y++ ) {
       T *q = (T *)VIPS_REGION_ADDR( ir, s.left, s.top + y );
       memcpy( Tbuf, q, sizeof(T)*line_size );
+      for(int x = 0; x < s.width*lensfun->in->Bands; x++) {
+        Tbuf[x] /= lensfun->gain;
+      }
       lensfun->modifier->ApplyColorModification (Tbuf, s.left, s.top+y, s.width, 1,
           LF_CR_3 (RED, GREEN, BLUE), 0);
       q = (T *)VIPS_REGION_ADDR( oreg, s.left, s.top + y );
@@ -478,6 +483,8 @@ vips_lensfun_build( VipsObject *object )
    */
   g_object_set( lensfun, "out", vips_image_new(), NULL );
 
+  lensfun->gain = lfpar->get_gain_vignetting();
+
   /* Set demand hints. 
   */
   std::cout<<"vips_lensfun_build(): lensfun->in="<<lensfun->in<<std::endl;
@@ -577,6 +584,7 @@ vips_lensfun_class_init( VipsLensFunClass *klass )
 static void
 vips_lensfun_init( VipsLensFun *lensfun )
 {
+  lensfun->gain = 1.0;
 #ifdef PF_HAS_LENSFUN
   lensfun->ldb = lf_db_new();
 #if (BUNDLED_LENSFUN == 1)

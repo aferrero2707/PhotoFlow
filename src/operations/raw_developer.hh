@@ -75,6 +75,7 @@ namespace PF
     PF::ProcessorBase* fast_demosaic_xtrans;
     PF::ProcessorBase* raw_preprocessor;
     PF::ProcessorBase* ca_correct;
+    PF::ProcessorBase* hl_reco;
     PF::ProcessorBase* lensfun;
     PF::ProcessorBase* raw_output;
     PF::ProcessorBase* convert_format;
