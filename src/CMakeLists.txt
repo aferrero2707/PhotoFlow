@@ -93,6 +93,14 @@ SET(CMAKE_CXX_FLAGS_RELEASE        " -O3 -ftree-vectorize -funroll-loops -fomit-
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g ${CMAKE_CXX_FLAGS_RELEASE}")
 SET(CMAKE_CXX_FLAGS_TEST "            -O3 -g -ftree-vectorize -Wno-unused-parameter -DNDEBUG ${COMPILE_FLAGS}") 
 
+
+#set(WITH_SAN "address")
+if(WITH_SAN)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -O1 -g -fsanitize=${WITH_SAN}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -O1 -g -fsanitize=${WITH_SAN}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O1 -g -fsanitize=${WITH_SAN}")
+endif()
+
 #link_directories("/this/is/a/test/path")
 
 include_directories(${EXPAT_INCLUDE_DIRS})
@@ -134,6 +142,8 @@ link_directories(${PNG_LIBRARY_DIRS})
 
 include_directories(${FFTW3_INCLUDE_DIRS})
 link_directories(${FFTW3_LIBRARY_DIRS})
+include_directories(${FFTW3F_INCLUDE_DIRS})
+link_directories(${FFTW3F_LIBRARY_DIRS})
 
 
 include_directories(${XML2_INCLUDE_DIRS})
@@ -252,9 +262,11 @@ FILE(GLOB RTIncludes
   rt/rtengine/opthelper.h 
   rt/rtengine/rawimage.h 
   rt/rtengine/noncopyable.h
+  rt/rtengine/imagedata.h
   rt/rtengine/imageio.h
   rt/rtengine/camconst.h
   rt/rtengine/cJSON.h
+  rt/rtengine/lj92.h
   rt/rtengine/rtlensfun.h
 )
 FILE(GLOB RTSources 
@@ -270,10 +282,16 @@ FILE(GLOB RTSources
   rt/rtengine/dcraw.cc
   rt/rtengine/myfile.cc
   rt/rtengine/rawimage.cc
+  rt/rtengine/imagedata.cc
   rt/rtengine/camconst.cc
   rt/rtengine/cJSON.c
   rt/rtengine/settings.cc
   rt/rtengine/rtlensfun.cc
+  rt/rtengine/utils.cc
+  rt/rtengine/lj92.c
+  rt/rtengine/canon_cr3_decoder.cc
+  rt/rtengine/panasonic_decoders.cc
+  rt/rtengine/jpeg_ijg/jpeg_memsrc.cc
 )
 
 FILE(GLOB VipsIncludes vips/*.h vips/*.hh vips/gmic/*.h)
@@ -604,8 +622,10 @@ target_link_libraries(photoflow ${LIBS}
   ${Pugixml_LIBRARIES}
   ${ICONV_LIBRARIES}
   ${FFTW3_LIBRARIES}
+  ${FFTW3F_LIBRARIES}
   ${OPENEXR_LIBRARIES}
   ${XML2_LIBRARIES}
+  ${IPTCDATA_LIBRARIES}
   ${EXIF_LIBRARIES}
   ${EXIV2_LIBRARIES}
   #${GEXIV2_LIBRARIES}
