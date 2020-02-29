@@ -604,8 +604,8 @@ PF::LFSelector::LFSelector( OperationConfigGUI* dialog, std::string pname, std::
   cb_hbox.pack_end(cb, Gtk::PACK_SHRINK);
   cb_hbox.pack_end(cb_label, Gtk::PACK_SHRINK);
   cb_label.set_text(_("match camera"));
-  cb.set_active(true);
-  vbox.pack_start(cb_hbox);
+  cb.set_active(false);
+  //vbox.pack_start(cb_hbox);
 
   vbox.set_spacing(4);
 

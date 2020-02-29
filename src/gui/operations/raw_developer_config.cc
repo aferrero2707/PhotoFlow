@@ -687,8 +687,8 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
         ca_red_slider( this, "ca_red", _("red"), 0, -4, 4, 0.1, 0.5, 1),
         ca_blue_slider( this, "ca_blue", _("blue"), 0, -4, 4, 0.1, 0.5, 1),
         ca_frame( _("CA correction") ),
-        lf_auto_matching_checkbox( this, "auto_matching", _("auto matching"), true ),
-        lf_auto_crop_checkbox( this, "lf_auto_crop", _("auto cropping"), true ),
+        lf_auto_matching_checkbox( this, "auto_matching", _("auto matching"), true, 1 ),
+        lf_auto_crop_checkbox( this, "lf_auto_crop", _("auto cropping"), true, 1 ),
         lf_cam_selector( this, "camera_maker", "camera_model", _("camera model: "), 0, 150 ),
         lf_lens_selector( this, "lens", _("lens model: "), 0, 150 ),
         lf_selector( this, "camera_maker", "camera_model", "lens" ),
@@ -816,26 +816,15 @@ PF::RawDeveloperConfigGUI::RawDeveloperConfigGUI( PF::Layer* layer ):
   //hotp_box.pack_start( hotp_markfixed_checkbox, Gtk::PACK_SHRINK );
 
   lens_frame.add( lf_box );
-  lf_label1.set_text( _("cam. maker: ") );
-  lf_hbox1.pack_start( lf_label1 );
-  lf_hbox1.pack_start( lf_makerEntry );
-  lf_label2.set_text( _("cam. model: ") );
-  lf_hbox2.pack_start( lf_label2 );
-  lf_hbox2.pack_start( lf_modelEntry );
-  lf_label3.set_text( _("lens: ") );
-  lf_hbox3.pack_start( lf_label3 );
-  lf_hbox3.pack_start( lf_lensEntry );
-  //lf_box.pack_start( lf_cam_selector );
-  //lf_box.pack_start( lf_lens_selector );
   lf_box.pack_start( lf_selector );
-  //lf_box.pack_start( lf_hbox1 );
-  //lf_box.pack_start( lf_hbox2 );
-  //lf_box.pack_start( lf_hbox3 );
   lf_hbox.pack_start( lf_auto_matching_checkbox );
   lf_hbox.pack_start( lf_enable_all_button );
+  lf_hbox2.pack_start( lf_auto_crop_checkbox );
+  lf_hbox2.pack_start( lf_enable_vignetting_button );
   lf_box.pack_start( lf_hbox );
-  lf_box.pack_start( lf_auto_crop_checkbox );
-  lf_box.pack_start( lf_enable_vignetting_button );
+  lf_box.pack_start( lf_hbox2 );
+  //lf_box.pack_start( lf_auto_crop_checkbox );
+  //lf_box.pack_start( lf_enable_vignetting_button );
   lf_box.pack_start( lf_enable_distortion_button );
   lf_box.pack_start( lf_enable_tca_button );
   lf_makerEntry.set_editable( false );
