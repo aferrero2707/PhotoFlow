@@ -430,11 +430,12 @@ image( NULL )
 
 
   void* buf = malloc( sizeof(PF::exif_data_t) );
-  if( !buf ) return;
-  memcpy( buf, &exif_data, sizeof(PF::exif_data_t) );
-  vips_image_set_blob( image, PF_META_EXIF_NAME,
-      (VipsCallbackFn) PF::exif_free, buf,
-      sizeof(PF::exif_data_t) );
+  if( buf ) {
+    memcpy( buf, &exif_data, sizeof(PF::exif_data_t) );
+    vips_image_set_blob( image, PF_META_EXIF_NAME,
+        (VipsCallbackFn) PF::exif_free, buf,
+        sizeof(PF::exif_data_t) );
+  }
 
 #ifndef NDEBUG
   print_exif();

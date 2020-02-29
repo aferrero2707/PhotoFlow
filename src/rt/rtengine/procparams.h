@@ -56,9 +56,95 @@ enum RenderingIntent {
     RI_ABSOLUTE = INTENT_ABSOLUTE_COLORIMETRIC,
     RI__COUNT
 };
-#ifdef __NO_PHF__
+
 namespace procparams
 {
+/**
+  * Minimal wrapper allowing forward declaration for representing a key/value for the exif metadata information
+  */
+class ExifPairs final
+{
+public:
+    using const_iterator = std::map<Glib::ustring, Glib::ustring>::const_iterator;
+
+    const_iterator begin() const
+    {
+        return pairs.begin();
+    }
+
+    const_iterator end() const
+    {
+        return pairs.end();
+    }
+
+    void clear()
+    {
+        pairs.clear();
+    }
+
+    Glib::ustring& operator[](const Glib::ustring& key)
+    {
+        return pairs[key];
+    }
+
+    bool operator ==(const ExifPairs& other) const
+    {
+        return pairs == other.pairs;
+    }
+
+private:
+    std::map<Glib::ustring, Glib::ustring> pairs;
+};
+
+/**
+  * The IPTC key/value pairs
+  */
+class IPTCPairs final
+{
+public:
+    using iterator = std::map<Glib::ustring, std::vector<Glib::ustring>>::iterator;
+    using const_iterator = std::map<Glib::ustring, std::vector<Glib::ustring>>::const_iterator;
+
+    iterator find(const Glib::ustring& key)
+    {
+        return pairs.find(key);
+    }
+
+    const_iterator begin() const
+    {
+        return pairs.begin();
+    }
+
+    const_iterator end() const
+    {
+        return pairs.end();
+    }
+
+    bool empty() const
+    {
+        return pairs.empty();
+    }
+
+    void clear()
+    {
+        pairs.clear();
+    }
+
+    std::vector<Glib::ustring>& operator[](const Glib::ustring& key)
+    {
+        return pairs[key];
+    }
+
+    bool operator ==(const IPTCPairs& other) const
+    {
+        return pairs == other.pairs;
+    }
+
+private:
+    std::map<Glib::ustring, std::vector<Glib::ustring>> pairs;
+};
+
+#ifdef __NO_PHF__
 
 template <typename T>
 class Threshold
@@ -1417,8 +1503,8 @@ public:
         deleteInstance();
     }
 };
+#endif
 
 }
-#endif
 }
 #endif

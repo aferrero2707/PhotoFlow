@@ -87,6 +87,7 @@ struct exif_data_t
   char exif_maker[64];
   char exif_model[64];
   char exif_lens[128];
+  char exif_lens_alt[128];
   char exif_datetime_taken[20];
   char camera_maker[64];
   char camera_model[64];

@@ -14,90 +14,20 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with RawTherapee.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with RawTherapee.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef __RAWIMAGE_H
-#define __RAWIMAGE_H
+#pragma once
 
 #include <ctime>
+#include <cmath>
+#include <iostream>
+#include <glibmm/ustring.h>
 
 #include "dcraw.h"
-#include "imageio.h"
-#include "noncopyable.h"
+#include "imageformat.h"
 
 namespace rtengine
 {
-
-struct badPix {
-    uint16_t x;
-    uint16_t y;
-    badPix( uint16_t xc, uint16_t yc ): x(xc), y(yc) {}
-};
-
-class PixelsMap :
-    public NonCopyable
-{
-    int w; // line width in base_t units
-    int h; // height
-    typedef unsigned long base_t;
-    static const size_t base_t_size = sizeof(base_t);
-    base_t *pm;
-
-public:
-    PixelsMap(int width, int height )
-        : h(height)
-    {
-        w = (width / (base_t_size * 8)) + 1;
-        pm = new base_t [h * w ];
-        memset(pm, 0, h * w * base_t_size );
-    }
-
-    ~PixelsMap()
-    {
-        delete [] pm;
-    }
-    int width() const
-    {
-        return w;
-    }
-    int height() const
-    {
-        return h;
-    }
-
-    // if a pixel is set returns true
-    bool get(int x, int y)
-    {
-        return (pm[y * w + x / (base_t_size * 8) ] & (base_t)1 << (x % (base_t_size * 8)) ) != 0;
-    }
-
-    // set a pixel
-    void set(int x, int y)
-    {
-        pm[y * w + x / (base_t_size * 8) ] |= (base_t)1 << (x % (base_t_size * 8)) ;
-    }
-
-    // set pixels from a list
-    int set( std::vector<badPix> &bp)
-    {
-        for(std::vector<badPix>::iterator iter = bp.begin(); iter != bp.end(); ++iter) {
-            set( iter->x, iter->y);
-        }
-
-        return bp.size();
-    }
-
-    void clear()
-    {
-        memset(pm, 0, h * w * base_t_size );
-    }
-    // return 0 if at least one pixel in the word(base_t) is set, otherwise return the number of pixels to skip to the next word base_t
-    int skipIfZero(int x, int y)
-    {
-        return pm[y * w + x / (base_t_size * 8) ] == 0 ? base_t_size * 8 - x % (base_t_size * 8) : 0;
-    }
-};
-
 
 class RawImage: public DCraw
 {
@@ -106,7 +36,7 @@ public:
     explicit RawImage( const Glib::ustring &name );
     ~RawImage();
 
-    int loadRaw (bool loadData = true, bool closeFile = true, ProgressListener *plistener = nullptr, double progressRange = 1.0);
+    int loadRaw (bool loadData, unsigned int imageNum = 0, bool closeFile = true, ProgressListener *plistener = nullptr, double progressRange = 1.0);
     void get_colorsCoeff( float* pre_mul_, float* scale_mul_, float* cblack_, bool forceAutoWB );
     void set_prefilters()
     {
@@ -119,23 +49,18 @@ public:
     {
         return image;
     }
-    float** compress_image(); // revert to compressed pixels format and release image data
+    float** compress_image(unsigned int frameNum, bool freeImage = true); // revert to compressed pixels format and release image data
     float** data;             // holds pixel values, data[i][j] corresponds to the ith row and jth column
     unsigned prefilters;               // original filters saved ( used for 4 color processing )
+    unsigned int getFrameCount() const { return is_raw; }
+
+    double getBaselineExposure() const { return 0; /*RT_baseline_exposure;*/ }
 protected:
     Glib::ustring filename; // complete filename
     int rotate_deg; // 0,90,180,270 degree of rotation: info taken by dcraw from exif
     char* profile_data; // Embedded ICC color profile
     float* allocation; // pointer to allocated memory
     int maximum_c4[4];
-    bool isBayer() const
-    {
-        return (filters != 0 && filters != 9);
-    }
-    bool isXtrans() const
-    {
-        return filters == 9;
-    }
     bool isFoveon() const
     {
         return is_foveon;
@@ -172,20 +97,26 @@ public:
     {
         return top_margin;
     }
+
+    int get_rawwidth() const
+    {
+        return raw_width;
+    }
+
     int get_FujiWidth() const
     {
         return fuji_width;
     }
-    eSensorType getSensorType();
+
+    float const * get_FloatRawImage() const
+    {
+        return float_raw_image;
+    }
+
+    eSensorType getSensorType() const;
 
     void getRgbCam (float rgbcam[3][4]);
-    void getXtransMatrix ( char xtransMatrix[6][6]);
-    void clearXtransCblack( )
-    {
-        for(int c = 0; c < 4; c++) {
-            cblack[c] = 0;
-        }
-    }
+    void getXtransMatrix ( int xtransMatrix[6][6]);
     unsigned get_filters() const
     {
         return filters;
@@ -246,7 +177,13 @@ public:
     }
     float get_pre_mul(int c )const
     {
-        return pre_mul[c];
+        if(std::isfinite(pre_mul[c])) {
+            return pre_mul[c];
+        } else {
+            std::cout << "Failure decoding '" << filename << "', please file a bug report including the raw file and the line below:" << std::endl;
+            std::cout << "rawimage.h get_pre_mul() : pre_mul[" << c << "] value " << pre_mul[c] << " automatically replaced by value 1.0" << std::endl;
+            return 1.f;
+        }
     }
     float get_rgb_cam( int r, int c) const
     {
@@ -274,49 +211,56 @@ public:
     {
         return profile_data;
     }
-    IMFILE *get_file()
+    IMFILE *get_file() const
     {
         return ifp;
     }
     bool is_supportedThumb() const ;
     bool is_jpegThumb() const ;
     bool is_ppmThumb() const ;
-    int get_thumbOffset()
+    int get_thumbOffset() const
     {
         return int(thumb_offset);
     }
-    int get_thumbWidth()
+    int get_thumbWidth() const
     {
         return int(thumb_width);
     }
-    int get_thumbHeight()
+    int get_thumbHeight() const
     {
         return int(thumb_height);
     }
-    int get_thumbBPS()
+    int get_thumbBPS() const
     {
         return thumb_load_raw ? 16 : 8;
     }
     bool get_thumbSwap() const;
-    unsigned get_thumbLength()
+    unsigned get_thumbLength() const
     {
         return thumb_length;
     }
-    bool zeroIsBad()
+    bool zeroIsBad() const
     {
-        return zero_is_bad == 1 ? true : false;
+        return zero_is_bad == 1;
+    }
+
+    bool isBayer() const
+    {
+        return (filters != 0 && filters != 9);
+    }
+
+    bool isXtrans() const
+    {
+        return filters == 9;
+    }
+
+    bool isFloat() const
+    {
+        return float_raw_image;
     }
 
 public:
     // dcraw functions
-    void scale_colors()
-    {
-        if(isXtrans()) {
-            clearXtransCblack( );
-        }
-
-        DCraw::scale_colors();
-    }
     void pre_interpolate()
     {
         DCraw::pre_interpolate();
@@ -356,8 +300,10 @@ public:
         return (xtrans[(row) % 6][(col) % 6]);
     }
 
+    unsigned DNGVERSION ( ) const
+    {
+        return dng_version;
+    }
 };
 
 }
-
-#endif // __RAWIMAGE_H

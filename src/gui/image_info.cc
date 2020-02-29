@@ -117,10 +117,10 @@ void PF::ImageInfo::update( VipsRect* area )
     info_text2 << exif_data->exif_lens;
   else
     info_text2 << _("UNKNOWN LENS");
-  if( exif_data->exif_focal_length > 0 )
-    info_text2 << " (at " << exif_data->exif_focal_length << "mm)";
   info_text2 << std::endl;
   std::ostringstream info_text3;
+  if( exif_data->exif_focal_length > 0 )
+    info_text3 << exif_data->exif_focal_length << "mm  ";
   if( exif_data->exif_aperture > 0 )
     info_text3 << "f/" << exif_data->exif_aperture << "  ";
   else

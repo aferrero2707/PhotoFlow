@@ -85,9 +85,11 @@ find_package (ZLIB REQUIRED)
 
 #pkg_check_modules(FFTW3 REQUIRED fftw3>=3.0)
 pkg_check_modules(FFTW3 REQUIRED fftw3)
+pkg_check_modules(FFTW3F REQUIRED fftw3f)
 
 pkg_check_modules(XML2 REQUIRED libxml-2.0)
 
+pkg_check_modules(IPTCDATA REQUIRED libiptcdata)
 pkg_check_modules(EXIF REQUIRED libexif)
 
 if(NOT BUNDLED_EXIV2)

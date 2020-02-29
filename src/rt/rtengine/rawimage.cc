@@ -4,43 +4,44 @@
  *  Created on: 20/nov/2010
  */
 
-#include "rawimage.h"
-#include "settings.h"
-#include "camconst.h"
-//#include "utils.h"
+#include <strings.h>
 #ifdef WIN32
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
 #endif
 
-#define min MIN
+#include "rawimage.h"
+#include "settings.h"
+#include "camconst.h"
+#include "utils.h"
+#include "rt_math.h"
+#include "rtengine.h"
 
 namespace rtengine
 {
 
-extern const Settings* settings;
+static Settings* settings;
 
 RawImage::RawImage(  const Glib::ustring &name )
     : data(nullptr)
     , prefilters(0)
     , filename(name)
+    , rotate_deg(0)
     , profile_data(nullptr)
     , allocation(nullptr)
-    , rotate_deg(0)
 {
     memset(maximum_c4, 0, sizeof(maximum_c4));
-    RT_matrix_from_constant = 0;
-    RT_blacklevel_from_constant = 0;
-    RT_whitelevel_from_constant = 0;
-
-    if( !settings ) settings = rtengine::Settings::create ();
+    RT_matrix_from_constant = ThreeValBool::X;
+    RT_blacklevel_from_constant = ThreeValBool::X;
+    RT_whitelevel_from_constant = ThreeValBool::X;
 }
 
 RawImage::~RawImage()
 {
     if(ifp) {
         fclose(ifp);
+        ifp = nullptr;
     }
 
     if( image ) {
@@ -68,7 +69,7 @@ RawImage::~RawImage()
     }
 }
 
-eSensorType RawImage::getSensorType()
+eSensorType RawImage::getSensorType() const
 {
     if (isBayer()) {
         return ST_BAYER;
@@ -86,9 +87,9 @@ eSensorType RawImage::getSensorType()
  */
 void RawImage::get_colorsCoeff( float *pre_mul_, float *scale_mul_, float *cblack_, bool forceAutoWB)
 {
-    unsigned  row, col, x, y, c, sum[8];
-    unsigned  W = this->get_width();
-    unsigned  H = this->get_height();
+    unsigned sum[8], c;
+    unsigned W = this->get_width();
+    unsigned H = this->get_height();
     float val;
     double dsum[8], dmin, dmax;
 
@@ -100,6 +101,9 @@ void RawImage::get_colorsCoeff( float *pre_mul_, float *scale_mul_, float *cblac
         }
     } else if ((this->get_cblack(4) + 1) / 2 == 1 && (this->get_cblack(5) + 1) / 2 == 1) {
         for (int c = 0; c < 4; c++) {
+            cblack_[c] = this->get_cblack(c);
+        }
+        for (int c = 0; c < 4; c++) {
             cblack_[FC(c / 2, c % 2)] = this->get_cblack(6 + c / 2 % this->get_cblack(4) * this->get_cblack(5) + c % 2 % this->get_cblack(5));
             pre_mul_[c] = this->get_pre_mul(c);
         }
@@ -110,9 +114,14 @@ void RawImage::get_colorsCoeff( float *pre_mul_, float *scale_mul_, float *cblac
         }
     }
 
-    if ( this->get_cam_mul(0) == -1 || forceAutoWB) {
+    if (this->get_cam_mul(0) == -1 || forceAutoWB) {
+        if(!data) { // this happens only for thumbnail creation when get_cam_mul(0) == -1
+            compress_image(0, false);
+        }
         memset(dsum, 0, sizeof dsum);
 
+        constexpr float blackThreshold = 8.f;
+        constexpr float whiteThreshold = 25.f;
         if (this->isBayer()) {
             // calculate number of pixels per color
             dsum[FC(0, 0) + 4] += (int)(((W + 1) / 2) * ((H + 1) / 2));
@@ -120,7 +129,9 @@ void RawImage::get_colorsCoeff( float *pre_mul_, float *scale_mul_, float *cblac
             dsum[FC(1, 0) + 4] += (int)(((W + 1) / 2) * (H / 2));
             dsum[FC(1, 1) + 4] += (int)((W / 2) * (H / 2));
 
-            #pragma omp parallel private(val,row,col,x,y)
+#ifdef _OPENMP
+            #pragma omp parallel private(val)
+#endif
             {
                 double dsumthr[8];
                 memset(dsumthr, 0, sizeof dsumthr);
@@ -130,26 +141,28 @@ void RawImage::get_colorsCoeff( float *pre_mul_, float *scale_mul_, float *cblac
                 float whitefloat[4];
 
                 for (int c = 0; c < 4; c++) {
-                    cblackfloat[c] = cblack_[c];
-                    whitefloat[c] = this->get_white(c) - 25;
+                    cblackfloat[c] = cblack_[c] + blackThreshold;
+                    whitefloat[c] = this->get_white(c) - whiteThreshold;
                 }
 
                 float *tempdata = data[0];
+#ifdef _OPENMP
                 #pragma omp for nowait
+#endif
 
-                for (row = 0; row < H; row += 8) {
-                    int ymax = row + 8 < H ? row + 8 : H;
+                for (size_t row = 0; row < H; row += 8) {
+                    size_t ymax = row + 8 < H ? row + 8 : H;
 
-                    for (col = 0; col < W ; col += 8) {
-                        int xmax = col + 8 < W ? col + 8 : W;
+                    for (size_t col = 0; col < W ; col += 8) {
+                        size_t xmax = col + 8 < W ? col + 8 : W;
                         memset(sum, 0, sizeof sum);
 
-                        for (y = row; y < ymax; y++)
-                            for (x = col; x < xmax; x++) {
+                        for (size_t y = row; y < ymax; y++)
+                            for (size_t x = col; x < xmax; x++) {
                                 int c = FC(y, x);
                                 val = tempdata[y * W + x];
 
-                                if (val > whitefloat[c]) { // calculate number of pixels to be substracted from sum and skip the block
+                                if (val > whitefloat[c] || val < cblackfloat[c]) { // calculate number of pixels to be subtracted from sum and skip the block
                                     dsumthr[FC(row, col) + 4]      += (int)(((xmax - col + 1) / 2) * ((ymax - row + 1) / 2));
                                     dsumthr[FC(row, col + 1) + 4]    += (int)(((xmax - col) / 2) * ((ymax - row + 1) / 2));
                                     dsumthr[FC(row + 1, col) + 4]    += (int)(((xmax - col + 1) / 2) * ((ymax - row) / 2));
@@ -157,15 +170,11 @@ void RawImage::get_colorsCoeff( float *pre_mul_, float *scale_mul_, float *cblac
                                     goto skip_block2;
                                 }
 
-                                if (val < cblackfloat[c]) {
-                                    val = cblackfloat[c];
-                                }
-
                                 sum[c] += val;
                             }
 
                         for (int c = 0; c < 4; c++) {
-                            dsumthr[c] += sum[c];
+                            dsumthr[c] += static_cast<double>(sum[c]);
                         }
 
 skip_block2:
@@ -173,7 +182,9 @@ skip_block2:
                     }
                 }
 
+#ifdef _OPENMP
                 #pragma omp critical
+#endif
                 {
                     for (int c = 0; c < 4; c++) {
                         dsum[c] += dsumthr[c];
@@ -187,56 +198,62 @@ skip_block2:
             }
 
             for(int c = 0; c < 4; c++) {
-                dsum[c] -= cblack_[c] * dsum[c + 4];
+                dsum[c] -= static_cast<double>(cblack_[c]) * dsum[c + 4];
             }
 
         } else if(isXtrans()) {
+#ifdef _OPENMP
             #pragma omp parallel
+#endif
             {
                 double dsumthr[8];
                 memset(dsumthr, 0, sizeof dsumthr);
                 float sum[8];
                 // make local copies of the black and white values to avoid calculations and conversions
+                float cblackfloat[4];
                 float whitefloat[4];
 
                 for (int c = 0; c < 4; c++)
                 {
-                    whitefloat[c] = this->get_white(c) - 25;
+                    cblackfloat[c] = cblack_[c] + blackThreshold;
+                    whitefloat[c] = this->get_white(c) - whiteThreshold;
                 }
 
+#ifdef _OPENMP
                 #pragma omp for nowait
+#endif
 
-                for (int row = 0; row < H; row += 8)
-                    for (int col = 0; col < W ; col += 8)
+                for (size_t row = 0; row < H; row += 8)
+                    for (size_t col = 0; col < W ; col += 8)
                     {
                         memset(sum, 0, sizeof sum);
 
-                        for (int y = row; y < row + 8 && y < H; y++)
-                            for (int x = col; x < col + 8 && x < W; x++) {
+                        for (size_t y = row; y < row + 8 && y < H; y++)
+                            for (size_t x = col; x < col + 8 && x < W; x++) {
                                 int c = XTRANSFC(y, x);
                                 float val = data[y][x];
 
-                                if (val > whitefloat[c]) {
+                                if (val > whitefloat[c] || val < cblackfloat[c]) {
                                     goto skip_block3;
                                 }
 
-                                if ((val -= cblack_[c]) < 0) {
-                                    val = 0;
-                                }
+                                val -= cblack_[c];
 
                                 sum[c] += val;
                                 sum[c + 4]++;
                             }
 
                         for (int c = 0; c < 8; c++) {
-                            dsumthr[c] += sum[c];
+                            dsumthr[c] += static_cast<double>(sum[c]);
                         }
 
 skip_block3:
                         ;
                     }
 
+#ifdef _OPENMP
                 #pragma omp critical
+#endif
                 {
                     for (int c = 0; c < 8; c++)
                     {
@@ -250,34 +267,23 @@ skip_block3:
                 pre_mul_[c] = 1;
             }
         } else {
-            for (row = 0; row < H; row += 8)
-                for (col = 0; col < W ; col += 8) {
+            for (size_t row = 0; row < H; row += 8)
+                for (size_t col = 0; col < W ; col += 8) {
                     memset(sum, 0, sizeof sum);
 
-                    for (y = row; y < row + 8 && y < H; y++)
-                        for (x = col; x < col + 8 && x < W; x++)
+                    for (size_t y = row; y < row + 8 && y < H; y++)
+                        for (size_t x = col; x < col + 8 && x < W; x++)
                             for (int c = 0; c < 3; c++) {
-                                if (this->isBayer()) {
-                                    c = FC(y, x);
-                                    val = data[y][x];
-                                } else {
-                                    val = data[y][3 * x + c];
-                                }
+                                val = data[y][3 * x + c];
 
-                                if (val > this->get_white(c) - 25) {
+                                if (val > this->get_white(c) - whiteThreshold || val < cblack_[c] + blackThreshold) {
                                     goto skip_block;
                                 }
 
-                                if ((val -= cblack_[c]) < 0) {
-                                    val = 0;
-                                }
+                                val -= cblack_[c];
 
                                 sum[c] += val;
                                 sum[c + 4]++;
-
-                                if ( this->isBayer()) {
-                                    break;
-                                }
                             }
 
                     for (c = 0; c < 8; c++) {
@@ -296,8 +302,8 @@ skip_block:
     } else {
         memset(sum, 0, sizeof sum);
 
-        for (row = 0; row < 8; row++)
-            for (col = 0; col < 8; col++) {
+        for (size_t row = 0; row < 8; row++)
+            for (size_t col = 0; col < 8; col++) {
                 int c = FC(row, col);
 
                 if ((val = white[row][col] - cblack_[c]) > 0) {
@@ -327,10 +333,16 @@ skip_block:
         pre_mul_[3] = pre_mul_[1] = (pre_mul_[3] + pre_mul_[1]) / 2;
     }
 
-    if (colors == 1)
+    if (colors == 1) {
+        // there are monochrome cameras with wrong matrix. We just replace with this one.
+        rgb_cam[0][0] = 1; rgb_cam[1][0] = 0; rgb_cam[2][0] = 0;
+        rgb_cam[0][1] = 0; rgb_cam[1][1] = 1; rgb_cam[2][1] = 0;
+        rgb_cam[0][2] = 0; rgb_cam[1][2] = 0; rgb_cam[2][2] = 1;
+
         for (c = 1; c < 4; c++) {
             cblack_[c] = cblack_[0];
         }
+    }
 
     bool multiple_whites = false;
     int largest_white = this->get_white(0);
@@ -356,21 +368,17 @@ skip_block:
     }
 
     for (dmin = DBL_MAX, dmax = c = 0; c < 4; c++) {
-        if (dmin > pre_mul_[c]) {
-            dmin = pre_mul_[c];
-        }
-
-        if (dmax < pre_mul_[c]) {
-            dmax = pre_mul_[c];
-        }
+        dmin = rtengine::min<double>(dmin, pre_mul_[c]);
+        dmax = rtengine::max<double>(dmax, pre_mul_[c]);
     }
 
     for (c = 0; c < 4; c++) {
         int sat = this->get_white(c) - cblack_[c];
-        scale_mul_[c] = (pre_mul_[c] /= dmax) * 65535.0 / sat;
+        pre_mul_[c] /= static_cast<float>(dmax);
+        scale_mul_[c] = pre_mul_[c] * 65535.f / sat;
     }
 
-    if (settings->verbose) {
+    if (false) {
         float asn[4] = { 1 / cam_mul[0], 1 / cam_mul[1], 1 / cam_mul[2], 1 / cam_mul[3] };
 
         for (dmax = c = 0; c < 4; c++) {
@@ -378,38 +386,47 @@ skip_block:
                 asn[c] = 0;
             }
 
-            if (asn[c] > dmax) {
+            if (asn[c] > static_cast<float>(dmax)) {
                 dmax = asn[c];
             }
         }
 
         for (c = 0; c < 4; c++) {
-            asn[c] /= dmax;
+            asn[c] /= static_cast<float>(dmax);
         }
 
         printf("cam_mul:[%f %f %f %f], AsShotNeutral:[%f %f %f %f]\n",
-               cam_mul[0], cam_mul[1], cam_mul[2], cam_mul[3], asn[0], asn[1], asn[2], asn[3]);
+               static_cast<double>(cam_mul[0]), static_cast<double>(cam_mul[1]),
+               static_cast<double>(cam_mul[2]), static_cast<double>(cam_mul[3]),
+               static_cast<double>(asn[0]), static_cast<double>(asn[1]), static_cast<double>(asn[2]), static_cast<double>(asn[3]));
         printf("pre_mul:[%f %f %f %f], scale_mul:[%f %f %f %f], cblack:[%f %f %f %f]\n",
-               pre_mul_[0], pre_mul_[1], pre_mul_[2], pre_mul_[3],
-               scale_mul_[0], scale_mul_[1], scale_mul_[2], scale_mul_[3],
-               cblack_[0], cblack_[1], cblack_[2], cblack_[3]);
+               static_cast<double>(pre_mul_[0]), static_cast<double>(pre_mul_[1]),
+               static_cast<double>(pre_mul_[2]), static_cast<double>(pre_mul_[3]),
+               static_cast<double>(scale_mul_[0]), static_cast<double>(scale_mul_[1]),
+               static_cast<double>(scale_mul_[2]), static_cast<double>(scale_mul_[3]),
+               static_cast<double>(cblack_[0]), static_cast<double>(cblack_[1]),
+               static_cast<double>(cblack_[2]), static_cast<double>(cblack_[3]));
         printf("rgb_cam:[ [ %f %f %f], [%f %f %f], [%f %f %f] ]%s\n",
-               rgb_cam[0][0], rgb_cam[1][0], rgb_cam[2][0],
-               rgb_cam[0][1], rgb_cam[1][1], rgb_cam[2][1],
-               rgb_cam[0][2], rgb_cam[1][2], rgb_cam[2][2],
+               static_cast<double>(rgb_cam[0][0]), static_cast<double>(rgb_cam[1][0]), static_cast<double>(rgb_cam[2][0]),
+               static_cast<double>(rgb_cam[0][1]), static_cast<double>(rgb_cam[1][1]), static_cast<double>(rgb_cam[2][1]),
+               static_cast<double>(rgb_cam[0][2]), static_cast<double>(rgb_cam[1][2]), static_cast<double>(rgb_cam[2][2]),
                (!this->isBayer()) ? " (not bayer)" : "");
 
     }
 }
 
-int RawImage::loadRaw (bool loadData, bool closeFile, ProgressListener *plistener, double progressRange)
+int RawImage::loadRaw (bool loadData, unsigned int imageNum, bool closeFile, ProgressListener *plistener, double progressRange)
 {
     ifname = filename.c_str();
     image = nullptr;
-    verbose = settings->verbose;
+    verbose = false; //settings->verbose;
     oprof = nullptr;
 
-    ifp = gfopen (ifname);  // Maps to either file map or direct fopen
+    if(!ifp) {
+        ifp = gfopen (ifname);  // Maps to either file map or direct fopen
+    } else  {
+        fseek (ifp, 0, SEEK_SET);
+    }
 
     if (!ifp) {
         return 3;
@@ -426,7 +443,12 @@ int RawImage::loadRaw (bool loadData, bool closeFile, ProgressListener *plistene
     raw_image = nullptr;
 
     //***************** Read ALL raw file info
-    identify ();
+    // set the number of the frame to extract. If the number is larger then number of existing frames - 1, dcraw will handle that correctly
+
+    shot_select = imageNum;
+    identify();
+    // in case dcraw didn't handle the above mentioned case...
+    shot_select = std::min(shot_select, std::max(is_raw, 1u) - 1);
 
     if (!is_raw) {
         fclose(ifp);
@@ -437,6 +459,14 @@ int RawImage::loadRaw (bool loadData, bool closeFile, ProgressListener *plistene
         }
 
         return 2;
+    }
+
+    if(!strcmp(make,"Fujifilm") && raw_height * raw_width * 2u != raw_size) {
+        if (raw_width * raw_height * 7u / 4u == raw_size) {
+            load_raw = &RawImage::fuji_14bit_load_raw;
+        } else {
+            parse_fuji_compressed_header();
+        }
     }
 
     if (flip == 5) {
@@ -456,7 +486,7 @@ int RawImage::loadRaw (bool loadData, bool closeFile, ProgressListener *plistene
         use_camera_wb = 1;
         shrink = 0;
 
-        if (settings->verbose) {
+        if (verbose) {
             printf ("Loading %s %s image from %s...\n", make, model, filename.c_str());
         }
 
@@ -464,13 +494,13 @@ int RawImage::loadRaw (bool loadData, bool closeFile, ProgressListener *plistene
         iwidth  = width;
 
         if (filters || colors == 1) {
-            raw_image = (ushort *) calloc ((raw_height + 7) * raw_width, 2);
+            raw_image = (ushort *) calloc ((static_cast<unsigned int>(raw_height) + 7u) * static_cast<unsigned int>(raw_width), 2);
             merror (raw_image, "main()");
         }
 
         // dcraw needs this global variable to hold pixel data
-        image = (dcrawImage_t)calloc (height * width * sizeof * image + meta_length, 1);
-        meta_data = (char *) (image + height * width);
+        image = (dcrawImage_t)calloc (static_cast<unsigned int>(height) * static_cast<unsigned int>(width) * sizeof * image + meta_length, 1);
+        meta_data = (char *) (image + static_cast<unsigned int>(height) * static_cast<unsigned int>(width));
 
         if(!image) {
             return 200;
@@ -487,6 +517,10 @@ int RawImage::loadRaw (bool loadData, bool closeFile, ProgressListener *plistene
         // Load raw pixels data
         fseek (ifp, data_offset, SEEK_SET);
         (this->*load_raw)();
+
+        if (!float_raw_image) { // apply baseline exposure only for float DNGs
+            RT_baseline_exposure = 0;
+        }
 
         if (plistener) {
             plistener->setProgress(0.9 * progressRange);
@@ -538,7 +572,7 @@ int RawImage::loadRaw (bool loadData, bool closeFile, ProgressListener *plistene
             free (raw_image);
             raw_image = nullptr;
         } else {
-            if (cc && cc->has_rawCrop()) { // foveon images
+            if (get_maker() == "Sigma" && cc && cc->has_rawCrop()) { // foveon images
                 int lm, tm, w, h;
                 cc->get_rawCrop(lm, tm, w, h);
                 left_margin = lm;
@@ -584,20 +618,20 @@ int RawImage::loadRaw (bool loadData, bool closeFile, ProgressListener *plistene
 
         if (cc) {
             for (int i = 0; i < 4; i++) {
-                if (RT_blacklevel_from_constant) {
+                if (RT_blacklevel_from_constant == ThreeValBool::T) {
                     int blackFromCc = cc->get_BlackLevel(i, iso_speed);
                     // if black level from camconst > 0xffff it is an absolute value.
                     black_c4[i] = blackFromCc > 0xffff ? (blackFromCc & 0xffff) : blackFromCc + cblack[i];
                 }
 
                 // load 4 channel white level here, will be used if available
-                if (RT_whitelevel_from_constant) {
+                if (RT_whitelevel_from_constant == ThreeValBool::T) {
                     maximum_c4[i] = cc->get_WhiteLevel(i, iso_speed, aperture);
 
                     if(tiff_bps > 0 && maximum_c4[i] > 0 && !isFoveon()) {
                         unsigned compare = ((uint64_t)1 << tiff_bps) - 1; // use uint64_t to avoid overflow if tiff_bps == 32
 
-                        while(maximum_c4[i] > compare) {
+                        while(static_cast<uint64_t>(maximum_c4[i]) > compare) {
                             maximum_c4[i] >>= 1;
                         }
                     }
@@ -625,12 +659,12 @@ int RawImage::loadRaw (bool loadData, bool closeFile, ProgressListener *plistene
         }
 
         for (int c = 0; c < 4; c++) {
-            if (cblack[c] < black_c4[c]) {
+            if (static_cast<int>(cblack[c]) < black_c4[c]) {
                 cblack[c] = black_c4[c];
             }
         }
 
-        if (settings->verbose) {
+        if (verbose) {
             if (cc) {
                 printf("constants exists for \"%s %s\" in camconst.json\n", make, model);
             } else {
@@ -658,7 +692,7 @@ int RawImage::loadRaw (bool loadData, bool closeFile, ProgressListener *plistene
     return 0;
 }
 
-float** RawImage::compress_image()
+float** RawImage::compress_image(unsigned int frameNum, bool freeImage)
 {
     if( !image ) {
         return nullptr;
@@ -666,17 +700,18 @@ float** RawImage::compress_image()
 
     if (isBayer() || isXtrans()) {
         if (!allocation) {
-            allocation = new float[height * width];
+            // shift the beginning of all frames but the first by 32 floats to avoid cache miss conflicts on CPUs which have <= 4-way associative L1-Cache
+            allocation = new float[static_cast<unsigned int>(height) * static_cast<unsigned int>(width) + frameNum * 32u];
             data = new float*[height];
 
             for (int i = 0; i < height; i++) {
-                data[i] = allocation + i * width;
+                data[i] = allocation + i * width + frameNum * 32;
             }
         }
     } else if (colors == 1) {
         // Monochrome
         if (!allocation) {
-            allocation = new float[height * width];
+            allocation = new float[static_cast<unsigned long>(height) * static_cast<unsigned long>(width)];
             data = new float*[height];
 
             for (int i = 0; i < height; i++) {
@@ -685,7 +720,7 @@ float** RawImage::compress_image()
         }
     } else {
         if (!allocation) {
-            allocation = new float[3 * height * width];
+            allocation = new float[3UL * static_cast<unsigned long>(height) * static_cast<unsigned long>(width)];
             data = new float*[height];
 
             for (int i = 0; i < height; i++) {
@@ -696,7 +731,9 @@ float** RawImage::compress_image()
 
     // copy pixel raw data: the compressed format earns space
     if( float_raw_image ) {
+#ifdef _OPENMP
         #pragma omp parallel for
+#endif
 
         for (int row = 0; row < height; row++)
             for (int col = 0; col < width; col++) {
@@ -706,28 +743,40 @@ float** RawImage::compress_image()
         delete [] float_raw_image;
         float_raw_image = nullptr;
     } else if (filters != 0 && !isXtrans()) {
+#ifdef _OPENMP
         #pragma omp parallel for
+#endif
 
         for (int row = 0; row < height; row++)
             for (int col = 0; col < width; col++) {
                 this->data[row][col] = image[row * width + col][FC(row, col)];
             }
     } else if (isXtrans()) {
+#ifdef _OPENMP
         #pragma omp parallel for
+#endif
 
         for (int row = 0; row < height; row++)
             for (int col = 0; col < width; col++) {
                 this->data[row][col] = image[row * width + col][XTRANSFC(row, col)];
             }
     } else if (colors == 1) {
+#ifdef _OPENMP
         #pragma omp parallel for
+#endif
 
         for (int row = 0; row < height; row++)
             for (int col = 0; col < width; col++) {
                 this->data[row][col] = image[row * width + col][0];
             }
     } else {
+        if((get_maker() == "Sigma" || get_maker() == "Pentax" || get_maker() == "Sony") && dng_version) { // Hack to prevent sigma dng files and dng files from PixelShift2DNG from crashing
+            height -= top_margin;
+            width -= left_margin;
+        }
+#ifdef _OPENMP
         #pragma omp parallel for
+#endif
 
         for (int row = 0; row < height; row++)
             for (int col = 0; col < width; col++) {
@@ -737,8 +786,10 @@ float** RawImage::compress_image()
             }
     }
 
-    free(image); // we don't need this anymore
-    image = nullptr;
+    if(freeImage) {
+        free(image); // we don't need this anymore
+        image = nullptr;
+    }
     return data;
 }
 
@@ -767,7 +818,7 @@ RawImage::is_ppmThumb() const
              !thumb_load_raw );
 }
 
-void RawImage::getXtransMatrix( char XtransMatrix[6][6])
+void RawImage::getXtransMatrix( int XtransMatrix[6][6])
 {
     for(int row = 0; row < 6; row++)
         for(int col = 0; col < 6; col++) {
@@ -1027,16 +1078,31 @@ DCraw::dcraw_coeff_overrides(const char make[], const char model[], const int is
 
     *black_level = -1;
     *white_level = -1;
+
+    const bool is_pentax_dng = dng_version && !strncmp(RT_software.c_str(), "PENTAX", 6);
+    
+    if (RT_blacklevel_from_constant == ThreeValBool::F && !is_pentax_dng) {
+        *black_level = black;
+    }
+    if (RT_whitelevel_from_constant == ThreeValBool::F && !is_pentax_dng) {
+        *white_level = maximum;
+    }
     memset(trans, 0, sizeof(*trans) * 12);
 
-    // indicate that DCRAW wants these from constants (rather than having loaded these from RAW file
-    // note: this is simplified so far, in some cases dcraw calls this when it has say the black level
-    // from file, but then we will not provide any black level in the tables. This case is mainly just
-    // to avoid loading table values if we have loaded a DNG conversion of a raw file (which already
-    // have constants stored in the file).
-    RT_whitelevel_from_constant = 1;
-    RT_blacklevel_from_constant = 1;
-    RT_matrix_from_constant = 1;
+    // // indicate that DCRAW wants these from constants (rather than having loaded these from RAW file
+    // // note: this is simplified so far, in some cases dcraw calls this when it has say the black level
+    // // from file, but then we will not provide any black level in the tables. This case is mainly just
+    // // to avoid loading table values if we have loaded a DNG conversion of a raw file (which already
+    // // have constants stored in the file).
+    // if (RT_whitelevel_from_constant == ThreeValBool::X || is_pentax_dng) {
+    //     RT_whitelevel_from_constant = ThreeValBool::T;
+    // }
+    // if (RT_blacklevel_from_constant == ThreeValBool::X || is_pentax_dng) {
+    //     RT_blacklevel_from_constant = ThreeValBool::T;
+    // }
+    // if (RT_matrix_from_constant == ThreeValBool::X) {
+    //     RT_matrix_from_constant = ThreeValBool::T;
+    // }
 
     {
         // test if we have any information in the camera constants store, if so we take that.
@@ -1044,10 +1110,14 @@ DCraw::dcraw_coeff_overrides(const char make[], const char model[], const int is
         rtengine::CameraConst *cc = ccs->get(make, model);
 
         if (cc) {
-            *black_level = cc->get_BlackLevel(0, iso_speed);
-            *white_level = cc->get_WhiteLevel(0, iso_speed, aperture);
+            if (RT_blacklevel_from_constant == ThreeValBool::T) {
+                *black_level = cc->get_BlackLevel(0, iso_speed);
+            }
+            if (RT_whitelevel_from_constant == ThreeValBool::T) {
+                *white_level = cc->get_WhiteLevel(0, iso_speed, aperture);
+            }
 
-            if (cc->has_dcrawMatrix()) {
+            if (RT_matrix_from_constant == ThreeValBool::T && cc->has_dcrawMatrix()) {
                 const short *mx = cc->get_dcrawMatrix();
 
                 for (int j = 0; j < 12; j++) {
@@ -1062,10 +1132,14 @@ DCraw::dcraw_coeff_overrides(const char make[], const char model[], const int is
     char name[strlen(make) + strlen(model) + 32];
     sprintf(name, "%s %s", make, model);
 
-    for (int i = 0; i < sizeof table / sizeof(table[0]); i++) {
+    for (size_t i = 0; i < sizeof table / sizeof(table[0]); i++) {
         if (strcasecmp(name, table[i].prefix) == 0) {
-            *black_level = table[i].black_level;
-            *white_level = table[i].white_level;
+            if (RT_blacklevel_from_constant == ThreeValBool::T) {
+                *black_level = table[i].black_level;
+            }
+            if (RT_whitelevel_from_constant == ThreeValBool::T) {
+                *white_level = table[i].white_level;
+            }
 
             for (int j = 0; j < 12; j++) {
                 trans[j] = table[i].trans[j];

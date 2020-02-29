@@ -992,7 +992,7 @@ bool PF::RawImage::load_rawtherapee()
 
   rtengine::RawImage rt_image(file_name_real);
   rtengine::RawImage* ri = &rt_image;
-  int errCode = rt_image.loadRaw();
+  int errCode = rt_image.loadRaw(false);
 #ifndef NDEBUG
   std::cout<<"RawImage::load_rawtherapee(): errCode="<<errCode<<std::endl;
 #endif
@@ -1000,7 +1000,7 @@ bool PF::RawImage::load_rawtherapee()
     return false;
   }
 
-  rt_image.compress_image();
+  rt_image.compress_image(0);
 #ifndef NDEBUG
   std::cout<<"RawImage::load_rawtherapee(): compress_image() finished."<<std::endl;
 #endif

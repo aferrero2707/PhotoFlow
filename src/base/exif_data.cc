@@ -36,6 +36,8 @@
 
 #include <glib.h>
 
+#include "../rt/rtengine/imagedata.h"
+#include "../rt/rtengine/rawimage.h"
 #include "exif_data.hh"
 #include "photoflow.hh"
 
@@ -85,17 +87,17 @@ bool PF::exif_read(exif_data_t* data, const char* path)
 {
   try
   {
-  Exiv2::Image::AutoPtr image;
-  image = Exiv2::ImageFactory::open(path);
-  assert(image.get() != 0);
-  image->readMetadata();
-  bool res = true;
+    Exiv2::Image::AutoPtr image;
+    image = Exiv2::ImageFactory::open(path);
+    assert(image.get() != 0);
+    image->readMetadata();
+    bool res = true;
 
-  // EXIF metadata
-  Exiv2::ExifData &exifData = image->exifData();
-  if(exifData.empty()) 
-    return false;
-  
+    // EXIF metadata
+    Exiv2::ExifData &exifData = image->exifData();
+    if(exifData.empty())
+      return false;
+
     /* List of tag names taken from exiv2's printSummary() in actions.cpp */
     Exiv2::ExifData::const_iterator pos;
     /* Read shutter time */
@@ -241,7 +243,40 @@ bool PF::exif_read(exif_data_t* data, const char* path)
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
       //g_print("read_exif(): Generic2 lens found: \"%s\"\n", data->exif_lens);
     }
-    //g_print("read_exif(): lens=%s\n",data->exif_lens);
+    g_print("read_exif(): lens=%s\n",data->exif_lens);
+    {
+      Glib::ustring fname = path;
+      rtengine::FramesData* fd = nullptr;
+
+      rtengine::RawImage* ri = new rtengine::RawImage(fname);
+      int errCode = ri->loadRaw (false, 0, false);
+      g_printf("read_exif(): errCode=%d\n", errCode);
+      if( !errCode) {
+        std::unique_ptr<rtengine::RawMetaDataLocation> rml(new rtengine::RawMetaDataLocation (ri->get_exifBase(), ri->get_ciffBase(), ri->get_ciffLen()));
+        fd = new rtengine::FramesData(fname, std::move(rml), true);
+      }
+
+      data->exif_lens_alt[0] = '\0';
+      std::string rt_lens;
+      if( fd ) rt_lens = fd->getLens(0);
+      g_print("read_exif(): rt_lens=%s\n",rt_lens.c_str());
+      if( !rt_lens.empty() ) {
+        char *s = g_locale_to_utf8(rt_lens.c_str(), rt_lens.length(),
+                                   NULL, NULL, NULL);
+        if ( s!=NULL )
+        {
+          g_strlcpy(data->exif_lens_alt, s, sizeof(data->exif_lens_alt));
+          g_free(s);
+        }
+        else
+        {
+          g_strlcpy(data->exif_lens_alt, rt_lens.c_str(), sizeof(data->exif_lens_alt));
+        }
+      }
+
+      if( fd ) delete fd;
+      if( ri ) delete ri;
+    }
 
 #if 0
     /* Read flash mode */

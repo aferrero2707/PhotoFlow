@@ -522,11 +522,12 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
 
 
   //Glib::ustring cam_make, cam_model, lens_model;
-  std::string cam_make, cam_model, lens_model;
+  std::string cam_make, cam_model, lens_model, lens_model_alt;
   if( auto_matching.get() ) {
     cam_make = exif_data->exif_maker;
     cam_model = exif_data->exif_model;
     lens_model = exif_data->exif_lens;
+    lens_model_alt = exif_data->exif_lens_alt;
   } else {
     cam_make = prop_camera_maker.get();
     cam_model = prop_camera_model.get();
@@ -544,6 +545,10 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
   if( lfcamera ) {
     //std::cout<<"LensFunPar::build(): camera "<<lfcamera.getMake()<<" / "<<lfcamera.getModel()<<" found in database"<<std::endl;
     lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens_model, !(auto_matching.get()));
+    if( !lflens && auto_matching.get() ) {
+      // in auto-matching mode try also the alternative lens name extracted with the RawTherapee EXIF metadata parser
+      lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens_model_alt, !(auto_matching.get()));
+    }
     if( lflens ) {
       //std::cout<<"LensFunPar::build(): lens "<<lflens.getMake()<<" / "<<lflens.getLens()<<" ("<<exif_data->exif_lens<<") found in database"<<std::endl;
     } else {

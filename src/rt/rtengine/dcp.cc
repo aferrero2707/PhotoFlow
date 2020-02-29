@@ -725,7 +725,14 @@ DCPProfile::DCPProfile(const Glib::ustring& filename) :
 
     FILE* const file = g_fopen(filename.c_str(), "rb");
 
-    std::unique_ptr<TagDirectory> tagDir(ExifManager::parseTIFF(file, false));
+    if (file == nullptr) {
+        printf ("Unable to load DCP profile '%s' !", filename.c_str());
+        return;
+    }
+
+    ExifManager exifManager(file, nullptr, true);
+    exifManager.parseTIFF(false);
+    std::unique_ptr<TagDirectory> tagDir(exifManager.roots.at(0));
 
     Tag* tag = tagDir->getTag(toUnderlying(TagKey::CALIBRATION_ILLUMINANT_1));
     light_source_1 =
