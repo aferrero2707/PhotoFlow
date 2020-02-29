@@ -690,7 +690,7 @@ FrameData::FrameData(rtexif::TagDirectory* frameRootDir_, rtexif::TagDirectory* 
 #endif
             }
         }
-    } else if (photometric == PHOTOMETRIC_CFA) {
+    /*} else if (photometric == PHOTOMETRIC_CFA) {
         if (sampleformat == SAMPLEFORMAT_IEEEFP) {
             if (bitspersample == 16) {
                 sampleFormat = IIOSF_FLOAT16;
@@ -719,7 +719,7 @@ FrameData::FrameData(rtexif::TagDirectory* frameRootDir_, rtexif::TagDirectory* 
             } else if (bitspersample <= 16) {
                 sampleFormat = IIOSF_UNSIGNED_SHORT;
             }
-        }
+        }*/
     } else if (photometric == 34892 || photometric == 32892  /* Linear RAW (see DNG spec ; 32892 seem to be a flaw from Sony's ARQ files) */) {
         if (sampleformat == SAMPLEFORMAT_IEEEFP) {
             sampleFormat = IIOSF_FLOAT32;
