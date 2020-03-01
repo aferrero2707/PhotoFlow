@@ -245,6 +245,7 @@ namespace PF
       if( nbands == 3 ) {
         float* p;
         float* pout;
+        float in;
         int line_sz = r->width*3;
         for( y = 0; y < r->height; y++ ) {
           p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
@@ -256,9 +257,24 @@ namespace PF
             //pout[x] = (p[x]-black[0]) * mul[0] / (white[0]-black[0]);
             //pout[x+1] = (p[x+1]-black[1]) * mul[1] / (white[1]-black[1]);
             //pout[x+2] = (p[x+2]-black[2]) * mul[2] / (white[2]-black[2]);
-            pout[x]   = p[x]   * mul[0] / cam_wb[0];
-            pout[x+1] = p[x+1] * mul[1] / cam_wb[1];
-            pout[x+2] = p[x+2] * mul[2] / cam_wb[2];
+            int i = 0;
+            if( black_corr[i] != 1 || white_corr != 1 ) {
+            in = p[x+i] * (image_data->color.maximum - image_data->color.cblack[i]) + image_data->color.cblack[i];
+            in -= black[i]; in /= (white[i] - black[i]);
+            pout[x]   = in * mul[0] / cam_wb[0];
+            i = 1;
+            in = p[x+i] * (image_data->color.maximum - image_data->color.cblack[i]) + image_data->color.cblack[i];
+            in -= black[i]; in /= (white[i] - black[i]);
+            pout[x+1] = in * mul[1] / cam_wb[1];
+            i = 2;
+            in = p[x+i] * (image_data->color.maximum - image_data->color.cblack[i]) + image_data->color.cblack[i];
+            in -= black[i]; in /= (white[i] - black[i]);
+            pout[x+2] = in * mul[2] / cam_wb[2];
+            } else {
+              pout[x]   = p[x]   * mul[0] / cam_wb[0];
+              pout[x+1] = p[x+1] * mul[1] / cam_wb[1];
+              pout[x+2] = p[x+2] * mul[2] / cam_wb[2];
+            }
             if( hlreco_mode == HLRECO_CLIP ) {
               pout[x] = CLIP( pout[x] );
               pout[x+1] = CLIP( pout[x+1] );
@@ -289,8 +305,12 @@ namespace PF
             rpout.color(x) = rp.color(x);
             //rpout[x] = __CLIP(rp[x] * sat_corr * mul[ rp.icolor(x) ] - black[ rp.icolor(x) ]);
             int c = rp.icolor(x);
-            //rval = (rp[x]-black[c]) / (white[c]-black[c]);
-            rval = rp[x];
+            if( black_corr[c] != 1 || white_corr != 1 ) {
+              rval = rp[x] * (image_data->color.maximum - image_data->color.cblack[c]) + image_data->color.cblack[c];
+              rval = (rval - black[c]) / (white[c] - black[c]);
+            } else {
+              rval = rp[x];
+            }
             if( hlreco_mode == HLRECO_CLIP ) {
               rpout[x] = CLIP( rval * mul[c] / cam_wb[c] );
             } else {
