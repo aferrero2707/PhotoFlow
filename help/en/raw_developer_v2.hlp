@@ -1,0 +1,3 @@
+The "RAW developer" tool processes the RAW data decoded by the "RAW loader" and converts it to an RGB image.
+
+It allows to adjust parameters like the white balance, exposure compensation, demosaicing and color conversion.
