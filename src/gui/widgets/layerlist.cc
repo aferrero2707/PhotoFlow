@@ -194,8 +194,8 @@ void PF::LayerList::update_model()
     row = *ri;
     if( row ) {
       std::string cname = row[columns.col_name];
-      cbox.set_tooltip_text(cname);
-      label.set_tooltip_text(cname);
+      cbox.set_tooltip_text(std::string(_("select the input layer for this tool\n\ncurrent: \""))+cname+"\"");
+      label.set_tooltip_text(std::string(_("select the input layer for this tool\n\ncurrent: \""))+cname+"\"");
     }
   }
 

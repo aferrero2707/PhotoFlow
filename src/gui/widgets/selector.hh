@@ -76,6 +76,11 @@ namespace PF {
       return true;
     }
 
+    void set_tooltip(Glib::ustring t)
+    {
+      set_tooltip_text(t);
+    }
+
     void get_value();
     void set_value();
   };

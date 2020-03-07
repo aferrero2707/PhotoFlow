@@ -111,6 +111,8 @@ namespace PF {
     void get_value();
     void set_value();
 
+    void set_tooltip(Glib::ustring t);
+
     void update_gui()
     {
       while (gtk_events_pending())

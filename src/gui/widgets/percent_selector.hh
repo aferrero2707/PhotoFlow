@@ -77,6 +77,8 @@ namespace PF {
       return true;
     }
 
+    void set_tooltip(Glib::ustring t) { set_tooltip_text(t); }
+
     void on_value_changed();
     void on_entry_activated();
     bool on_entry_focus_out_event( GdkEventFocus* event );

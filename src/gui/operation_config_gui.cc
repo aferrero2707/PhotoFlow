@@ -252,6 +252,13 @@ PF::OperationConfigGUI::OperationConfigGUI(PF::Layer* layer, const Glib::ustring
   layer_list2.set_size(160, -1);
   aux_controls_hbox_2.pack_start( layer_list2, Gtk::PACK_EXPAND_WIDGET );
 
+  blendSelector.set_tooltip(_("select the layer opacity blend mode"));
+  blendSelector2.set_tooltip(_("select the layer opacity blend mode"));
+  blendSelectorMask.set_tooltip(_("select the mask combining mode"));
+  blendSelectorMask2.set_tooltip(_("select the mask combining mode"));
+  opacitySelector.set_tooltip(_("adjust the layer opacity"));
+  opacitySelector2.set_tooltip(_("adjust the layer opacity"));
+
   aux_opacity_box.set_spacing(5);
   aux_opacity_box.pack_start( blendSelectorMask2, Gtk::PACK_EXPAND_WIDGET, 0 );
   aux_opacity_box.pack_start( blendSelector2, Gtk::PACK_EXPAND_WIDGET, 0 );

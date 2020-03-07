@@ -148,6 +148,8 @@ class RawDeveloperConfigGUI: public OperationConfigGUI
   Gtk::HSeparator exp_separator, demo_separator;
 
   CheckBox hotp_enable_checkbox;
+  Gtk::Label hotp_enable_label;
+  Gtk::HBox hotp_enable_hbox;
   Slider hotp_strength_slider;
   Slider hotp_threshold_slider;
   CheckBox hotp_permissive_checkbox;
@@ -167,8 +169,6 @@ class RawDeveloperConfigGUI: public OperationConfigGUI
   Gtk::Entry lf_makerEntry, lf_modelEntry, lf_lensEntry;
   CheckBox lf_auto_matching_checkbox;
   CheckBox lf_auto_crop_checkbox;
-  PF::LFCamSelector2 lf_cam_selector;
-  PF::LFLensSelector2 lf_lens_selector;
   PF::LFSelector lf_selector;
   CheckBox lf_enable_distortion_button, lf_enable_tca_button, lf_enable_vignetting_button, lf_enable_all_button;
   Gtk::VBox lf_box;

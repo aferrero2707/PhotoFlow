@@ -182,6 +182,8 @@ void PF::Slider::create_widgets( std::string l, double val,
     pack_end( hbox, Gtk::PACK_SHRINK );
   }
 
+  reset_button.set_tooltip_text(_("reset the slider value"));
+
   //pack_start( hbox, Gtk::PACK_SHRINK );
 
 #ifdef GTKMM_2
@@ -277,3 +279,13 @@ void PF::Slider::set_value()
   get_prop()->update(val);
   //std::cout<<"PF::Slider::set_value(): property=\""<<get_prop_name()<<"\"(0x"<<get_prop()<<")  val="<<val<<std::endl;
 }
+
+
+void PF::Slider::set_tooltip(Glib::ustring t)
+{
+  //scale.set_tooltip_text(t);
+  //label.set_tooltip_text(t);
+  //numentry.set_tooltip_text(t);
+  set_tooltip_text(t);
+}
+

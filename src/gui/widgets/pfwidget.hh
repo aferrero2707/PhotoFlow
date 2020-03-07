@@ -58,6 +58,8 @@ namespace PF {
 
     virtual void reset() { set_inhibit(true); if(property) {property->reset(); get_value();} set_inhibit(false); }
 
+    virtual void set_tooltip(Glib::ustring t) {};
+
     OperationConfigGUI* get_dialog() { return dialog; }
 
     void set_processor( ProcessorBase* p) { processor = p; }

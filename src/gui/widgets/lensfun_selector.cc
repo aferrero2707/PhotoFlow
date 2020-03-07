@@ -251,343 +251,16 @@ void PF::LFLensSelector::set_value()
 
 
 
-
-PF::LFCamSelector2::LFCamSelector2( OperationConfigGUI* dialog, std::string pname, std::string pn2, std::string l, int val, int width ):
-      Gtk::HBox(), PF::PFWidget( dialog, pname ), pname2(pn2), property2(NULL)
-{
-  if (!lf) {
-      lf = new PF::LFDbHelper();
-  }
-
-  label.set_text("----");
-  label.set_size_request( -1, 30 );
-  frame.add( label );
-  ebox.add( frame );
-  pack_start(ebox, Gtk::PACK_EXPAND_WIDGET, 5);
-
-  fill_menu();
-
-  ebox.signal_button_release_event().
-      connect( sigc::mem_fun(*this, &PF::LFCamSelector2::my_button_release_event) );
-
-  show_all_children();
-}
-
-
-PF::LFCamSelector2::LFCamSelector2( OperationConfigGUI* dialog, PF::ProcessorBase* processor, std::string pname, std::string l, int val, int width ):
-      Gtk::HBox(),
-      PF::PFWidget( dialog, processor, pname )
-{
-  if (!lf) {
-      lf = new PF::LFDbHelper();
-  }
-
-  show_all_children();
-}
-
-
-
-void PF::LFCamSelector2::update_cam( Glib::ustring maker_new, Glib::ustring model_new )
-{
-  bool modified = false;
-  if( maker_name != maker_new ) modified = true;
-  if( model_name != model_new ) modified = true;
-  maker_name = maker_new;
-  model_name = model_new;
-  if( enabled && modified ) changed();
-}
-
-
-void PF::LFCamSelector2::init()
-{
-  if( get_processor() && get_processor()->get_par() ) {
-    property2 = get_processor()->get_par()->get_property( pname2 );
-    //set_inhibit( true );
-    //get_value();
-    //set_inhibit( false );
-  }
-
-  PF::PFWidget::init();
-
-  return;
-}
-
-
-bool PF::LFCamSelector2::my_button_release_event( GdkEventButton* event )
-{
-  menu.popup(event->button, event->time);
-  return false;
-}
-
-
-void PF::LFCamSelector2::fill_menu()
-{
-  //std::cout << "LENSFUN, scanning cameras:" << std::endl;
-  std::map<Glib::ustring, std::set<Glib::ustring>> camnames;
-  auto camlist = rtengine::LFDatabase::getInstance()->getCameras();
-  for (auto &c : camlist) {
-    camnames[c.getMake()].insert(c.getModel());
-
-    //std::cout << "  found: " << c.getDisplayString().c_str() << std::endl;
-  }
-  for (auto &p : camnames) {
-    Gtk::MenuItem* item = new Gtk::MenuItem(p.first);
-    menu.append( *item );
-    Gtk::Menu* cmenu = new Gtk::Menu;
-    item->set_submenu( *cmenu );
-    for (auto &c : p.second) {
-      Gtk::MenuItem* citem = new Gtk::MenuItem( c );
-      cmenu->append( *citem );
-
-      citem->signal_activate().connect(
-          sigc::bind<Glib::ustring>(
-              sigc::mem_fun(*this,&LFCamSelector2::on_item_clicked), p.first, c ) );
-
-      //citem->signal_activate().connect( sigc::mem_fun(*this, &PFWidget::changed) );
-    }
-  }
-  menu.show_all();
-}
-
-
-
-void PF::LFCamSelector2::on_item_clicked(Glib::ustring make_, Glib::ustring model_)
-{
-  update_cam( make_, model_ );
-  //std::cout<<"LFCamSelector2::on_item_clicked(): model \""<<maker_name + " " + model_name<<"\" selected"<<std::endl;
-  label.set_text( model_name );
-  label.set_ellipsize( Pango::ELLIPSIZE_MIDDLE );
-  label.set_tooltip_text( maker_name + " " + model_name );
-}
-
-
-void PF::LFCamSelector2::set_cam(Glib::ustring cam_make, Glib::ustring cam_model)
-{
-  label.set_text( _("Unknown camera") );
-  label.set_ellipsize( Pango::ELLIPSIZE_MIDDLE );
-  label.set_tooltip_text( _("Unknown camera") );
-
-  rtengine::LFCamera lfcamera = rtengine::LFDatabase::getInstance()->findCamera(cam_make, cam_model);
-  if( lfcamera ) {
-    update_cam( lfcamera.getMake(), lfcamera.getModel() );
-      //std::cout<<"LFCamSelector2::set_cam(): model \""<<maker_name + " " + model_name<<"\" selected"<<std::endl;
-      label.set_text( model_name );
-      label.set_tooltip_text( maker_name + " " + model_name );
-  } else {
-    //std::cout<<"LFCamSelector2::set_lens(): cannot find camera \""<<cam_model<<"\" in database"<<std::endl;
-  }
-}
-
-
-
-void PF::LFCamSelector2::get_value()
-{
-  if( !get_prop() ) return;
-  PF::Property<std::string>* strprop = dynamic_cast< PF::Property<std::string>* >( get_prop() );
-  if( !strprop ) return;
-
-  if( !property2 ) return;
-  PF::Property<std::string>* strprop2 = dynamic_cast< PF::Property<std::string>* >( property2 );
-  if( !strprop2 ) return;
-
-  std::string str = strprop->get();
-  maker_name = str;
-  str = strprop2->get();
-  model_name = str;
-
-  label.set_text( model_name );
-  label.set_ellipsize( Pango::ELLIPSIZE_MIDDLE );
-  label.set_tooltip_text( maker_name + " " + model_name );
-}
-
-
-void PF::LFCamSelector2::set_value()
-{
-  if( !get_prop() ) return;
-  if( !property2 ) return;
-
-  std::string str = maker_name.c_str();
-  get_prop()->update(str);
-  str = model_name.c_str();
-  property2->update(str);
-
-  std::cout<<"LFCamSelector2::set_value(): properties set to \""<<maker_name<<"\" \""<<model_name<<"\""<<std::endl;
-}
-
-
-
-
-PF::LFLensSelector2::LFLensSelector2( OperationConfigGUI* dialog, std::string pname, std::string l, int val, int width ):
-      Gtk::HBox(),
-      PF::PFWidget( dialog, pname )
-{
-  if (!lf) {
-      lf = new PF::LFDbHelper();
-  }
-
-  label.set_text("----");
-  label.set_size_request( -1, 30 );
-  frame.add( label );
-  ebox.add( frame );
-  pack_start(ebox, Gtk::PACK_EXPAND_WIDGET, 5);
-
-  fill_menu();
-
-  ebox.signal_button_release_event().
-      connect( sigc::mem_fun(*this, &PF::LFLensSelector2::my_button_release_event) );
-
-  show_all_children();
-}
-
-
-PF::LFLensSelector2::LFLensSelector2( OperationConfigGUI* dialog, PF::ProcessorBase* processor, std::string pname, std::string l, int val, int width ):
-      Gtk::HBox(),
-      PF::PFWidget( dialog, processor, pname )
-{
-  if (!lf) {
-      lf = new PF::LFDbHelper();
-  }
-
-  show_all_children();
-}
-
-
-void PF::LFLensSelector2::update_lens( Glib::ustring lens_new )
-{
-  bool modified = false;
-  if( lens_name != lens_new ) modified = true;
-  lens_name = lens_new;
-  if( enabled && modified ) changed();
-}
-
-
-bool PF::LFLensSelector2::my_button_release_event( GdkEventButton* event )
-{
-  if( !enabled ) return false;
-  menu.popup(event->button, event->time);
-  return false;
-}
-
-
-
-void PF::LFLensSelector2::on_item_clicked(Glib::ustring lens, Glib::ustring prettylens)
-{
-  std::cout<<"LFLensSelector2::on_item_clicked(): lens \""<<lens<<"\" selected"<<std::endl;
-  label.set_text( prettylens );
-  label.set_ellipsize( Pango::ELLIPSIZE_MIDDLE );
-  label.set_tooltip_text( lens );
-  update_lens( prettylens );
-}
-
-
-void PF::LFLensSelector2::set_lens(Glib::ustring cam_make, Glib::ustring cam_model, Glib::ustring lens)
-{
-  label.set_text( _("Unknown lens") );
-  label.set_ellipsize( Pango::ELLIPSIZE_MIDDLE );
-  label.set_tooltip_text( _("Unknown lens") );
-
-  rtengine::LFCamera lfcamera = rtengine::LFDatabase::getInstance()->findCamera(cam_make, cam_model);
-  rtengine::LFLens lflens;
-  if( lfcamera ) {
-    lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens);
-    if( lflens ) {
-      Glib::ustring lens_make = lflens.getMake();
-      Glib::ustring lens_model = lflens.getLens();
-      Glib::ustring lpretty;
-      if (lens_model.find(lens_make, lens_make.size()+1) == lens_make.size()+1) {
-        lpretty = lens_model.substr(lens_make.size()+1);
-      } else {
-        lpretty = lens_model;
-      }
-      //std::cout<<"LFLensSelector2::set_lens(): lens \""<<lens<<"\" selected"<<std::endl;
-      label.set_text( lpretty );
-      label.set_tooltip_text( lens_model );
-      update_lens( lpretty );
-    } else {
-      //std::cout<<"LFLensSelector2::set_lens(): cannot find lens \""<<lens<<"\" in database"<<std::endl;
-    }
-  } else {
-    //std::cout<<"LFLensSelector2::set_lens(): cannot find camera \""<<cam_model<<"\" in database"<<std::endl;
-  }
-}
-
-
-void PF::LFLensSelector2::fill_menu()
-{
-  //std::cout << "LENSFUN, scanning lenses:" << std::endl;
-  std::map<Glib::ustring, std::set<Glib::ustring>> lenses;
-  auto lenslist = rtengine::LFDatabase::getInstance()->getLenses();
-  for (auto &l : lenslist) {
-    auto name = l.getLens();
-    auto make = l.getMake();
-    lenses[make].insert(name);
-
-    //std::cout << "  found: " << l.getDisplayString().c_str() << std::endl;
-  }
-  for (auto &p : lenses) {
-    Gtk::MenuItem* item = new Gtk::MenuItem(p.first);
-    menu.append( *item );
-    Gtk::Menu* cmenu = new Gtk::Menu;
-    item->set_submenu( *cmenu );
-    for (auto &c : p.second) {
-      Gtk::MenuItem* citem;
-      Glib::ustring cpretty;
-      if (c.find(p.first, p.first.size()+1) == p.first.size()+1) {
-        cpretty = c.substr(p.first.size()+1);
-      } else {
-        cpretty = c;
-      }
-      citem = new Gtk::MenuItem( cpretty );
-      cmenu->append( *citem );
-
-      citem->signal_activate().connect(
-          sigc::bind<Glib::ustring>(
-              sigc::mem_fun(*this,&LFLensSelector2::on_item_clicked), c, cpretty ) );
-    }
-  }
-  menu.show_all();
-}
-
-
-
-void PF::LFLensSelector2::get_value()
-{
-  if( !get_prop() ) return;
-  PF::Property<std::string>* strprop = dynamic_cast< PF::Property<std::string>* >( get_prop() );
-  if( !strprop ) return;
-
-  std::string str = strprop->get();
-  lens_name = str;
-
-  //std::cout<<"LFLensSelector2::get_value(): lens_name=\""<<lens_name<<"\""<<std::endl;
-
-  label.set_text( lens_name );
-  label.set_ellipsize( Pango::ELLIPSIZE_MIDDLE );
-  label.set_tooltip_text( lens_name );
-}
-
-
-void PF::LFLensSelector2::set_value()
-{
-  if( !get_prop() ) return;
-
-  std::string str = lens_name.c_str();
-  get_prop()->update(str);
-
-  std::cout<<"LFLensSelector2::set_value(): property set to \""<<lens_name<<"\""<<std::endl;
-}
-
-
-
-
-PF::LFSelector::LFSelector( OperationConfigGUI* dialog, std::string pname, std::string pn2, std::string pn3 ):
-      Gtk::HBox(),
-      PF::PFWidget( dialog, pname ), pname2(pn2), property2(NULL), pname3(pn3), property3(NULL)
+PF::LFSelector::LFSelector( OperationConfigGUI* dialog, std::string pname, std::string pn2, std::string pn3 ): Gtk::HBox(),
+    PF::PFWidget( dialog, pname ), pname2(pn2), property2(NULL), pname3(pn3), property3(NULL)
 {
   if (!lf) {
     std::cout<<"LFSelector::LFSelector(): creating new LF DB helper"<<std::endl;
       lf = new PF::LFDbHelper();
   }
+
+  cam_label.set_tooltip_text(_("choose the camera model"));
+  lens_label.set_tooltip_text(_("choose the lens model"));
 
   cam_label.set_text("----");
   cam_label.set_size_request( -1, 30 );
@@ -601,11 +274,12 @@ PF::LFSelector::LFSelector( OperationConfigGUI* dialog, std::string pname, std::
   lens_ebox.add( lens_frame );
   vbox.pack_start(lens_ebox);
 
+  cb_hbox.set_tooltip_text(_("only list lenses compatible with the selected camera model"));
   cb_hbox.pack_end(cb, Gtk::PACK_SHRINK);
   cb_hbox.pack_end(cb_label, Gtk::PACK_SHRINK);
   cb_label.set_text(_("match camera"));
-  cb.set_active(true);
-  vbox.pack_start(cb_hbox);
+  cb.set_active(false);
+  //vbox.pack_start(cb_hbox);
 
   vbox.set_spacing(4);
 
@@ -804,15 +478,15 @@ void PF::LFSelector::fill_lens_menu()
     auto name = l.getLens();
     auto make = l.getMake();
     lenses[make].insert(name);
-
-      //std::cout << "  found: " << l.getDisplayString().c_str() << std::endl;
-          //<< " ("<<l.getLens()<<")" << std::endl;
+    //std::cout << "  found: " << l.getDisplayString().c_str() << " ("<<l.getLens()<<")" << std::endl;
   }
   for (auto &p : lenses) {
     Gtk::Menu* cmenu = NULL;
     for (auto &c : p.second) {
       rtengine::LFLens lflens;
       lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, c, false);
+      //std::cout<<"camera: "<<lfcamera.getMake()<<" - "<<lfcamera.getModel()<<std::endl;
+      //std::cout<<"  lflens \""<<c<<"\": "<<lflens.getLens()<<std::endl;
       if( !lflens ) continue;
       if( !cmenu ) {
         Gtk::MenuItem* item = new Gtk::MenuItem(p.first);

@@ -30,15 +30,19 @@
 #include "checkbox.hh"
 
 
-PF::CheckBox::CheckBox( OperationConfigGUI* dialog, std::string pname, std::string l, int val ):
+PF::CheckBox::CheckBox( OperationConfigGUI* dialog, std::string pname, std::string l, int val, int orientation ):
   Gtk::HBox(),
   PF::PFWidget( dialog, pname )
 {
   label.set_text( l.c_str() );
 
-  hbox.pack_end( check, Gtk::PACK_SHRINK );
-  hbox.pack_end( label, Gtk::PACK_SHRINK );
-  pack_end( hbox, Gtk::PACK_SHRINK );
+  if(orientation == 0) {
+    pack_end( check, Gtk::PACK_SHRINK );
+    pack_end( label, Gtk::PACK_SHRINK );
+  } else {
+    pack_start( check, Gtk::PACK_SHRINK );
+    pack_start( label, Gtk::PACK_SHRINK );
+  }
 
   check.set_active( val!=0 );
 
@@ -51,14 +55,19 @@ PF::CheckBox::CheckBox( OperationConfigGUI* dialog, std::string pname, std::stri
 
 
 PF::CheckBox::CheckBox( OperationConfigGUI* dialog, PF::ProcessorBase* processor,
-    std::string pname, std::string l, int val ):
+    std::string pname, std::string l, int val, int orientation ):
       Gtk::HBox(),
       PF::PFWidget( dialog, processor, pname )
 {
   label.set_text( l.c_str() );
 
-  pack_start( check );
-  pack_start( label );
+  if(orientation == 0) {
+    pack_end( check, Gtk::PACK_SHRINK );
+    pack_end( label, Gtk::PACK_SHRINK );
+  } else {
+    pack_start( check, Gtk::PACK_SHRINK );
+    pack_start( label, Gtk::PACK_SHRINK );
+  }
 
   check.set_active( val!=0 );
 
