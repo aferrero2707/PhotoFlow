@@ -146,6 +146,7 @@ class LensFunPar: public OpParBase
 
   ProcessorBase* step1;
   ProcessorBase* step2;
+  bool match_found;
 
 public:
   LensFunPar();
@@ -162,6 +163,7 @@ public:
   std::string camera_maker() { return prop_camera_maker.get(); }
   std::string camera_model() { return prop_camera_model.get(); }
   std::string lens() { return prop_lens.get(); }
+  bool get_match_found() { return match_found; }
 
   float get_focal_length();
   float get_aperture();

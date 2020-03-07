@@ -376,17 +376,17 @@ VipsImage* PF::LensFunParStep::build(std::vector<VipsImage*>& in, int first,
 }
 
 
-PF::LensFunPar::LensFunPar():
-            OpParBase(),
-            prop_camera_maker( "camera_maker", this ),
-            prop_camera_model( "camera_model", this ),
-            prop_lens( "lens", this ),
-            auto_matching( "auto_matching", this, true ),
-            auto_crop( "auto_crop", this, false ),
-            enable_distortion( "enable_distortion", this, false ),
-            enable_tca( "enable_tca", this, false ),
-            enable_vignetting( "enable_vignetting", this, false ),
-            enable_all( "enable_all", this, false )
+PF::LensFunPar::LensFunPar(): OpParBase(),
+    prop_camera_maker( "camera_maker", this ),
+    prop_camera_model( "camera_model", this ),
+    prop_lens( "lens", this ),
+    auto_matching( "auto_matching", this, true ),
+    auto_crop( "auto_crop", this, false ),
+    enable_distortion( "enable_distortion", this, false ),
+    enable_tca( "enable_tca", this, false ),
+    enable_vignetting( "enable_vignetting", this, false ),
+    enable_all( "enable_all", this, false ),
+    match_found(false)
 {
   step1 = new_lensfun_step();
   step2 = new_lensfun_step();
@@ -505,6 +505,7 @@ float PF::LensFunPar::get_gain_vignetting()
 VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
     VipsImage* imap, VipsImage* omap, unsigned int& level)
 {
+  match_found = false;
   VipsImage* out = NULL;
 
   VipsImage* outnew = NULL;
@@ -545,18 +546,19 @@ VipsImage* PF::LensFunPar::build(std::vector<VipsImage*>& in, int first,
     //std::cout<<"LensFunPar::build(): camera "<<lfcamera.getMake()<<" / "<<lfcamera.getModel()<<" found in database"<<std::endl;
     lflens  = rtengine::LFDatabase::getInstance()->findLens(lfcamera, lens_model, !(auto_matching.get()));
     if( lflens ) {
-      //std::cout<<"LensFunPar::build(): lens "<<lflens.getMake()<<" / "<<lflens.getLens()<<" ("<<exif_data->exif_lens<<") found in database"<<std::endl;
+      std::cout<<"LensFunPar::build(): lens "<<lflens.getMake()<<" / "<<lflens.getLens()<<" ("<<exif_data->exif_lens<<") found in database"
+          <<"  score="<<lflens.data_->Score<<std::endl;
     } else {
-      //g_print ("LensFunPar::build(): cannot find the lens `%s' in database\n", lens_model.c_str());
+      g_print ("LensFunPar::build(): cannot find the lens `%s' in database\n", lens_model.c_str());
       PF_REF( in[0], "LensFunPar::build(): lens not found in lensfun database." );
       return( in[0] );
     }
   } else {
-    //g_print ("LensFunPar::build(): cannot find the camera `%s %s' in database\n",
-    //    cam_make.c_str(), cam_model.c_str());
+    g_print ("LensFunPar::build(): cannot find the camera `%s %s' in database\n", cam_make.c_str(), cam_model.c_str());
     PF_REF( in[0], "LensFunPar::build(): camera not found in lensfun database." );
     return( in[0] );
   }
+  match_found = true;
 
 #ifndef NDEBUG
   std::cout<<"Maker: "<<exif_data->exif_maker<<"  model: "<<exif_data->exif_model

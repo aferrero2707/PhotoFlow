@@ -212,6 +212,17 @@ std::string PF::RawDeveloperPar::get_lf_lens()
 }
 
 
+bool PF::RawDeveloperPar::get_lf_match_found()
+{
+  LensFunPar* lfpar = dynamic_cast<LensFunPar*>( lensfun->get_par() );
+  if( !lfpar ) {
+    std::cout<<"RawDeveloperPar::build(): could not get LensFunPar object."<<std::endl;
+    return false;
+  }
+  return lfpar->get_match_found();
+}
+
+
 VipsImage* PF::RawDeveloperPar::build(std::vector<VipsImage*>& in, int first, 
 				     VipsImage* imap, VipsImage* omap, 
 				     unsigned int& level)

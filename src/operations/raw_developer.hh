@@ -137,9 +137,11 @@ namespace PF
     bool get_tca_enabled() { return enable_tca.get(); }
     bool get_all_enabled() { return enable_all.get(); }
 
+
     std::string get_lf_maker();
     std::string get_lf_model();
     std::string get_lf_lens();
+    bool get_lf_match_found();
 
 
     VipsImage* build(std::vector<VipsImage*>& in, int first,
