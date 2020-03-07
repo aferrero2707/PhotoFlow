@@ -217,13 +217,11 @@ bool PF::exif_read(exif_data_t* data, const char* path)
       //g_print("read_exif(): Pnasonic lens found.");
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
     }
-#if LF_VERSION>((0 << 24) | (2 << 16) | (8 << 8) | 0)
     else if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.OlympusEq.LensType"))) != exifData.end() && pos->size())
     {
-      //g_print("read_exif(): Olympus lens found.\n");
+      //g_print("read_exif(): Olympus lens found from Exif.OlympusEq.LensType.\n");
       dt_strlcpy_to_utf8(data->exif_lens, sizeof(data->exif_lens), pos, exifData);
     }
-#endif
 #if EXIV2_MINOR_VERSION>20
     else if ( (pos=exifData.findKey(Exiv2::ExifKey("Exif.OlympusEq.LensModel"))) != exifData.end() && pos->size())
     {
