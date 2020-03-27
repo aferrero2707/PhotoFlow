@@ -248,9 +248,10 @@ bool PF::LayerTreeModel::row_drop_possible_vfunc( const Gtk::TreeModel::Path& de
 {
   /* Destination layer
    */
-  std::cout<<"row_drop_possible_vfunc()"<<std::endl;
+  std::cout<<"\n\n====================\nrow_drop_possible_vfunc()"<<std::endl;
   bool drop_into;
   PF::Layer* dest_layer = get_dest_layer( dest, drop_into );
+  std::cout<<std::endl<<"Drop_into="<<drop_into<<std::endl;
   if( drop_into ) {
     if( dest_layer )
       std::cout<<std::endl<<"Dest layer: \""<<dest_layer->get_name()<<"\"  drop_into="<<drop_into<<std::endl;
@@ -260,11 +261,14 @@ bool PF::LayerTreeModel::row_drop_possible_vfunc( const Gtk::TreeModel::Path& de
   }
   PF::Layer* parent_layer = get_parent_layer( dest  );
   //if( !dest_layer && parent_layer ) return false;
+
+  bool add_dest_to_plist = true;
   if( dest_layer )
     std::cout<<std::endl<<"Dest layer: \""<<dest_layer->get_name()<<"\"  drop_into="<<drop_into<<std::endl;
   else if( parent_layer ) {
     std::cout<<std::endl<<"Parent layer: \""<<parent_layer->get_name()<<"\""<<std::endl;
     dest_layer = parent_layer;
+    add_dest_to_plist = false;
   }
 
   PF::Layer* src_layer = NULL;
@@ -329,15 +333,24 @@ bool PF::LayerTreeModel::row_drop_possible_vfunc( const Gtk::TreeModel::Path& de
   std::list<PF::Layer*> plist;
   image->get_layer_manager().get_input_layers( dest_layer, plist );
   /**/
-  std::cout<<"Parents of layer \""<<dest_layer->get_name()<<"\":"<<std::endl;
+  std::cout<<"Parents of layer \""<<dest_layer->get_name()<<"\" before expand_layer:"<<std::endl;
   for( std::list< PF::Layer*>::iterator li = plist.begin();
        li != plist.end(); li++ ) {
     if( (*li) != NULL ) std::cout<<"  \""<<(*li)->get_name()<<"\""<<std::endl;
   }
   /**/
-  // Add dest_layer and all its children to plist
-  image->get_layer_manager().expand_layer( dest_layer, plist );
-  
+  if( add_dest_to_plist ) {
+    // Add dest_layer and all its children to plist
+    image->get_layer_manager().expand_layer( dest_layer, plist );
+    /**/
+    std::cout<<"Parents of layer \""<<dest_layer->get_name()<<"\" after expand_layer:"<<std::endl;
+    for( std::list< PF::Layer*>::iterator li = plist.begin();
+        li != plist.end(); li++ ) {
+      if( (*li) != NULL ) std::cout<<"  \""<<(*li)->get_name()<<"\""<<std::endl;
+    }
+    /**/
+  }
+
 
   std::list<PF::Layer*> source_layers;
   source_layers.push_back( src_layer );
