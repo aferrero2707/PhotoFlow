@@ -226,6 +226,8 @@ VipsImage* PF::BlenderPar::build(std::vector<VipsImage*>& in, int first,
       icc_data_top = PF::get_icc_profile( foreground );
       //std::cout<<"BlenderPar::build(): icc_data_top="<<icc_data_top<<std::endl;
       if( icc_data_bottom != icc_data_top ) {
+        //if(background) {std::cout<<"bottom profile: "; PF::print_embedded_profile(background);}
+        //if(foreground) {std::cout<<"top profile:    "; PF::print_embedded_profile(foreground);}
         if( icc_data_bottom ) profile_bottom = icc_data_bottom->get_profile();
         if( icc_data_top ) profile_top = icc_data_top->get_profile();
       }

@@ -570,6 +570,20 @@ int PF::vips_copy_metadata( VipsImage* in, VipsImage* out )
 
 void PF::print_embedded_profile( VipsImage* image )
 {
+  PF::ICCProfile* icc_data = PF::get_icc_profile( image );
+  if(icc_data) {
+    cmsHPROFILE in_profile = icc_data->get_profile();
+    if( in_profile ) {
+      char tstr[1024];
+      cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
+      std::cout<<"\""<<tstr<<"\", ";
+      //cmsCloseProfile( in_profile );
+      //return;
+    //} else {
+    //  std::cout<<"Cannot open profile from memory."<<std::endl;
+    }
+  }
+
   void *data;
   size_t data_length;
   if( !PF_VIPS_IMAGE_GET_BLOB( image, VIPS_META_ICC_NAME, &data, &data_length ) ) {
@@ -577,13 +591,13 @@ void PF::print_embedded_profile( VipsImage* image )
     if( in_profile ) {
       char tstr[1024];
       cmsGetProfileInfoASCII(in_profile, cmsInfoDescription, "en", "US", tstr, 1024);
-      std::cout<<"Embedded profile found: "<<tstr<<std::endl;
+      std::cout<<"\""<<tstr<<"\""<<std::endl;
       cmsCloseProfile( in_profile );
       return;
     }
     std::cout<<"Cannot open profile from memory."<<std::endl;
   }
-  std::cout<<"Embedded profile not found."<<std::endl;
+  std::cout<<"Embedded ICC profile not found."<<std::endl;
 }
 
 
