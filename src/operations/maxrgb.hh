@@ -39,8 +39,12 @@ namespace PF
 
   class MaxRGBPar: public OpParBase
   {
+    bool do_max;
   public:
     MaxRGBPar();
+
+    bool get_do_max() { return do_max; }
+    void set_do_max(bool b) { do_max = b; }
 
     bool has_intensity() { return false; }
     bool has_target_channel() { return true; }
@@ -80,16 +84,21 @@ namespace PF
 
       float* pin;
       float* pout;
-      float max;
+      float val;
       for( y = 0; y < height; y++ ) {
         pin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
         pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
-        for( x = 0; x < line_size; x+=3 ) {
-          max = MAX3(pin[x],pin[x+1],pin[x+2]);
-          pout[x+2] = pout[x+1] = pout[x] = max;
-          if( false && r->left==0 && r->top==0 )
-          std::cout<<"MaxRGB: in="<<pin[x]<<","<<pin[x+1]<<","<<pin[x+2]<<"    out="<<pout[x]<<std::endl;
+        if( opar->get_do_max() ) {
+          for( x = 0; x < line_size; x+=3 ) {
+            val = MAX3(pin[x],pin[x+1],pin[x+2]);
+            pout[x+2] = pout[x+1] = pout[x] = val;
+          }
+        } else {
+          for( x = 0; x < line_size; x+=3 ) {
+            val = MIN3(pin[x],pin[x+1],pin[x+2]);
+            pout[x+2] = pout[x+1] = pout[x] = val;
+          }
         }
       }
     }
@@ -117,16 +126,21 @@ namespace PF
 
       float* pin;
       float* pout;
-      float max;
+      float val;
       for( y = 0; y < height; y++ ) {
         pin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
         pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
-        for( x = 0, xout = 0; xout < line_size; x+=3, xout+=1 ) {
-          max = MAX3(pin[x],pin[x+1],pin[x+2]);
-          pout[xout] = max;
-          if( false && r->left==0 && r->top==0 )
-          std::cout<<"MaxRGB(grayscale): in="<<pin[x]<<","<<pin[x+1]<<","<<pin[x+2]<<"    out["<<xout<<"]="<<pout[xout]<<std::endl;
+        if( opar->get_do_max() ) {
+          for( x = 0; x < line_size; x+=3 ) {
+            val = MAX3(pin[x],pin[x+1],pin[x+2]);
+            pout[xout] = val;
+          }
+        } else {
+          for( x = 0; x < line_size; x+=3 ) {
+            val = MIN3(pin[x],pin[x+1],pin[x+2]);
+            pout[xout] = val;
+          }
         }
       }
     }
