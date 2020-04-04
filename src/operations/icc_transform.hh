@@ -253,10 +253,14 @@ namespace PF
               if( opar->get_LCh_format() || opar->get_LSh_format() ) {
                 PF::Lab2LCH( &(pout[x]), &(pout[x]), 1 );
                 if( opar->get_LSh_format() ) {
-                  if( pout[x] > 1.0e-10 || pout[x] < -1.0e-10 ) pout[x+1] /= std::fabs(pout[x]);
+                  float den = std::sqrt(pout[x]*pout[x] + pout[x+1]*pout[x+1]);
+                  if( den > 1.0e-10 ) pout[x+1] /= den;
                   else pout[x+1] = 0;
+                } else {
+                  pout[x+1] /= 256.0f;
                 }
                 pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
+                pout[x+2] /= 360.0f;
               } else {
                 pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
                 pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0f) / 256.0f);
