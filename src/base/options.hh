@@ -147,7 +147,7 @@ enum layers_list_placement_t
     layers_list_placement_t get_ui_layers_list_placement() { return ui_layers_list_placement; }
 
     void set_ui_floating_tool_dialogs(bool b) { ui_floating_tool_dialogs = b; }
-    bool get_ui_floating_tool_dialogs() { return ui_floating_tool_dialogs; }
+    bool get_ui_floating_tool_dialogs() { return true; /*ui_floating_tool_dialogs;*/ }
 
     void set_ui_multiple_tool_dialogs(bool b) { ui_multiple_tool_dialogs = b; }
     bool get_ui_multiple_tool_dialogs() { return ui_multiple_tool_dialogs; }

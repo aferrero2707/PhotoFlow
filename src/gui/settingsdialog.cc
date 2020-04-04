@@ -245,16 +245,16 @@ PF::SettingsDialog::SettingsDialog():
   ui_layers_list_on_right_hbox.set_tooltip_text(_("Put the layers list panel to the right (restart needed)"));
   //general_box.pack_start( ui_layers_list_on_right_hbox, Gtk::PACK_SHRINK );
 
-  ui_floating_tool_dialogs_hbox.pack_start( ui_floating_tool_dialogs_check, Gtk::PACK_SHRINK );
+  /*ui_floating_tool_dialogs_hbox.pack_start( ui_floating_tool_dialogs_check, Gtk::PACK_SHRINK );
   ui_floating_tool_dialogs_hbox.pack_start( ui_floating_tool_dialogs_label, Gtk::PACK_SHRINK );
   ui_floating_tool_dialogs_hbox.set_tooltip_text(_("Floating tool controls dialogues (restart needed)"));
-  ui_vbox.pack_start( ui_floating_tool_dialogs_hbox, Gtk::PACK_SHRINK, 2 );
+  ui_vbox.pack_start( ui_floating_tool_dialogs_hbox, Gtk::PACK_SHRINK, 2 );*/
 
-  ui_multiple_tool_dialogs_pad.set_size_request(20,0);
+  //ui_multiple_tool_dialogs_pad.set_size_request(20,0);
   ui_multiple_tool_dialogs_hbox.pack_start( ui_multiple_tool_dialogs_pad, Gtk::PACK_SHRINK );
   ui_multiple_tool_dialogs_hbox.pack_start( ui_multiple_tool_dialogs_check, Gtk::PACK_SHRINK );
   ui_multiple_tool_dialogs_hbox.pack_start( ui_multiple_tool_dialogs_label, Gtk::PACK_SHRINK );
-  ui_multiple_tool_dialogs_hbox.set_tooltip_text("");
+  ui_multiple_tool_dialogs_hbox.set_tooltip_text("Keep tool control dialogues open (restart needed)");
   ui_vbox.pack_start( ui_multiple_tool_dialogs_hbox, Gtk::PACK_SHRINK, 2 );
 
   ui_frame.add(ui_vbox);
