@@ -46,6 +46,7 @@ enum clone_channel {
   CLONE_CHANNEL_R,
   CLONE_CHANNEL_G,
   CLONE_CHANNEL_B,
+  CLONE_CHANNEL_MIN_RGB,
   CLONE_CHANNEL_MAX_RGB,
   CLONE_CHANNEL_Lab,
   CLONE_CHANNEL_L,
@@ -53,6 +54,7 @@ enum clone_channel {
   CLONE_CHANNEL_b,
   CLONE_CHANNEL_LCh_C,
   CLONE_CHANNEL_LCh_S,
+  CLONE_CHANNEL_LCh_H,
   CLONE_CHANNEL_CMYK,
   CLONE_CHANNEL_C,
   CLONE_CHANNEL_M,
@@ -193,6 +195,8 @@ public:
 
 class ClonePar: public OpParBase
 {
+  ICCProfile* profile;
+
   PropertyBase source_channel;
 
   ProcessorBase* convert_format;

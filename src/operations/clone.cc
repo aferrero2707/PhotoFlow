@@ -88,6 +88,7 @@ PF::ClonePar::ClonePar():
   source_channel.add_enum_value(PF::CLONE_CHANNEL_R,"R","R");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_G,"G","G");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_B,"B","B");
+  source_channel.add_enum_value(PF::CLONE_CHANNEL_MIN_RGB,"MIN_RGB","min(R,G,B)");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_MAX_RGB,"MAX_RGB","max(R,G,B)");
   //source_channel.add_enum_value(PF::CLONE_CHANNEL_Lab,"Lab","Lab");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_L,"L","L");
@@ -95,6 +96,7 @@ PF::ClonePar::ClonePar():
   source_channel.add_enum_value(PF::CLONE_CHANNEL_b,"b","b");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_LCh_C,"LCh_C","C (LCh)");
   source_channel.add_enum_value(PF::CLONE_CHANNEL_LCh_S,"LCh_S","S (LCh)");
+  source_channel.add_enum_value(PF::CLONE_CHANNEL_LCh_H,"LCh_H","H (LCh)");
 
   source_channel.set_enum_value(PF::CLONE_CHANNEL_SOURCE);
 
@@ -394,6 +396,11 @@ VipsImage* PF::ClonePar::rgb2maxrgb(VipsImage* srcimg, clone_channel ch, unsigne
 
   colorspace_t cs = get_colorspace();
 
+  PF::MaxRGBPar* maxrgbpar = dynamic_cast<PF::MaxRGBPar*>(maxrgb->get_par());
+  if( !maxrgbpar ) return NULL;
+  if( ch == PF::CLONE_CHANNEL_MIN_RGB ) maxrgbpar->set_do_max(false);
+  else maxrgbpar->set_do_max(true);
+
   maxrgb->get_par()->set_image_hints( srcimg );
   maxrgb->get_par()->set_format( get_format() );
   if( cs == PF::PF_COLORSPACE_GRAYSCALE ) {
@@ -404,6 +411,8 @@ VipsImage* PF::ClonePar::rgb2maxrgb(VipsImage* srcimg, clone_channel ch, unsigne
   }
   std::vector<VipsImage*> in2; in2.push_back( srcimg );
   VipsImage* tempimg = maxrgb->get_par()->build( in2, 0, NULL, NULL, level );
+
+  return tempimg;
 
   trcconv->get_par()->set_image_hints( tempimg );
   trcconv->get_par()->set_format( get_format() );
@@ -430,13 +439,26 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
     csin = PF::convert_colorspace( srcimg->Type );
 
 
-  void *profile_data;
-  size_t profile_length;
-  if( PF_VIPS_IMAGE_GET_BLOB( srcimg, VIPS_META_ICC_NAME, &profile_data, &profile_length ) )
-    profile_data = NULL;
+  //void *profile_data;
+  //size_t profile_length;
+  //if( PF_VIPS_IMAGE_GET_BLOB( srcimg, VIPS_META_ICC_NAME, &profile_data, &profile_length ) )
+  //  profile_data = NULL;
+  //std::cout<<"ClonePar::Lab2grayscale(): profile_data="<<profile_data<<std::endl;
 
 
   if( csin != PF::PF_COLORSPACE_LAB ) {
+    PF::ConvertColorspacePar* cpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
+    if( cpar ) {
+      cpar->set_clip_negative(false);
+      cpar->set_clip_overflow(false);
+      if( ch == PF::CLONE_CHANNEL_LCh_C )
+        cpar->set_LCh_format();
+      else if( ch == PF::CLONE_CHANNEL_LCh_S )
+        cpar->set_LSh_format();
+      else
+        cpar->set_Lab_format();
+    }
+    std::cout<<"ClonePar::Lab2grayscale(): ch="<<ch<<"  cpar->get_LSh_format()="<<cpar->get_LSh_format()<<std::endl;
     convert2lab->get_par()->set_image_hints( srcimg );
     convert2lab->get_par()->set_format( get_format() );
     convert2lab->get_par()->lab_image( get_xsize(), get_ysize() );
@@ -451,16 +473,16 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
     PF_REF( srcimg, "PF::ClonePar::Lab2rgb(): srcimg ref (csin != PF::PF_COLORSPACE_LAB)" );
   }
   switch( ch ) {
-  case PF::CLONE_CHANNEL_L:
-    out = L2rgb( srcimg, level );
-    break;
   case PF::CLONE_CHANNEL_a:
+  case PF::CLONE_CHANNEL_LCh_C:
+  case PF::CLONE_CHANNEL_LCh_S:
     if( vips_extract_band( srcimg, &band, 1, NULL ) )
       return NULL;
     //g_object_unref( srcimg );
     PF_UNREF( srcimg, "PF::ClonePar::Lab2rgb(): srcimg unref (PF::CLONE_CHANNEL_a)" );
     break;
   case PF::CLONE_CHANNEL_b:
+  case PF::CLONE_CHANNEL_LCh_H:
     if( vips_extract_band( srcimg, &band, 2, NULL ) )
       return NULL;
     //g_object_unref( srcimg );
@@ -469,6 +491,7 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
   default: return srcimg;
   }
 
+  rgb_image( band->Xsize, band->Ysize );
   vips_image_init_fields( band,
                           get_xsize(), get_ysize(), 
                           1, get_format(),
@@ -485,16 +508,16 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
     return NULL;
   }
   PF_UNREF( band, "ClonePar::rgb2rgb(): band unref" );
-  rgb_image( out->Xsize, out->Ysize );
 
-  if( profile_data ) {
+  PF::set_icc_profile(out, profile);
+  /*if( profile_data ) {
     void* buf = malloc( profile_length );
     if( buf ) {
       memcpy( buf, profile_data, profile_length );
       vips_image_set_blob( out, VIPS_META_ICC_NAME, 
                            (VipsCallbackFn) g_free, buf, profile_length );
     }
-  }
+  }*/
   return out;
 }
 
@@ -581,6 +604,8 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
   VipsImage* srcimg = in[0];
   VipsImage* out = NULL;
 
+  profile = PF::get_icc_profile( srcimg );
+
   colorspace_t cs = get_colorspace();
 
   colorspace_t csin = PF::PF_COLORSPACE_UNKNOWN;
@@ -633,7 +658,7 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
         out = rgb2grayscale( srcimg, ch, level2 );
         std::cout<<"ClonePar::build(): rgb2grayscale() out="<<out<<std::endl;
       }
-      if( ch==PF::CLONE_CHANNEL_MAX_RGB ) {
+      if( ch==PF::CLONE_CHANNEL_MIN_RGB || ch==PF::CLONE_CHANNEL_MAX_RGB ) {
         unsigned int level2 = level;
         std::cout<<"ClonePar::build(): calling rgb2maxrgb()"<<std::endl;
         out = rgb2maxrgb( srcimg, ch, level2 );
@@ -681,14 +706,17 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
         //std::cout<<"ClonePar::build(): calling rgb2rgb()"<<std::endl;
         out = rgb2rgb( srcimg, ch, level2 );
       }
-      if( ch==PF::CLONE_CHANNEL_MAX_RGB ) {
+      if( ch==PF::CLONE_CHANNEL_MIN_RGB || ch==PF::CLONE_CHANNEL_MAX_RGB ) {
         unsigned int level2 = level;
         std::cout<<"ClonePar::build(): calling rgb2maxrgb()"<<std::endl;
         out = rgb2maxrgb( srcimg, ch, level2 );
       }
       if( ch==PF::CLONE_CHANNEL_L ||
           ch==PF::CLONE_CHANNEL_a ||
-          ch==PF::CLONE_CHANNEL_b ) {
+          ch==PF::CLONE_CHANNEL_b ||
+          ch==PF::CLONE_CHANNEL_LCh_C ||
+          ch==PF::CLONE_CHANNEL_LCh_S ||
+          ch==PF::CLONE_CHANNEL_LCh_H ) {
         unsigned int level2 = level;
         out = Lab2rgb( srcimg, ch, level2 );
       }
