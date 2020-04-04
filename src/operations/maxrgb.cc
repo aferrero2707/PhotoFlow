@@ -31,7 +31,8 @@
 #include "maxrgb.hh"
 
 PF::MaxRGBPar::MaxRGBPar():
-  OpParBase()
+  OpParBase(),
+  do_max(true)
 {
   set_type( "max_rgb" );
 
