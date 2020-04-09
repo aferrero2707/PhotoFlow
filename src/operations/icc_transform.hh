@@ -123,20 +123,20 @@ namespace PF
                      VipsImage* imap, VipsImage* omap, unsigned int& level);
   };
 
-  
 
-  template < OP_TEMPLATE_DEF > 
+
+  template < OP_TEMPLATE_DEF >
   class ICCTransformProc
   {
-  public: 
+  public:
     void render(VipsRegion** ireg, int n, int in_first,
-                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* imap, VipsRegion* omap,
                 VipsRegion* oreg, OpParBase* par)
     {
       ICCTransformPar* opar = dynamic_cast<ICCTransformPar*>(par);
       if( !opar ) return;
       VipsRect *r = &oreg->valid;
-      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
+      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
       int width = r->width;
       int height = r->height;
 
@@ -146,14 +146,14 @@ namespace PF
       int x, y;
 
       for( y = 0; y < height; y++ ) {
-        p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
-        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+        p = (T*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
+        pout = (T*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
         pin = p;
         if(opar->get_transform().valid())
           //cmsDoTransform( opar->get_transform(), pin, pout, width );
           opar->get_transform().apply(pin,pout,width);
-        else 
+        else
           memcpy( pout, pin, sizeof(T)*line_size );
       }
     }
@@ -162,12 +162,12 @@ namespace PF
 
 
 
-  template < OP_TEMPLATE_DEF_TYPE_SPEC > 
+  template < OP_TEMPLATE_DEF_TYPE_SPEC >
   class ICCTransformProc< OP_TEMPLATE_IMP_TYPE_SPEC(float) >
   {
-  public: 
+  public:
     void render(VipsRegion** ireg, int n, int in_first,
-                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* imap, VipsRegion* omap,
                 VipsRegion* oreg, OpParBase* par)
     {
       ICCTransformPar* opar = dynamic_cast<ICCTransformPar*>(par);
@@ -193,8 +193,8 @@ namespace PF
 
       for( y = 0; y < height; y++ ) {
         //std::cout<<"icc_transform: ti="<<ti<<" y="<<y<<"  corner="<<r->left<<","<<r->top<<std::endl;
-        p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
-        pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+        p = (float*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
+        pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
         if(opar->get_transform().valid()) {
           if( opar->get_input_cs_type() == cmsSigLabData ) {
@@ -260,7 +260,8 @@ namespace PF
                   pout[x+1] /= 256.0f;
                 }
                 pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
-                pout[x+2] /= 360.0f;
+                //std::cout<<"H: "<<pout[x+2]<<std::endl;
+                pout[x+2] /= (M_PI*2);
               } else {
                 pout[x] = (cmsFloat32Number) (pout[x] / 100.0);
                 pout[x+1] = (cmsFloat32Number) ((pout[x+1] + 128.0f) / 256.0f);
@@ -307,19 +308,19 @@ namespace PF
 
 
 
-/*
-  template < OP_TEMPLATE_DEF_TYPE_SPEC > 
+  /*
+  template < OP_TEMPLATE_DEF_TYPE_SPEC >
   class ICCTransformProc< OP_TEMPLATE_IMP_TYPE_SPEC(double) >
   {
-  public: 
+  public:
     void render(VipsRegion** ireg, int n, int in_first,
-                VipsRegion* imap, VipsRegion* omap, 
+                VipsRegion* imap, VipsRegion* omap,
                 VipsRegion* oreg, OpParBase* par)
     {
       ICCTransformPar* opar = dynamic_cast<ICCTransformPar*>(par);
       if( !opar ) return;
       VipsRect *r = &oreg->valid;
-      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands; 
+      int line_size = r->width * oreg->im->Bands; //layer->in_all[0]->Bands;
       int width = r->width;
       int height = r->height;
 
@@ -334,13 +335,13 @@ namespace PF
       }
 
       for( y = 0; y < height; y++ ) {
-        p = (double*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y ); 
-        pout = (double*)VIPS_REGION_ADDR( oreg, r->left, r->top + y ); 
+        p = (double*)VIPS_REGION_ADDR( ireg[in_first], r->left, r->top + y );
+        pout = (double*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
         if(opar->get_transform().valid()) {
           if( opar->get_input_cs_type() == cmsSigLabData ) {
             for( x = 0; x < line_size; x+= 3 ) {
-              line[x] = (cmsFloat64Number) (pin[x] * 100.0); 
+              line[x] = (cmsFloat64Number) (pin[x] * 100.0);
               line[x+1] = (cmsFloat64Number) (pin[x+1]*256.0 - 128.0);
               line[x+2] = (cmsFloat64Number) (pin[x+2]*256.0 - 128.0);
             }
@@ -360,7 +361,7 @@ namespace PF
       }
     }
   };
-*/
+  */
 
 
 
