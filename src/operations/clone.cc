@@ -142,7 +142,7 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
   if( csin != PF::PF_COLORSPACE_LAB ) {
     PF::ConvertColorspacePar* cpar = dynamic_cast<PF::ConvertColorspacePar*>(convert2lab->get_par());
     if( cpar ) {
-      if( ch == PF::CLONE_CHANNEL_LCh_C )
+      if( ch == PF::CLONE_CHANNEL_LCh_C || ch == PF::CLONE_CHANNEL_LCh_H )
         cpar->set_LCh_format();
       else if( ch == PF::CLONE_CHANNEL_LCh_S )
         cpar->set_LSh_format();
@@ -195,6 +195,7 @@ VipsImage* PF::ClonePar::Lab2grayscale(VipsImage* srcimg, clone_channel ch, unsi
                             1.0, 1.0);
     break;
   case PF::CLONE_CHANNEL_b:
+  case PF::CLONE_CHANNEL_LCh_H:
     if( vips_extract_band( srcimg, &out, 2, NULL ) )
       return NULL;
     //g_object_unref( srcimg );
@@ -451,7 +452,7 @@ VipsImage* PF::ClonePar::Lab2rgb(VipsImage* srcimg, clone_channel ch, unsigned i
     if( cpar ) {
       cpar->set_clip_negative(false);
       cpar->set_clip_overflow(false);
-      if( ch == PF::CLONE_CHANNEL_LCh_C )
+      if( ch == PF::CLONE_CHANNEL_LCh_C || ch == PF::CLONE_CHANNEL_LCh_H )
         cpar->set_LCh_format();
       else if( ch == PF::CLONE_CHANNEL_LCh_S )
         cpar->set_LSh_format();
@@ -644,6 +645,7 @@ VipsImage* PF::ClonePar::build(std::vector<VipsImage*>& in, int first,
           ch==PF::CLONE_CHANNEL_b ||
           ch==PF::CLONE_CHANNEL_LCh_C ||
           ch==PF::CLONE_CHANNEL_LCh_S ||
+          ch==PF::CLONE_CHANNEL_LCh_H ||
           (ch==PF::CLONE_CHANNEL_SOURCE && csin == PF::PF_COLORSPACE_LAB) ) {
         unsigned int level2 = level;
         out = Lab2grayscale( srcimg, ch, level2 );
