@@ -59,7 +59,6 @@
 #include "gradient.hh"
 #include "hotpixels.hh"
 #include "hsl_mask.hh"
-#include "icc_transform.hh"
 #include "igv_demosaic.hh"
 #include "image_reader.hh"
 #include "impulse_nr.hh"
@@ -189,9 +188,6 @@ PF::ProcessorBase* PF::new_hotpixels()
 
 PF::ProcessorBase* PF::new_hsl_mask()
 { return new PF::Processor<PF::HSLMaskPar,PF::HSLMask>(); }
-
-PF::ProcessorBase* PF::new_icc_transform()
-{ return new PF::Processor<PF::ICCTransformPar,PF::ICCTransformProc>(); }
 
 PF::ProcessorBase* PF::new_igv_demosaic()
 { return( new PF::Processor<PF::IgvDemosaicPar,PF::IgvDemosaicProc>() ); }
