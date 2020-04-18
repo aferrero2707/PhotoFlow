@@ -66,7 +66,7 @@
 #include "lensfun.hh"
 #include "levels.hh"
 #include "lmmse_demosaic.hh"
-#include "maxrgb.hh"
+//#include "maxrgb.hh"
 #include "multiraw_developer.hh"
 #include "nlmeans.hh"
 #include "path_mask.hh"
@@ -86,7 +86,7 @@
 #include "local_contrast.hh"
 //#include "local_contrast_v2.hh"
 #include "noise_generator.hh"
-#include "trcconv.hh"
+//#include "trcconv.hh"
 
 
 PF::ProcessorBase* PF::new_no_demosaic()
@@ -214,9 +214,6 @@ PF::ProcessorBase* PF::new_levels()
 PF::ProcessorBase* PF::new_lmmse_demosaic()
 { return( new PF::Processor<PF::LMMSEDemosaicPar,PF::LMMSEDemosaicProc>() ); }
 
-PF::ProcessorBase* PF::new_maxrgb()
-{ return( new PF::Processor<PF::MaxRGBPar,PF::MaxRGBProc>() ); }
-
 PF::ProcessorBase* PF::new_multiraw_developer()
 { return new PF::Processor<PF::MultiRawDeveloperPar,PF::MultiRawDeveloper>(); }
 
@@ -277,9 +274,6 @@ PF::ProcessorBase* PF::new_local_contrast()
 
 PF::ProcessorBase* PF::new_noise_generator()
 { return new PF::Processor<PF::NoiseGeneratorPar,PF::NoiseGeneratorProc>(); }
-
-PF::ProcessorBase* PF::new_trcconv()
-{ return( new PF::Processor<PF::TRCConvPar,PF::TRCConvProc>() ); }
 
 #include "uniform.hh"
 PF::ProcessorBase* PF::new_uniform()
