@@ -1,0 +1,584 @@
+<preset version="5">
+  <layer name="RAW developer" id="1" visible="1" expanded="1" normal="1" extra_inputs="">
+    <operation type="raw_developer_v2">
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="previous_channel_is_input" value="1">
+      </property>
+      <property name="lf_camera_maker" value="">
+      </property>
+      <property name="lf_camera_model" value="">
+      </property>
+      <property name="lf_lens" value="">
+      </property>
+      <property name="lf_enable_distortion" value="0">
+      </property>
+      <property name="lf_enable_tca" value="0">
+      </property>
+      <property name="lf_enable_vignetting" value="0">
+      </property>
+      <property name="lf_enable_all" value="1">
+      </property>
+      <property name="tca_method" value="TCA_CORR_PROFILED_AUTO">
+      </property>
+      <property name="demo_method" value="AMAZE">
+      </property>
+      <property name="fcs_steps" value="0">
+      </property>
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="previous_channel_is_input" value="1">
+      </property>
+      <property name="wb_mode" value="CAMERA">
+      </property>
+      <property name="camwb_corr_red" value="1">
+      </property>
+      <property name="camwb_corr_green" value="1">
+      </property>
+      <property name="camwb_corr_blue" value="1">
+      </property>
+      <property name="wb_target_L" value="-100">
+      </property>
+      <property name="wb_target_a" value="10">
+      </property>
+      <property name="wb_target_b" value="12">
+      </property>
+      <property name="saturation_level_correction" value="1">
+      </property>
+      <property name="black_level_correction" value="1">
+      </property>
+      <property name="wb_red_0" value="1.61719">
+      </property>
+      <property name="wb_green_0" value="1">
+      </property>
+      <property name="wb_blue_0" value="1.18359">
+      </property>
+      <property name="wb_red_1" value="1">
+      </property>
+      <property name="wb_green_1" value="1">
+      </property>
+      <property name="wb_blue_1" value="1">
+      </property>
+      <property name="wb_red_2" value="1">
+      </property>
+      <property name="wb_green_2" value="1">
+      </property>
+      <property name="wb_blue_2" value="1">
+      </property>
+      <property name="wb_red_3" value="1">
+      </property>
+      <property name="wb_green_3" value="1">
+      </property>
+      <property name="wb_blue_3" value="1">
+      </property>
+      <property name="wb_red_4" value="1">
+      </property>
+      <property name="wb_green_4" value="1">
+      </property>
+      <property name="wb_blue_4" value="1">
+      </property>
+      <property name="wb_red_5" value="1.5625">
+      </property>
+      <property name="wb_green_5" value="1">
+      </property>
+      <property name="wb_blue_5" value="1.30859">
+      </property>
+      <property name="wb_red_6" value="1.66406">
+      </property>
+      <property name="wb_green_6" value="1">
+      </property>
+      <property name="wb_blue_6" value="1.1875">
+      </property>
+      <property name="wb_red_7" value="1.90234">
+      </property>
+      <property name="wb_green_7" value="1">
+      </property>
+      <property name="wb_blue_7" value="1.06641">
+      </property>
+      <property name="wb_red_8" value="1.01953">
+      </property>
+      <property name="wb_green_8" value="1">
+      </property>
+      <property name="wb_blue_8" value="2.10938">
+      </property>
+      <property name="wb_red_9" value="1">
+      </property>
+      <property name="wb_green_9" value="1">
+      </property>
+      <property name="wb_blue_9" value="1">
+      </property>
+      <property name="wb_red_10" value="1">
+      </property>
+      <property name="wb_green_10" value="1">
+      </property>
+      <property name="wb_blue_10" value="1">
+      </property>
+      <property name="wb_red_11" value="1">
+      </property>
+      <property name="wb_green_11" value="1">
+      </property>
+      <property name="wb_blue_11" value="1">
+      </property>
+      <property name="wb_red_12" value="1">
+      </property>
+      <property name="wb_green_12" value="1">
+      </property>
+      <property name="wb_blue_12" value="1">
+      </property>
+      <property name="wb_red_13" value="1.46875">
+      </property>
+      <property name="wb_green_13" value="1">
+      </property>
+      <property name="wb_blue_13" value="2.03516">
+      </property>
+      <property name="wb_red_14" value="1.04688">
+      </property>
+      <property name="wb_green_14" value="1">
+      </property>
+      <property name="wb_blue_14" value="1.96094">
+      </property>
+      <property name="wb_red_15" value="1.69922">
+      </property>
+      <property name="wb_green_15" value="1">
+      </property>
+      <property name="wb_blue_15" value="1.10156">
+      </property>
+      <property name="wb_red_16" value="1">
+      </property>
+      <property name="wb_green_16" value="1">
+      </property>
+      <property name="wb_blue_16" value="1">
+      </property>
+      <property name="wb_red_17" value="1.19141">
+      </property>
+      <property name="wb_green_17" value="1">
+      </property>
+      <property name="wb_blue_17" value="2.30469">
+      </property>
+      <property name="wb_red_18" value="1">
+      </property>
+      <property name="wb_green_18" value="1.0535">
+      </property>
+      <property name="wb_blue_18" value="2.44444">
+      </property>
+      <property name="wb_red_19" value="1.49219">
+      </property>
+      <property name="wb_green_19" value="1">
+      </property>
+      <property name="wb_blue_19" value="1.36328">
+      </property>
+      <property name="wb_red_20" value="1.96094">
+      </property>
+      <property name="wb_green_20" value="1">
+      </property>
+      <property name="wb_blue_20" value="1.32812">
+      </property>
+      <property name="wb_red_21" value="1.6875">
+      </property>
+      <property name="wb_green_21" value="1">
+      </property>
+      <property name="wb_blue_21" value="1.15234">
+      </property>
+      <property name="wb_red_22" value="1">
+      </property>
+      <property name="wb_green_22" value="1">
+      </property>
+      <property name="wb_blue_22" value="1">
+      </property>
+      <property name="wb_red_23" value="1">
+      </property>
+      <property name="wb_green_23" value="1">
+      </property>
+      <property name="wb_blue_23" value="1">
+      </property>
+      <property name="wb_red_24" value="1">
+      </property>
+      <property name="wb_green_24" value="1">
+      </property>
+      <property name="wb_blue_24" value="1">
+      </property>
+      <property name="wb_red_25" value="1">
+      </property>
+      <property name="wb_green_25" value="1">
+      </property>
+      <property name="wb_blue_25" value="1">
+      </property>
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="previous_channel_is_input" value="1">
+      </property>
+      <property name="enable_ca" value="1">
+      </property>
+      <property name="auto_ca" value="1">
+      </property>
+      <property name="ca_red" value="0">
+      </property>
+      <property name="ca_blue" value="0">
+      </property>
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="previous_channel_is_input" value="1">
+      </property>
+      <property name="exposure" value="1">
+      </property>
+      <property name="exposure_mode" value="NORMAL">
+      </property>
+      <property name="exposure_clip_amount" value="0">
+      </property>
+      <property name="hlreco_mode" value="HLRECO_CLIP">
+      </property>
+      <property name="profile_mode" value="MATRIX">
+      </property>
+      <property name="cam_profile_name" value="">
+      </property>
+      <property name="cam_dcp_profile_name" value="">
+      </property>
+      <property name="apply_hue_sat_map" value="1">
+      </property>
+      <property name="apply_look_table" value="1">
+      </property>
+      <property name="use_tone_curve" value="1">
+      </property>
+      <property name="apply_baseline_exposure_offset" value="1">
+      </property>
+      <property name="gamma_mode" value="NONE">
+      </property>
+      <property name="gamma_lin" value="0">
+      </property>
+      <property name="gamma_exp" value="2.2">
+      </property>
+      <property name="out_profile_mode2" value="DEFAULT">
+      </property>
+      <property name="out_profile_mode" value="EMBEDDED">
+      </property>
+      <property name="out_trc_type" value="TRC_LINEAR">
+      </property>
+      <property name="out_profile_name" value="">
+      </property>
+      <property name="clip_negative" value="0">
+      </property>
+      <property name="clip_overflow" value="0">
+      </property>
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="previous_channel_is_input" value="1">
+      </property>
+      <property name="hotp_enable" value="0">
+      </property>
+      <property name="hotp_threshold" value="0.05">
+      </property>
+      <property name="hotp_strength" value="0.25">
+      </property>
+      <property name="hotp_permissive" value="0">
+      </property>
+      <property name="hotp_markfixed" value="0">
+      </property>
+    </operation>
+    <operation type="blender">
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="previous_channel_is_input" value="1">
+      </property>
+      <property name="blend_mode" value="PF_BLEND_NORMAL">
+      </property>
+      <property name="mask_blend_mode" value="PF_MASK_BLEND_NORMAL">
+      </property>
+      <property name="opacity" value="1">
+      </property>
+      <property name="shift_x" value="0">
+      </property>
+      <property name="shift_y" value="0">
+      </property>
+    </operation>
+    <sublayers type="child">
+    </sublayers>
+    <sublayers type="imap">
+    </sublayers>
+    <sublayers type="omap">
+    </sublayers>
+  </layer>
+  <layer name="white balance" id="3" visible="1" expanded="1" normal="1" extra_inputs="">
+    <operation type="white_balance">
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="previous_channel_is_input" value="1">
+      </property>
+      <property name="wb_mode" value="UNIWB">
+      </property>
+      <property name="camwb_corr_red" value="1">
+      </property>
+      <property name="camwb_corr_green" value="1">
+      </property>
+      <property name="camwb_corr_blue" value="1">
+      </property>
+      <property name="wb_target_L" value="-100">
+      </property>
+      <property name="wb_target_a" value="10">
+      </property>
+      <property name="wb_target_b" value="12">
+      </property>
+      <property name="saturation_level_correction" value="1">
+      </property>
+      <property name="black_level_correction" value="1">
+      </property>
+      <property name="wb_red_0" value="1.61719">
+      </property>
+      <property name="wb_green_0" value="1">
+      </property>
+      <property name="wb_blue_0" value="1.18359">
+      </property>
+      <property name="wb_red_1" value="1">
+      </property>
+      <property name="wb_green_1" value="1">
+      </property>
+      <property name="wb_blue_1" value="1">
+      </property>
+      <property name="wb_red_2" value="1">
+      </property>
+      <property name="wb_green_2" value="1">
+      </property>
+      <property name="wb_blue_2" value="1">
+      </property>
+      <property name="wb_red_3" value="1">
+      </property>
+      <property name="wb_green_3" value="1">
+      </property>
+      <property name="wb_blue_3" value="1">
+      </property>
+      <property name="wb_red_4" value="1">
+      </property>
+      <property name="wb_green_4" value="1">
+      </property>
+      <property name="wb_blue_4" value="1">
+      </property>
+      <property name="wb_red_5" value="1.5625">
+      </property>
+      <property name="wb_green_5" value="1">
+      </property>
+      <property name="wb_blue_5" value="1.30859">
+      </property>
+      <property name="wb_red_6" value="1.66406">
+      </property>
+      <property name="wb_green_6" value="1">
+      </property>
+      <property name="wb_blue_6" value="1.1875">
+      </property>
+      <property name="wb_red_7" value="1.90234">
+      </property>
+      <property name="wb_green_7" value="1">
+      </property>
+      <property name="wb_blue_7" value="1.06641">
+      </property>
+      <property name="wb_red_8" value="1.01953">
+      </property>
+      <property name="wb_green_8" value="1">
+      </property>
+      <property name="wb_blue_8" value="2.10938">
+      </property>
+      <property name="wb_red_9" value="1">
+      </property>
+      <property name="wb_green_9" value="1">
+      </property>
+      <property name="wb_blue_9" value="1">
+      </property>
+      <property name="wb_red_10" value="1">
+      </property>
+      <property name="wb_green_10" value="1">
+      </property>
+      <property name="wb_blue_10" value="1">
+      </property>
+      <property name="wb_red_11" value="1">
+      </property>
+      <property name="wb_green_11" value="1">
+      </property>
+      <property name="wb_blue_11" value="1">
+      </property>
+      <property name="wb_red_12" value="1">
+      </property>
+      <property name="wb_green_12" value="1">
+      </property>
+      <property name="wb_blue_12" value="1">
+      </property>
+      <property name="wb_red_13" value="1.46875">
+      </property>
+      <property name="wb_green_13" value="1">
+      </property>
+      <property name="wb_blue_13" value="2.03516">
+      </property>
+      <property name="wb_red_14" value="1.04688">
+      </property>
+      <property name="wb_green_14" value="1">
+      </property>
+      <property name="wb_blue_14" value="1.96094">
+      </property>
+      <property name="wb_red_15" value="1.69922">
+      </property>
+      <property name="wb_green_15" value="1">
+      </property>
+      <property name="wb_blue_15" value="1.10156">
+      </property>
+      <property name="wb_red_16" value="1">
+      </property>
+      <property name="wb_green_16" value="1">
+      </property>
+      <property name="wb_blue_16" value="1">
+      </property>
+      <property name="wb_red_17" value="1.19141">
+      </property>
+      <property name="wb_green_17" value="1">
+      </property>
+      <property name="wb_blue_17" value="2.30469">
+      </property>
+      <property name="wb_red_18" value="1">
+      </property>
+      <property name="wb_green_18" value="1.0535">
+      </property>
+      <property name="wb_blue_18" value="2.44444">
+      </property>
+      <property name="wb_red_19" value="1.49219">
+      </property>
+      <property name="wb_green_19" value="1">
+      </property>
+      <property name="wb_blue_19" value="1.36328">
+      </property>
+      <property name="wb_red_20" value="1.96094">
+      </property>
+      <property name="wb_green_20" value="1">
+      </property>
+      <property name="wb_blue_20" value="1.32812">
+      </property>
+      <property name="wb_red_21" value="1.6875">
+      </property>
+      <property name="wb_green_21" value="1">
+      </property>
+      <property name="wb_blue_21" value="1.15234">
+      </property>
+      <property name="wb_red_22" value="1">
+      </property>
+      <property name="wb_green_22" value="1">
+      </property>
+      <property name="wb_blue_22" value="1">
+      </property>
+      <property name="wb_red_23" value="1">
+      </property>
+      <property name="wb_green_23" value="1">
+      </property>
+      <property name="wb_blue_23" value="1">
+      </property>
+      <property name="wb_red_24" value="1">
+      </property>
+      <property name="wb_green_24" value="1">
+      </property>
+      <property name="wb_blue_24" value="1">
+      </property>
+      <property name="wb_red_25" value="1">
+      </property>
+      <property name="wb_green_25" value="1">
+      </property>
+      <property name="wb_blue_25" value="1">
+      </property>
+    </operation>
+    <operation type="blender">
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="previous_channel_is_input" value="1">
+      </property>
+      <property name="blend_mode" value="PF_BLEND_NORMAL">
+      </property>
+      <property name="mask_blend_mode" value="PF_MASK_BLEND_NORMAL">
+      </property>
+      <property name="opacity" value="1">
+      </property>
+      <property name="shift_x" value="0">
+      </property>
+      <property name="shift_y" value="0">
+      </property>
+    </operation>
+    <sublayers type="child">
+    </sublayers>
+    <sublayers type="imap">
+    </sublayers>
+    <sublayers type="omap">
+    </sublayers>
+  </layer>
+</preset>
