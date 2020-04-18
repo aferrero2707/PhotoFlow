@@ -413,7 +413,7 @@ VipsImage* PF::ClonePar::rgb2maxrgb(VipsImage* srcimg, clone_channel ch, unsigne
   std::vector<VipsImage*> in2; in2.push_back( srcimg );
   VipsImage* tempimg = maxrgb->get_par()->build( in2, 0, NULL, NULL, level );
 
-  return tempimg;
+  if( cs != PF::PF_COLORSPACE_GRAYSCALE ) return tempimg;
 
   trcconv->get_par()->set_image_hints( tempimg );
   trcconv->get_par()->set_format( get_format() );
