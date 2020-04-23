@@ -115,9 +115,11 @@ public:
       pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
       for( x = 0; x < width; x++, pin+=3, pout++ ) {
-        L = profile->get_lightness(pin[0], pin[1], pin[2]);
+        L = profile->get_lightness(MAX(pin[0],0), MAX(pin[1],0), MAX(pin[2],0));
         L *= bias;
         pL = (L>1.0e-16) ? xlog10( L ) : -16;
+
+        //std::cout<<"[LogLumiProc] y="<<y<<" x="<<x<<"  pin="<<pin[0]<<","<<pin[1]<<","<<pin[2]<<"  L="<<L<<"  pL="<<pL<<std::endl;
 
         pout[0] = pL;
       }
@@ -340,6 +342,113 @@ VipsImage* PF::LocalContrastV2Par::build(std::vector<VipsImage*>& in, int first,
 
   return out;
 }
+
+
+namespace PF
+{
+
+template < OP_TEMPLATE_DEF >
+class LocalContrastV2Proc
+{
+public:
+  void render(VipsRegion** in, int n, int in_first,
+              VipsRegion* imap, VipsRegion* omap,
+              VipsRegion* out, OpParBase* par)
+  {
+    std::cout<<"LocalContrastV2Proc::render() called."<<std::endl;
+  }
+};
+
+
+template < OP_TEMPLATE_DEF_CS_SPEC >
+class LocalContrastV2Proc< OP_TEMPLATE_IMP_CS_SPEC(PF_COLORSPACE_RGB) >
+{
+public:
+  void render(VipsRegion** ireg, int n, int in_first,
+              VipsRegion* imap, VipsRegion* omap,
+              VipsRegion* oreg, OpParBase* par)
+  {
+    if( n != 3 ) return;
+    if( ireg[0] == NULL ) return;
+    if( ireg[1] == NULL ) return;
+    if( ireg[2] == NULL ) return;
+
+    LocalContrastV2Par* opar = dynamic_cast<LocalContrastV2Par*>(par);
+    if( !opar ) return;
+
+    PF::ICCProfile* profile = opar->get_profile();
+    if( !profile ) return;
+
+    VipsRect *r = &oreg->valid;
+    int line_size = r->width * oreg->im->Bands;
+    //int width = r->width;
+    int height = r->height;
+
+    //std::cout<<"[LocalContrastV2Proc] width="<<r->width<<" height="<<r->height<<std::endl;
+
+    T* pin0;
+    T* pin1;
+    T* pin2;
+    T* pout;
+    int x, x0, y;
+    float bias = profile->perceptual2linear( 0.5 );
+    float white = profile->perceptual2linear( opar->get_white_level() );
+    float lwhite = xlog10(white/bias);
+    float lwhite2 = xlog10(white/bias);
+
+    for( y = 0; y < height; y++ ) {
+      // original image
+      pin0 = (float*)VIPS_REGION_ADDR( ireg[2], r->left, r->top + y );
+      // log-lumi image
+      pin1 = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
+      // blurred log-lumi image
+      pin2 = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
+      // output image
+      pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
+
+      for( x0 = 0, x = 0; x < line_size; x+=3, x0++ ) {
+        float l1 = pin1[x0];
+        float l2 = pin2[x0];
+        float delta = l1 - l2;
+        float scale = opar->get_amount();
+        float boost = 1;
+        float delta2 = delta;
+        if( scale > 0 ) {
+          if( delta < 0 ) {
+            boost = 2.0f - (lwhite - l2)/lwhite;
+            if(boost < 0) boost = 0;
+            if(boost > 1.5) boost = 1.5;
+            //boost *= 2;
+            //scale *= boost;
+          }
+          if( delta > 0 ) {
+            boost = (lwhite2 - l2)/lwhite2;
+            //std::cout<<"-->  boost="<<boost<<std::endl;
+            if(boost < 0) boost = 0;
+            if(boost > 1.5) boost = 1.5;
+            //std::cout<<"-->  boost="<<boost<<std::endl;
+            //boost *= 2;
+            //scale *= boost;
+          }
+        }
+        delta2 *= scale * boost;
+        float out = delta2 + l1;
+        //std::cout<<"y="<<y<<" x="<<x0<<"  l1="<<l1<<"  l2="<<l2<<"  lwhite2="<<lwhite2<<"  boost="<<boost<<"  delta2="<<delta2<<"  out="<<out<<std::endl;
+
+        l1 = xexp10( l1 );
+        out = xexp10( out );
+        float R = out / l1;
+
+        pout[x] = pin0[x] * R;
+        pout[x+1] = pin0[x+1] * R;
+        pout[x+2] = pin0[x+2] * R;
+        //std::cout<<"y="<<y<<" x="<<x0<<"  l1="<<l1<<"  out="<<out<<"  R="<<R<<"  pout="<<pout[x+0]<<","<<pout[x+1]<<","<<pout[x+2]<<std::endl;
+      }
+    }
+  }
+};
+
+} // namespace PF
 
 
 PF::ProcessorBase* PF::new_local_contrast_v2()
