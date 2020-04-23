@@ -39,7 +39,7 @@ namespace PF
   class LocalContrastV2Par: public OpParBase
   {
     Property<float> amount;
-    Property<float> radius, threshold, white_level;
+    Property<float> radius, threshold, white_level, boost;
 
     ProcessorBase* loglumi;
     ProcessorBase* guided[10];
@@ -60,6 +60,7 @@ namespace PF
     PF::ICCProfile* get_profile() { return in_profile; }
     float get_amount() { return amount.get(); }
     float get_white_level() { return white_level.get(); }
+    float get_boost() { return boost.get(); }
       
     VipsImage* build(std::vector<VipsImage*>& in, int first, 
 		     VipsImage* imap, VipsImage* omap, 

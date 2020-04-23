@@ -51,6 +51,7 @@ namespace PF {
     
     Slider amount_slider;
     Slider white_level_slider;
+    Slider boost_slider;
 
     Gtk::VBox guidedControlsBox;
     Slider guidedRadiusSlider;
