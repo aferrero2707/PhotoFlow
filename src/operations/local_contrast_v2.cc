@@ -134,7 +134,8 @@ PF::LocalContrastV2Par::LocalContrastV2Par():
   amount("amount",this,1),
   radius("radius",this,64),
   threshold("threshold",this,0.1),
-  white_level("white_level",this,0.8)
+  white_level("white_level",this,0.8),
+  boost("boost", this,1)
 {
   loglumi = new PF::Processor<LogLumiPar,LogLumiProc>();
   int ts = 1;
@@ -395,6 +396,7 @@ public:
     float white = profile->perceptual2linear( opar->get_white_level() );
     float lwhite = xlog10(white/bias);
     float lwhite2 = xlog10(white/bias);
+    float boost_adjustment = opar->get_boost();
 
     for( y = 0; y < height; y++ ) {
       // original image
@@ -431,7 +433,7 @@ public:
             //scale *= boost;
           }
         }
-        delta2 *= scale * boost;
+        delta2 *= scale * (((boost-1) * boost_adjustment) + 1);
         float out = delta2 + l1;
         //std::cout<<"y="<<y<<" x="<<x0<<"  l1="<<l1<<"  l2="<<l2<<"  lwhite2="<<lwhite2<<"  boost="<<boost<<"  delta2="<<delta2<<"  out="<<out<<std::endl;
 

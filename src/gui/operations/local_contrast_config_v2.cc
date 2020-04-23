@@ -35,7 +35,8 @@ PF::LocalContrastV2ConfigGUI::LocalContrastV2ConfigGUI( PF::Layer* layer ):
   amount_slider( this, "amount", "amount", 100, -100, 100, 0.5, 5, 100),
   white_level_slider( this, "white_level", "white level", 100, 0, 100, 0.5, 5, 100),
   guidedRadiusSlider( this, "radius", "radius", 1, 0, 1000, 0.05, 0.1, 1),
-  guidedThresholdSlider( this, "threshold", "edge threshold", 20, 0.5, 1000.0, 0.5, 5, 200)
+  guidedThresholdSlider( this, "threshold", "edge threshold", 20, 0.5, 1000.0, 0.5, 5, 200),
+  boost_slider( this, "boost", "boost", 100, 0, 100, 0.5, 5, 100)
 {
   guidedControlsBox.set_spacing(4);
   guidedControlsBox.pack_start( guidedRadiusSlider, Gtk::PACK_SHRINK );
@@ -44,6 +45,7 @@ PF::LocalContrastV2ConfigGUI::LocalContrastV2ConfigGUI( PF::Layer* layer ):
   controlsBox.set_spacing(8);
   controlsBox.pack_start( amount_slider, Gtk::PACK_SHRINK, 0 );
   //controlsBox.pack_start( white_level_slider, Gtk::PACK_SHRINK, 10 );
+  controlsBox.pack_start( boost_slider, Gtk::PACK_SHRINK, 0 );
   controlsBox.pack_start( guidedControlsBox, Gtk::PACK_SHRINK, 0 );
 
   //globalBox.pack_start( controlsBox, Gtk::PACK_SHRINK );
