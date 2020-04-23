@@ -14,9 +14,9 @@ Here is the general feature (wish)list:
 
 You can follow the development of photoflow and learn about its usage in the dedicated blog: http://photoflowblog.blogspot.fr/
 
-# Windows and OSX installers
+# Windows and macOS installers
 
-Up-to-date Windows and OSX installers are available from the [releases](https://github.com/aferrero2707/PhotoFlow/releases) web page.
+Up-to-date Windows and macOS installers are available from the [releases](https://github.com/aferrero2707/PhotoFlow/releases) web page.
 
 # Installing from PPA (Ubuntu Linux and derivate distributions)
 
@@ -33,6 +33,10 @@ To add the PPA and install photoflow, do the following:
 or to install the daily git builds from the "stable" branch:
 
         sudo apt-get install photoflow-git
+
+# Installing from official Debian (sid+)
+
+        apt install photoflow
 
 # Arch Linux packages
 
