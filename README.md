@@ -34,7 +34,7 @@ or to install the daily git builds from the "stable" branch:
 
         sudo apt-get install photoflow-git
 
-# Installing from official Debian (sid+)
+# Installing from official Debian (sid+) or Ubuntu (20.10+)
 
         apt install photoflow
 
