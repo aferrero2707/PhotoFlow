@@ -1,5 +1,5 @@
 <preset version="5">
-  <layer name="image" id="1" visible="1" expanded="1" normal="0" extra_inputs="">
+  <layer name="image %imageid%" id="1" visible="1" expanded="1" normal="0" extra_inputs="">
     <operation type="buffer">
       <property name="intensity" value="1">
       </property>

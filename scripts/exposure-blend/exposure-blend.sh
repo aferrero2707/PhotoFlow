@@ -89,13 +89,16 @@ for i in $(seq 1 $nimg); do
 	img=$(cat images.txt | sed -n ${imgid}p)
 	alimg=$(cat aligned.txt | sed -n ${i}p)
 	echo -n "Copying EXIF tags from $img..."
-	exiftool -tagsFromFile "$img" "$alimg"
+	exiftool -tagsFromFile "${img}.tif" -Orientation#=1 "$alimg"
 	echo " done."
 done
 
 #exit
 
 refexp=$(head -n 1 exposures.txt | cut -d" " -f 1)
+
+img=$(cat aligned.txt | sed -n 1p)
+cat "$scriptdir/base.pfi" | sed "s|%image%|$img|g" > blend1.pfi
 
 plist=""
 for i in $(seq 2 $nimg); do
@@ -109,11 +112,13 @@ for i in $(seq 2 $nimg); do
 	cat "$scriptdir/blend.pfp" | sed "s/<property name=\"exposure\" value=\"1\">/<property name=\"exposure\" value=\"$r\">/g" > blend${i}.pfp
 	#sed -i.bak "s|%image%|$(pwd)/$img|g" blend${i}.pfp
 	sed -i.bak "s|%image%|$img|g" blend${i}.pfp
+	sed -i.bak "s|%imageid%|$i|g" blend${i}.pfp
 
 	plist="$plist --config=blend${i}.pfp"
 
 done
 
-"$photoflow" --batch $plist --config="$scriptdir/wb.pfp" --config="$scriptdir/colorspace_conversion.pfp" $(ls -1 aligned*.tif | head -n 1)   blend.pfi #>& blend.pfi.log
+echo "\"$photoflow\" --batch $plist --config=\"$scriptdir/wb.pfp\" --config=\"$scriptdir/colorspace_conversion.pfp\" blend1.pfi blend.pfi"
+"$photoflow" --batch $plist --config="$scriptdir/wb.pfp" --config="$scriptdir/colorspace_conversion.pfp" blend1.pfi blend.pfi >& blend.pfi.log
 
 #rm $plist aligned.txt exposures.txt images.txt
