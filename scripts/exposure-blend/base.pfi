@@ -1,0 +1,70 @@
+<image version="5">
+  <layer name="image 1" id="0" visible="1" expanded="1" normal="1" inputs="">
+    <operation type="imageread">
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="enable_padding" value="0">
+      </property>
+      <property name="file_name" value="%image%">
+      </property>
+      <property name="in_profile_mode" value="EMBEDDED">
+      </property>
+      <property name="in_profile_type" value="REC2020">
+      </property>
+      <property name="in_trc_type" value="TRC_LINEAR">
+      </property>
+      <property name="in_profile_name" value="">
+      </property>
+      <property name="out_profile_mode" value="DEFAULT">
+      </property>
+      <property name="out_profile_type" value="EMBEDDED">
+      </property>
+      <property name="out_trc_type" value="TRC_LINEAR">
+      </property>
+      <property name="out_profile_name" value="">
+      </property>
+    </operation>
+    <operation type="blender">
+      <property name="intensity" value="1">
+      </property>
+      <property name="grey_target_channel" value="Grey">
+      </property>
+      <property name="rgb_target_channel" value="RGB">
+      </property>
+      <property name="lab_target_channel" value="Lab">
+      </property>
+      <property name="cmyk_target_channel" value="CMYK">
+      </property>
+      <property name="mask_enabled" value="1">
+      </property>
+      <property name="enable_padding" value="0">
+      </property>
+      <property name="blend_mode" value="PF_BLEND_PASSTHROUGH">
+      </property>
+      <property name="mask_blend_mode" value="PF_MASK_BLEND_NORMAL">
+      </property>
+      <property name="opacity" value="1">
+      </property>
+      <property name="shift_x" value="0">
+      </property>
+      <property name="shift_y" value="0">
+      </property>
+    </operation>
+    <sublayers type="child">
+    </sublayers>
+    <sublayers type="imap">
+    </sublayers>
+    <sublayers type="omap">
+    </sublayers>
+  </layer>
+</image>
