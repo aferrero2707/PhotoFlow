@@ -93,9 +93,9 @@ bool PF::exif_read(exif_data_t* data, const char* path)
 
   // EXIF metadata
   Exiv2::ExifData &exifData = image->exifData();
-  if(exifData.empty()) 
+  if(exifData.empty())
     return false;
-  
+
     /* List of tag names taken from exiv2's printSummary() in actions.cpp */
     Exiv2::ExifData::const_iterator pos;
     /* Read shutter time */
@@ -354,7 +354,7 @@ bool PF::exif_read(exif_data_t* data, const char* path)
     std::string s(e.what());
     std::cerr << "[exiv2] " << s << std::endl;
     return false;
-  }  
+  }
 }
 
 
@@ -396,3 +396,309 @@ PF::exif_data_t* PF::get_exif_data( VipsImage* img )
   return exif_data;
 }
 
+
+// Darktable code starts here
+//_________________________________
+
+static void dt_remove_exif_keys(Exiv2::ExifData &exif, const char *keys[], unsigned int n_keys)
+{
+  for(unsigned int i = 0; i < n_keys; i++)
+  {
+    try
+    {
+      Exiv2::ExifData::iterator pos;
+      while((pos = exif.findKey(Exiv2::ExifKey(keys[i]))) != exif.end())
+        exif.erase(pos);
+    }
+    catch(Exiv2::AnyError &e)
+    {
+      // the only exception we may get is "invalid" tag, which is not
+      // important enough to either stop the function, or even display
+      // a message (it's probably the tag is not implemented in the
+      // exiv2 version used)
+    }
+  }
+}
+
+
+
+#if defined(_WIN32) && defined(EXV_UNICODE_PATH)
+  #define WIDEN(s) pugi::as_wide(s)
+#else
+  #define WIDEN(s) (s)
+#endif
+
+
+
+int PF::dt_exif_write_blob(uint8_t *blob, uint32_t size, const char *path, const int sRGB, const int out_width, const int out_height)
+{
+  try
+  {
+    std::unique_ptr<Exiv2::Image> image(Exiv2::ImageFactory::open(WIDEN(path)));
+    assert(image.get() != 0);
+    image->readMetadata();
+    Exiv2::ExifData &imgExifData = image->exifData();
+    Exiv2::ExifData blobExifData;
+    Exiv2::ExifParser::decode(blobExifData, blob + 6, size);
+    Exiv2::ExifData::const_iterator end = blobExifData.end();
+    Exiv2::ExifData::iterator it;
+    for(Exiv2::ExifData::const_iterator i = blobExifData.begin(); i != end; ++i)
+    {
+      // add() does not override! we need to delete existing key first.
+      Exiv2::ExifKey key(i->key());
+      if((it = imgExifData.findKey(key)) != imgExifData.end()) imgExifData.erase(it);
+
+      imgExifData.add(Exiv2::ExifKey(i->key()), &i->value());
+    }
+
+    {
+      // Remove thumbnail
+      static const char *keys[] = {
+        "Exif.Thumbnail.Compression",
+        "Exif.Thumbnail.XResolution",
+        "Exif.Thumbnail.YResolution",
+        "Exif.Thumbnail.ResolutionUnit",
+        "Exif.Thumbnail.JPEGInterchangeFormat",
+        "Exif.Thumbnail.JPEGInterchangeFormatLength"
+      };
+      static const guint n_keys = G_N_ELEMENTS(keys);
+      dt_remove_exif_keys(imgExifData, keys, n_keys);
+    }
+
+    if(out_width > 0 && out_height > 0) {
+      imgExifData["Exif.Photo.PixelXDimension"] = (uint32_t)out_width;
+      imgExifData["Exif.Photo.PixelYDimension"] = (uint32_t)out_height;
+    } else {
+      static const char *keys[] = {
+        "Exif.Photo.PixelXDimension",
+        "Exif.Photo.PixelYDimension"
+      };
+      static const guint n_keys = G_N_ELEMENTS(keys);
+      dt_remove_exif_keys(imgExifData, keys, n_keys);
+    }
+
+    /* Write appropriate color space tag if using sRGB output */
+    if(sRGB)
+      imgExifData["Exif.Photo.ColorSpace"] = uint16_t(1); /* sRGB */
+    else
+      imgExifData["Exif.Photo.ColorSpace"] = uint16_t(0xFFFF); /* Uncalibrated */
+
+    imgExifData.sortByTag();
+    image->writeMetadata();
+  }
+  catch(Exiv2::AnyError &e)
+  {
+    std::string s(e.what());
+    std::cerr << "[exiv2 dt_exif_write_blob] " << path << ": " << s << std::endl;
+    return 0;
+  }
+  return 1;
+}
+
+
+
+int PF::dt_exif_read_blob(uint8_t **buf, const char *path, const int imgid, const int out_width,
+                      const int out_height, const int dng_mode)
+{
+  *buf = NULL;
+  try
+  {
+    std::unique_ptr<Exiv2::Image> image(Exiv2::ImageFactory::open(WIDEN(path)));
+    assert(image.get() != 0);
+    image->readMetadata();
+    Exiv2::ExifData &exifData = image->exifData();
+
+    // get rid of thumbnails
+    Exiv2::ExifThumb(exifData).erase();
+    Exiv2::ExifData::const_iterator pos;
+
+    {
+      static const char *keys[] = {
+        "Exif.Image.ImageWidth",
+        "Exif.Image.ImageLength",
+        "Exif.Image.BitsPerSample",
+        "Exif.Image.Compression",
+        "Exif.Image.PhotometricInterpretation",
+        "Exif.Image.FillOrder",
+        "Exif.Image.SamplesPerPixel",
+        "Exif.Image.StripOffsets",
+        "Exif.Image.RowsPerStrip",
+        "Exif.Image.StripByteCounts",
+        "Exif.Image.PlanarConfiguration",
+        "Exif.Image.DNGVersion",
+        "Exif.Image.DNGBackwardVersion"
+      };
+      static const guint n_keys = G_N_ELEMENTS(keys);
+      dt_remove_exif_keys(exifData, keys, n_keys);
+    }
+
+      /* Many tags should be removed in all cases as they are simply wrong also for dng files */
+
+      // remove subimage* trees, related to thumbnails or HDR usually; also UserCrop
+    for(Exiv2::ExifData::iterator i = exifData.begin(); i != exifData.end();)
+    {
+      static const std::string needle = "Exif.SubImage";
+      if(i->key().compare(0, needle.length(), needle) == 0)
+        i = exifData.erase(i);
+      else
+        ++i;
+    }
+
+    {
+      static const char *keys[] = {
+        // Canon color space info
+        "Exif.Canon.ColorSpace",
+        "Exif.Canon.ColorData",
+
+        // Nikon thumbnail data
+        "Exif.Nikon3.Preview",
+        "Exif.NikonPreview.JPEGInterchangeFormat",
+
+        // DNG stuff that is irrelevant or misleading
+        "Exif.Image.DNGPrivateData",
+        "Exif.Image.DefaultBlackRender",
+        "Exif.Image.DefaultCropOrigin",
+        "Exif.Image.DefaultCropSize",
+        "Exif.Image.RawDataUniqueID",
+        "Exif.Image.OriginalRawFileName",
+        "Exif.Image.OriginalRawFileData",
+        "Exif.Image.ActiveArea",
+        "Exif.Image.MaskedAreas",
+        "Exif.Image.AsShotICCProfile",
+        "Exif.Image.OpcodeList1",
+        "Exif.Image.OpcodeList2",
+        "Exif.Image.OpcodeList3",
+        "Exif.Photo.MakerNote",
+
+        // Pentax thumbnail data
+        "Exif.Pentax.PreviewResolution",
+        "Exif.Pentax.PreviewLength",
+        "Exif.Pentax.PreviewOffset",
+        "Exif.PentaxDng.PreviewResolution",
+        "Exif.PentaxDng.PreviewLength",
+        "Exif.PentaxDng.PreviewOffset",
+        // Pentax color info
+        "Exif.PentaxDng.ColorInfo",
+
+        // Minolta thumbnail data
+        "Exif.Minolta.Thumbnail",
+        "Exif.Minolta.ThumbnailOffset",
+        "Exif.Minolta.ThumbnailLength",
+
+        // Sony thumbnail data
+        "Exif.SonyMinolta.ThumbnailOffset",
+        "Exif.SonyMinolta.ThumbnailLength",
+
+        // Olympus thumbnail data
+        "Exif.Olympus.Thumbnail",
+        "Exif.Olympus.ThumbnailOffset",
+        "Exif.Olympus.ThumbnailLength"
+
+        "Exif.Image.BaselineExposureOffset",
+        };
+      static const guint n_keys = G_N_ELEMENTS(keys);
+      dt_remove_exif_keys(exifData, keys, n_keys);
+    }
+#if EXIV2_MINOR_VERSION >= 23
+    {
+      // Exiv2 versions older than 0.23 drop all EXIF if the code below is executed
+      // Samsung makernote cleanup, the entries below have no relevance for exported images
+      static const char *keys[] = {
+        "Exif.Samsung2.SensorAreas",
+        "Exif.Samsung2.ColorSpace",
+        "Exif.Samsung2.EncryptionKey",
+        "Exif.Samsung2.WB_RGGBLevelsUncorrected",
+        "Exif.Samsung2.WB_RGGBLevelsAuto",
+        "Exif.Samsung2.WB_RGGBLevelsIlluminator1",
+        "Exif.Samsung2.WB_RGGBLevelsIlluminator2",
+        "Exif.Samsung2.WB_RGGBLevelsBlack",
+        "Exif.Samsung2.ColorMatrix",
+        "Exif.Samsung2.ColorMatrixSRGB",
+        "Exif.Samsung2.ColorMatrixAdobeRGB",
+        "Exif.Samsung2.ToneCurve1",
+        "Exif.Samsung2.ToneCurve2",
+        "Exif.Samsung2.ToneCurve3",
+        "Exif.Samsung2.ToneCurve4"
+      };
+      static const guint n_keys = G_N_ELEMENTS(keys);
+      dt_remove_exif_keys(exifData, keys, n_keys);
+    }
+#endif
+
+      static const char *dngkeys[] = {
+        // Embedded color profile info
+        "Exif.Image.CalibrationIlluminant1",
+        "Exif.Image.CalibrationIlluminant2",
+        "Exif.Image.ColorMatrix1",
+        "Exif.Image.ColorMatrix2",
+        "Exif.Image.ForwardMatrix1",
+        "Exif.Image.ForwardMatrix2",
+        "Exif.Image.ProfileCalibrationSignature",
+        "Exif.Image.ProfileCopyright",
+        "Exif.Image.ProfileEmbedPolicy",
+        "Exif.Image.ProfileHueSatMapData1",
+        "Exif.Image.ProfileHueSatMapData2",
+        "Exif.Image.ProfileHueSatMapDims",
+        "Exif.Image.ProfileHueSatMapEncoding",
+        "Exif.Image.ProfileLookTableData",
+        "Exif.Image.ProfileLookTableDims",
+        "Exif.Image.ProfileLookTableEncoding",
+        "Exif.Image.ProfileName",
+        "Exif.Image.ProfileToneCurve",
+        "Exif.Image.ReductionMatrix1",
+        "Exif.Image.ReductionMatrix2"
+        };
+      static const guint n_dngkeys = G_N_ELEMENTS(dngkeys);
+    dt_remove_exif_keys(exifData, dngkeys, n_dngkeys);
+
+    // we don't write the orientation here for dng as it is set in dt_imageio_dng_write_tiff_header
+    // or might be defined in this blob.
+    if(!dng_mode) exifData["Exif.Image.Orientation"] = uint16_t(1);
+
+    /* Replace RAW dimension with output dimensions (for example after crop/scale, or orientation for dng
+     * mode) */
+    if(out_width > 0) exifData["Exif.Photo.PixelXDimension"] = (uint32_t)out_width;
+    if(out_height > 0) exifData["Exif.Photo.PixelYDimension"] = (uint32_t)out_height;
+
+    int resolution = 0; //dt_conf_get_int("metadata/resolution");
+    if(resolution > 0)
+    {
+      exifData["Exif.Image.XResolution"] = Exiv2::Rational(resolution, 1);
+      exifData["Exif.Image.YResolution"] = Exiv2::Rational(resolution, 1);
+      exifData["Exif.Image.ResolutionUnit"] = uint16_t(2); /* inches */
+    }
+    else
+    {
+      static const char *keys[] = {
+        "Exif.Image.XResolution",
+        "Exif.Image.YResolution",
+        "Exif.Image.ResolutionUnit"
+      };
+      static const guint n_keys = G_N_ELEMENTS(keys);
+      dt_remove_exif_keys(exifData, keys, n_keys);
+    }
+
+    exifData["Exif.Image.Software"] = "PhotoFlow Image Editor";
+
+    Exiv2::Blob blob;
+    Exiv2::ExifParser::encode(blob, Exiv2::bigEndian, exifData);
+    const int length = blob.size();
+    *buf = (uint8_t *)malloc(length+6);
+    if (!*buf)
+    {
+      return 0;
+    }
+    memcpy(*buf, "Exif\000\000", 6);
+    memcpy(*buf + 6, &(blob[0]), length);
+    return length + 6;
+  }
+  catch(Exiv2::AnyError &e)
+  {
+    // std::cerr.rdbuf(savecerr);
+    std::string s(e.what());
+    std::cerr << "[exiv2 dt_exif_read_blob] " << path << ": " << s << std::endl;
+    free(*buf);
+    *buf = NULL;
+    return 0;
+  }
+}

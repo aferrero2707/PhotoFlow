@@ -203,6 +203,13 @@ PF::RawImage::RawImage( const std::string _fname ):
   {
     try
     {
+      int length;
+      uint8_t *exif_profile = NULL;
+      // last param is dng mode, it's false here
+      length = PF::dt_exif_read_blob(&exif_profile, file_name_real.c_str(), 0, -1, -1, 0);
+      exiv2_buf->blob = exif_profile;
+      exiv2_buf->length = length;
+
       Exiv2::ExifData::const_iterator pos;
       Exiv2::BasicIo::AutoPtr file (new Exiv2::FileIo (file_name_real));
       //std::unique_ptr<Exiv2::Image> image(Exiv2::ImageFactory::open(file));

@@ -129,6 +129,7 @@ PF::Rec2020Profile::Rec2020Profile(TRC_type type): ICCProfile()
     //profile = cmsOpenProfileFromFile( wprofname.c_str(), "r" );
     break;
   }
+  case PF::PF_TRC_UNKNOWN:
   case PF::PF_TRC_LINEAR: {
     cmsToneCurve *curve = cmsBuildGamma (NULL, 1.00);
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;

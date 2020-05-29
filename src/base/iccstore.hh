@@ -49,7 +49,8 @@ enum TRC_type
   PF_TRC_LINEAR=2,
   PF_TRC_sRGB=3,
   PF_TRC_GAMMA_22=4,
-  PF_TRC_GAMMA_18=5
+  PF_TRC_GAMMA_18=5,
+  PF_TRC_UNKNOWN=1000
 };
 
 
@@ -112,6 +113,7 @@ class ICCProfile
   cmsHPROFILE profile;
   cmsToneCurve* perceptual_trc;
   cmsToneCurve* perceptual_trc_inv;
+  profile_type_t profile_type;
   TRC_type trc_type;
   bool parametric_trc;
 
@@ -163,6 +165,8 @@ public:
   bool is_matrix();
   double* get_colorants() { return colorants; }
 
+  void set_profile_type(profile_type_t p) { profile_type = p; }
+  profile_type_t get_profile_type() { return profile_type; }
   void set_trc_type(TRC_type type) { trc_type = type; }
   TRC_type get_trc_type() { return trc_type; }
   bool is_linear() { return( get_trc_type() == PF_TRC_LINEAR ); }

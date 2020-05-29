@@ -115,6 +115,7 @@ PF::ProPhotoProfileD65::ProPhotoProfileD65(TRC_type type): ICCProfile()
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
     break;
   }
+  case PF::PF_TRC_UNKNOWN:
   case PF::PF_TRC_LINEAR: {
     cmsToneCurve *curve = cmsBuildGamma (NULL, 1.00);
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;

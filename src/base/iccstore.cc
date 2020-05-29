@@ -165,7 +165,8 @@ PF::ICCProfile::ICCProfile()
   has_colorants = false;
   profile_data = NULL;
   profile_size = 0;
-  trc_type = PF_TRC_STANDARD;
+  profile_type = PROF_TYPE_CUSTOM;
+  trc_type = PF_TRC_UNKNOWN;
   perceptual_trc = NULL;
   perceptual_trc_inv = NULL;
   parametric_trc = false;
@@ -362,11 +363,11 @@ void PF::ICCProfile::init_trc()
         cmsBuildParametricToneCurve(NULL, 4, labl_parameters);
     cmsToneCurve *labl_parametic_curve_inv = cmsReverseToneCurve( labl_parametic_curve );
     init_trc( labl_parametic_curve, labl_parametic_curve_inv );
-    set_trc_type( PF::PF_TRC_LINEAR );
+    if(get_trc_type() == PF::PF_TRC_UNKNOWN) set_trc_type( PF::PF_TRC_LINEAR );
   } else {
     cmsToneCurve* red_trc_inv = cmsReverseToneCurve( red_trc );
     init_trc( red_trc, red_trc_inv );
-    set_trc_type( PF::PF_TRC_PERCEPTUAL );
+    if(get_trc_type() == PF::PF_TRC_UNKNOWN) set_trc_type( PF::PF_TRC_PERCEPTUAL );
   }
 }
 

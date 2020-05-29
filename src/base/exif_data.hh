@@ -105,12 +105,18 @@ class exiv2_data_t
 {
 public:
   Exiv2::Image::AutoPtr image;
-  exiv2_data_t(): image(NULL) {}
+  uint8_t* blob;
+  int length;
+  exiv2_data_t(): image(NULL), blob(NULL), length(0) {}
 };
 
 void exiv2_free (gpointer mem);
 
 exif_data_t* get_exif_data( VipsImage* img );
+
+int dt_exif_write_blob(uint8_t *blob, uint32_t size, const char *path, const int sRGB, const int out_width, const int out_height);
+int dt_exif_read_blob(uint8_t **buf, const char *path, const int imgid, const int out_width,
+                      const int out_height, const int dng_mode);
 
 }
 
