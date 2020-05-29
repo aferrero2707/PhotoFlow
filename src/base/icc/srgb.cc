@@ -84,6 +84,7 @@ static cmsCIExyY  d65_srgb_adobe_specs = {0.3127, 0.3290, 1.0};
 
 PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
 {
+  set_profile_type( PROF_TYPE_sRGB );
   set_trc_type( type );
 
   /*
@@ -125,6 +126,7 @@ PF::sRGBProfile::sRGBProfile(TRC_type type): ICCProfile()
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;
     break;
   }
+  case PF::PF_TRC_UNKNOWN:
   case PF::PF_TRC_LINEAR: {
     cmsToneCurve *curve = cmsBuildGamma (NULL, 1.00);
     tone_curve[0] = tone_curve[1] = tone_curve[2] = curve;

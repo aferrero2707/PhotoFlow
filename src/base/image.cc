@@ -1286,6 +1286,9 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       image = out;
       print_embedded_profile( image );
     }
+    int out_width = image->Xsize;
+    int out_height = image->Ysize;
+    int sRGBout = ((iccprof->get_profile_type() == PF::PROF_TYPE_sRGB) && (iccprof->get_trc_type() == PF::PF_TRC_STANDARD)) ? 1 : 0;
 
 
     if( ext == "jpg" || ext == "jpeg" ) {
@@ -1402,12 +1405,15 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
         size_t exiv2_buf_length;
         if( PF_VIPS_IMAGE_GET_BLOB( outimg, PF_META_EXIV2_NAME, (&exiv2_buf), &exiv2_buf_length ) )
           exiv2_buf = NULL;
-        if( exiv2_buf && (exiv2_buf_length==sizeof(PF::exiv2_data_t)) && exiv2_buf->image.get() != NULL ) {
+        //if( exiv2_buf && (exiv2_buf_length==sizeof(PF::exiv2_data_t)) && exiv2_buf->image.get() != NULL ) {
+        if( exiv2_buf && (exiv2_buf_length==sizeof(PF::exiv2_data_t)) && exiv2_buf->blob != NULL ) {
+
+          dt_exif_write_blob(exiv2_buf->blob, exiv2_buf->length, filename.c_str(), sRGBout, out_width, out_height);
+
           Exiv2::BasicIo::AutoPtr file (new Exiv2::FileIo (filename));
           Exiv2::Image::AutoPtr exiv2_image = Exiv2::ImageFactory::open(file);
           if(exiv2_image.get() != 0) {
-            //exiv2_image->readMetadata();
-            exiv2_image->setMetadata( *(exiv2_buf->image.get()) );
+            exiv2_image->readMetadata();
 
             void *iccdata;
             size_t iccdata_length;
@@ -1416,19 +1422,6 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
               Exiv2::byte *iccdata2 = (Exiv2::byte *)iccdata;
               Exiv2::DataBuf iccbuf(iccdata2, iccdata_length);
               exiv2_image->setIccProfile( iccbuf, true );
-
-              /*
-              Exiv2::ExifKey            key("Exif.Image.InterColorProfile");
-              Exiv2::ExifData::iterator pos   = exiv2_image->exifData().findKey(key);
-              bool                      found = pos != exiv2_image->exifData().end();
-              if ( iccdata ) {
-                  Exiv2::DataValue value(iccdata2,iccdata_length);
-                  if ( found ) pos->setValue(&value);
-                  else     exiv2_image->exifData().add(key,&value);
-              } else {
-                  if ( found ) exiv2_image->exifData().erase(pos);
-              }
-              */
             }
             exiv2_image->writeMetadata();
           }
@@ -1437,19 +1430,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       } catch(Exiv2::AnyError &e) {
         std::string s(e.what());
         std::cerr << "[exiv2] " << filename << ": " << s << std::endl;
-        //return 1;
       }
-
-      /*
-      void* gexiv2_buf;
-      size_t gexiv2_buf_length;
-      if( vips_image_get_blob( outimg, "gexiv2-data",
-                               &gexiv2_buf, &gexiv2_buf_length ) )
-        gexiv2_buf = NULL;
-      if( gexiv2_buf && (gexiv2_buf_length==sizeof(GExiv2Metadata)) ) {
-        gexiv2_metadata_save_file( (GExiv2Metadata*)gexiv2_buf, filename.c_str(), NULL );
-      }
-       */
     }
 
     if( outimg ) {
