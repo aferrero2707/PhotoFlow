@@ -32,9 +32,14 @@
 #include <assert.h>
 #include <math.h>
 #include <iostream>
-
-
 #include <glib.h>
+
+#include <pugixml.hpp>
+#if defined(_WIN32) && defined(EXV_UNICODE_PATH)
+  #define WIDEN(s) pugi::as_wide(s)
+#else
+  #define WIDEN(s) (s)
+#endif
 
 #include "exif_data.hh"
 #include "photoflow.hh"
@@ -419,15 +424,6 @@ static void dt_remove_exif_keys(Exiv2::ExifData &exif, const char *keys[], unsig
     }
   }
 }
-
-
-
-#if defined(_WIN32) && defined(EXV_UNICODE_PATH)
-  #define WIDEN(s) pugi::as_wide(s)
-#else
-  #define WIDEN(s) (s)
-#endif
-
 
 
 int PF::dt_exif_write_blob(uint8_t *blob, uint32_t size, const char *path, const int sRGB, const int out_width, const int out_height)
