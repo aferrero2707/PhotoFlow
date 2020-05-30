@@ -32,9 +32,14 @@
 #include <assert.h>
 #include <math.h>
 #include <iostream>
-
-
 #include <glib.h>
+
+#include <pugixml.hpp>
+#if defined(_WIN32) && defined(EXV_UNICODE_PATH)
+  #define WIDEN(s) pugi::as_wide(s)
+#else
+  #define WIDEN(s) (s)
+#endif
 
 #include "../rt/rtengine/imagedata.h"
 #include "../rt/rtengine/rawimage.h"
