@@ -49,6 +49,8 @@
 #define BENCHMARK
 #include "../rt/rtengine/StopWatch.h"
 
+extern int vips_exrsave(VipsImage *in, const char *filename, int halfFloat, void *exif, int exif_len);
+
 
 
 gint PF::image_rebuild_callback( gpointer data )
@@ -1192,6 +1194,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
     //PF_REF( image, "Image::do_export_merged(): image ref" );
 
     bool saved = false;
+    bool add_exif = false;
 
     std::vector<VipsImage*> in;
 
@@ -1331,6 +1334,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
             save(filename+".pfi", false, false);
           }
           saved = true;
+          add_exif = true;
         }
         timer.stop();
         std::cout<<"Jpeg image saved in "<<timer.elapsed()<<" s"<<std::endl;
@@ -1393,12 +1397,52 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
             save(filename+".pfi", false, false);
           }
           saved = true;
+          add_exif = true;
+        }
+      }
+    }
+
+    if( ext == "exr" ) {
+      int halfFloat = 0;
+      outimg = image;
+      std::cout<<"Image::do_export_merged(): export_opt="<<export_opt<<std::endl;
+      if( export_opt )
+        std::cout<<"Image::do_export_merged(): exr_format="<<export_opt->exr_format<<std::endl;
+      std::cout<<"Image::do_export_merged(): saving EXR file "<<filename<<"   outimg="<<outimg<<std::endl;
+      if( export_opt && export_opt->tiff_format != EXPORT_FORMAT_EXR_16f ) {
+        halfFloat = 1;
+      }
+      if( outimg ) {
+        BENCHFUN
+#ifndef NDEBUG
+        std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
+#endif
+        PF::exiv2_data_t* exiv2_buf;
+        size_t exiv2_buf_length;
+        if( PF_VIPS_IMAGE_GET_BLOB( outimg, PF_META_EXIV2_NAME, (&exiv2_buf), &exiv2_buf_length ) )
+          exiv2_buf = NULL;
+        uint8_t* blob = NULL;
+        int length = 0;
+        if(exiv2_buf) {
+          blob = exiv2_buf->blob;
+          length = exiv2_buf->length;
+        }
+        if(vips_exrsave(outimg, filename.c_str(), halfFloat, blob, length) == 0) {
+#ifndef NDEBUG
+          std::cout<<"Image::do_export_merged(): vips_exrsave() finished..."<<std::endl;
+#endif
+          if( PF::PhotoFlow::Instance().get_options().get_save_sidecar_files() != 0 &&
+              !(PF::PhotoFlow::Instance().is_plugin()) ) {
+            save(filename+".pfi", false, false);
+          }
+          saved = true;
+          export_ok = true;
         }
       }
     }
     /**/
 
-    if( saved ) {
+    if( add_exif ) {
 
       try {
         PF::exiv2_data_t* exiv2_buf;

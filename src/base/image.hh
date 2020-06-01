@@ -58,7 +58,9 @@ enum export_format_t
   EXPORT_FORMAT_JPEG,
   EXPORT_FORMAT_TIFF_8,
   EXPORT_FORMAT_TIFF_16,
-  EXPORT_FORMAT_TIFF_32f
+  EXPORT_FORMAT_TIFF_32f,
+  EXPORT_FORMAT_EXR_16f,
+  EXPORT_FORMAT_EXR_32f
 };
 
 struct ImageBuffer
@@ -79,6 +81,7 @@ struct image_export_opt_t
   int jpeg_quant_table;
   int tiff_format;
   bool tiff_compress;
+  int exr_format;
   export_size_t size;
   int width, height;
   scale_interpolation_t interpolator;

@@ -136,6 +136,8 @@ export_format(PF::EXPORT_FORMAT_JPEG)
   export_format_selector.add_entry( _("TIFF (8 bit)"), PF::EXPORT_FORMAT_TIFF_8 );
   export_format_selector.add_entry( _("TIFF (16 bit"), PF::EXPORT_FORMAT_TIFF_16 );
   export_format_selector.add_entry( _("TIFF (32 bit float)"), PF::EXPORT_FORMAT_TIFF_32f );
+  export_format_selector.add_entry( _("EXR (16 bit float)"), PF::EXPORT_FORMAT_EXR_16f );
+  export_format_selector.add_entry( _("EXR (32 bit float)"), PF::EXPORT_FORMAT_EXR_32f );
   export_format_selector.set_active(PF::EXPORT_FORMAT_JPEG);
   left_vbox.pack_start( export_format_selector, Gtk::PACK_SHRINK, 4 );
   //left_vbox.pack_start( format_type_separator, Gtk::PACK_SHRINK, 0 );
@@ -407,6 +409,15 @@ void PF::ExportDialog::on_format_changed()
     tiff_options_vbox.show();
     std::string old_filename = file_entry.get_text();
     std::string new_filename = PF::replaceFileExtension(old_filename, "tif");
+    file_entry.set_text( new_filename );
+    break;
+  }
+  case PF::EXPORT_FORMAT_EXR_16f:
+  case PF::EXPORT_FORMAT_EXR_32f: {
+    jpeg_options_vbox.hide();
+    tiff_options_vbox.hide();
+    std::string old_filename = file_entry.get_text();
+    std::string new_filename = PF::replaceFileExtension(old_filename, "exr");
     file_entry.set_text( new_filename );
     break;
   }
