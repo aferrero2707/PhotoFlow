@@ -150,6 +150,7 @@ class Image: public sigc::trackable
   ProcessorBase* resize;
   ProcessorBase* sharpen;
   ProcessorBase* convert2outprof;
+  ProcessorBase* convert2linear;
 
   void remove_from_inputs( PF::Layer* layer );
   void remove_from_inputs( PF::Layer* layer, std::list<Layer*>& list );

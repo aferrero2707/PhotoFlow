@@ -65,6 +65,13 @@
 #endif
 
 
+#ifdef VIPS_GET_BLOB_REQUIRES_CONST_VOID_POINTER
+  #define VIPS_IMAGE_GET_BLOB(a, b, c, d) vips_image_get_blob(a, b, (const void**)(c), d)
+#else
+  #define VIPS_IMAGE_GET_BLOB(a, b, c, d) vips_image_get_blob(a, b, (void**)(c), d)
+#endif
+
+
 static bool VIPS_EXR_INITIALIZED = false;
 
 // this stores our exif data as a blob.
@@ -227,7 +234,7 @@ int vips_exrsave(VipsImage *in, const char *filename, int halfFloat, void *exif,
   void *iccdata;
   size_t iccdata_length;
 
-  if( !vips_image_get_blob(in, VIPS_META_ICC_NAME, (void**)(&iccdata), &iccdata_length) ) {
+  if( !VIPS_IMAGE_GET_BLOB(in, VIPS_META_ICC_NAME, &iccdata, &iccdata_length) ) {
     cmsToneCurve *red_curve = NULL,
                  *green_curve = NULL,
                  *blue_curve = NULL;

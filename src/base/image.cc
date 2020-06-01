@@ -44,6 +44,7 @@
 #include "../operations/icc_transform.hh"
 #include "../operations/scale.hh"
 #include "../operations/sharpen.hh"
+#include "../operations/trcconv.hh"
 //#include "../operations/gmic/gmic_untiled_op.hh"
 
 #define BENCHMARK
@@ -133,6 +134,7 @@ PF::Image::Image():
   convert2outprof = new_icc_transform();
   resize = new_scale();
   sharpen = new_sharpen();
+  convert2linear = new_trcconv();
 
   //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
   //add_pipeline( VIPS_FORMAT_UCHAR, 0 );
@@ -1413,9 +1415,20 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
         halfFloat = 1;
       }
       if( outimg ) {
+        PF::TRCConvPar* lin_par =
+            dynamic_cast<PF::TRCConvPar*>( convert2linear->get_par() );
+        in.clear();
+        in.push_back( outimg );
+        lin_par->set_image_hints( image );
+        lin_par->set_format( VIPS_FORMAT_FLOAT );
+        lin_par->set_to_perceptual( false );
+        VipsImage* tempimg = lin_par->build( in, 0, NULL, NULL, level );
+        PF_UNREF( outimg, "Image::do_export_merged(): outimg unref" );
+        outimg = tempimg;
+
         BENCHFUN
 #ifndef NDEBUG
-        std::cout<<"Image::do_export_merged(): calling vips_tiffsave()..."<<std::endl;
+        std::cout<<"Image::do_export_merged(): calling vips_exrsave()..."<<std::endl;
 #endif
         PF::exiv2_data_t* exiv2_buf;
         size_t exiv2_buf_length;
