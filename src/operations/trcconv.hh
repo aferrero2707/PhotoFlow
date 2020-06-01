@@ -41,20 +41,17 @@ namespace PF
   {
     Property<bool> perceptual;
     PF::ICCProfile* profile;
-    cmsToneCurve* trc;
-    cmsBool linear_trc;
-    cmsToneCurve *perceptual_trc_inv;
+    bool linear_trc;
   public:
     TRCConvPar();
 
     bool has_intensity() { return false; }
     bool has_target_channel() { return false; }
 
+    void set_to_perceptual(bool flag) { perceptual.update(flag); }
     bool to_perceptual() { return perceptual.get(); }
     PF::ICCProfile* get_profile() { return profile; }
-    cmsToneCurve* get_trc() { return trc; }
-    cmsBool is_linear_trc() { return linear_trc; }
-    cmsToneCurve* get_linear2perceptual_curve() { return perceptual_trc_inv; }
+    bool is_linear_trc() { return linear_trc; }
 
     VipsImage* build(std::vector<VipsImage*>& in, int first,
         VipsImage* imap, VipsImage* omap, unsigned int& level);
