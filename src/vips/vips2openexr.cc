@@ -94,11 +94,7 @@ public:
   }
 
   uint32_t size;
-#if defined(_LIBCPP_VERSION)
   std::shared_ptr<uint8_t> data;
-#else
-  std::tr1::shared_ptr<uint8_t> data;
-#endif
 };
 
 
@@ -231,7 +227,7 @@ int vips_exrsave(VipsImage *in, const char *filename, int halfFloat, void *exif,
   void *iccdata;
   size_t iccdata_length;
 
-  if( !vips_image_get_blob(in, VIPS_META_ICC_NAME, (const void**)(&iccdata), &iccdata_length) ) {
+  if( !vips_image_get_blob(in, VIPS_META_ICC_NAME, (void**)(&iccdata), &iccdata_length) ) {
     cmsToneCurve *red_curve = NULL,
                  *green_curve = NULL,
                  *blue_curve = NULL;
