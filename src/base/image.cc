@@ -984,6 +984,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
       proc->get_par()->get_property( "file_name" )->set_str( filename );
     limg->set_processor( proc );
     limg->set_name( _("background") );
+    limg->set_sticky(true);
     layer_manager.get_layers().push_back( limg );
     file_name = filename;
 
@@ -1015,6 +1016,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
       proc->get_par()->get_property( "file_name" )->set_str( filename );
     limg->set_processor( proc );
     limg->set_name( "RAW loader" );
+    limg->set_sticky(true);
     layer_manager.get_layers().push_back( limg );
 
     if( !PF::PhotoFlow::Instance().is_batch() ) {
@@ -1036,6 +1038,7 @@ bool PF::Image::open( std::string filename, std::string bckname )
         PF::ProcessorBase* proc2 = PF::PhotoFlow::Instance().new_operation( "raw_developer_v2", limg2 );
         limg2->set_processor( proc2 );
         limg2->set_name( "RAW developer" );
+        limg2->set_sticky(true);
         layer_manager.get_layers().push_back( limg2 );
       }
     }

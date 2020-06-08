@@ -295,7 +295,7 @@ bool PF::LayerTreeModel::row_drop_possible_vfunc( const Gtk::TreeModel::Path& de
     PF::Layer* l = row[columns.col_layer];
     src_layer = l;
     if( l != NULL ) {
-      std::cout<<"Dragged layer: \""<<l->get_name()<<"\""<<std::endl;
+      std::cout<<"Dragged layer: \""<<l->get_name()<<"\"  sticky: "<<l->is_sticky()<<std::endl;
     }
   }
 
@@ -304,6 +304,11 @@ bool PF::LayerTreeModel::row_drop_possible_vfunc( const Gtk::TreeModel::Path& de
 
   if( src_layer->get_id() == dest_layer->get_id() )
     return false;
+
+  if( src_layer->is_sticky() ) {
+    std::cout<<"Dragged source is sticky"<<std::endl;
+    return false;
+  }
 
   // The drop operation is only possible if two conditions are fulfilled:
   // 1. all the extra inputs of the dragged layer remain below it
@@ -382,7 +387,7 @@ bool PF::LayerTreeModel::drag_data_received_vfunc( const Gtk::TreeModel::Path& d
   const_iterator dest_row_iter = this2->get_iter( dest );
   if( !(dest_row_iter) ) {
     std::cout<<"Drag end: dest_row_iter not valid"<<std::endl;
-    return Gtk::TreeStore::drag_data_received_vfunc( dest, selection_data );
+    //return Gtk::TreeStore::drag_data_received_vfunc( dest, selection_data );
   }
 
   /* Source layer
@@ -414,8 +419,12 @@ bool PF::LayerTreeModel::drag_data_received_vfunc( const Gtk::TreeModel::Path& d
   //Gtk::TreeModel::Path dest_parent = dest;
   //bool is_child = dest_parent.up();
 
-  Row row = *dest_row_iter;
-  PF::Layer* l = row[columns.col_layer];
+  Row row;
+  PF::Layer* l = NULL;
+  if(dest_row_iter) {
+    row = *dest_row_iter;
+    l = row[columns.col_layer];
+  }
   dest_layer = l;
   if( l != NULL ) {
     std::cout<<"Drag end: destination layer: \""<<l->get_name()<<"\""<<std::endl;

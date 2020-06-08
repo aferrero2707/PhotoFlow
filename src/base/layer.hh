@@ -69,6 +69,7 @@ namespace PF
     bool visible;
     bool expanded;
     bool hidden;
+    bool sticky;   // a sticky layer cannot be hidden and/or moved
 
     bool normal;
 
@@ -145,6 +146,9 @@ namespace PF
       }
     }
     
+    bool is_sticky() { return sticky; }
+    void set_sticky( bool d ) { sticky = d; }
+
     bool is_visible() { return visible; }
     void set_visible( bool d ) { visible = d; }
 

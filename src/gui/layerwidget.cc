@@ -1243,7 +1243,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
 #ifndef NDEBUG
     std::cout<<"LayerWidget::on_row_activated: activated row "<<l->get_name()<<std::endl;
 #endif
-    if( column == layer_views[page]->get_tree().get_column(LAYER_COL_NUM) && floating_tool_dialogs ) {
+    if( column == layer_views[page]->get_layer_name_column() && floating_tool_dialogs ) {
       // close all dialogs
       if( l && l->get_processor() && l->get_processor()->get_par() &&
           l->get_processor()->get_par()->get_config_ui() ) {
@@ -1251,7 +1251,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
         controls_dialog_open(l);
       }
     }
-    if( column == layer_views[page]->get_tree().get_column(IMAP_COL_NUM) ) {
+    if( column == layer_views[page]->get_imap_column() ) {
       if( !l->get_processor()->get_par()->has_intensity() )
         return;
 #ifndef NDEBUG
@@ -1301,7 +1301,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
        */
       return;
     }
-    if( column == layer_views[page]->get_tree().get_column(OMAP_COL_NUM) ) {
+    if( column == layer_views[page]->get_omap_column() ) {
       if( !l->get_processor()->get_par()->has_opacity() )
         return;
 #ifndef NDEBUG

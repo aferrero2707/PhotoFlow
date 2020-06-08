@@ -47,6 +47,7 @@ PF::Layer::Layer(uint32_t i, bool c):
   enabled = true;
   visible = true;
   hidden = false;
+  sticky = false;
   expanded = true;
 
   normal = true;
