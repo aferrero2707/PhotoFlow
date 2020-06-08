@@ -55,10 +55,15 @@ class LayerWidget;
     public:
       
       LayerTreeColumns()
-      { add(col_visible); add(col_name); add(col_omap); add(col_imap); add(col_layer); }
+      { add(col_visible); add(col_name); add(col_omap); add(col_imap); add(col_layer); add(col_vis_active); add(col_vis_mode); add(col_active); add(col_inactive);  add(col_sep);}
       
+      Gtk::TreeModelColumn<bool> col_inactive;
+      Gtk::TreeModelColumn<bool> col_active;
+      Gtk::TreeModelColumn<bool> col_vis_active;
+      Gtk::TreeModelColumn<Gtk::CellRendererMode> col_vis_mode;
       Gtk::TreeModelColumn<bool> col_visible;
       Gtk::TreeModelColumn<Glib::ustring> col_name;
+      Gtk::TreeModelColumn<Glib::ustring> col_sep;
       Gtk::TreeModelColumn<Layer*> col_layer;
       Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> > col_imap;
       Gtk::TreeModelColumn< Glib::RefPtr<Gdk::Pixbuf> > col_omap;
@@ -108,6 +113,7 @@ class LayerWidget;
     Glib::RefPtr<PF::LayerTreeModel> treeModel;
 
     LayersTreeView treeView;
+    int col_name, col_omap, col_vis, col_sep;
 
     ImageEditor* editor;
 
@@ -138,6 +144,10 @@ class LayerWidget;
     LayerTreeModel::LayerTreeColumns& get_columns() { return treeModel->columns; }
 
     Gtk::TreeView& get_tree() { return treeView; }
+
+    Gtk::TreeViewColumn* get_layer_name_column() { return get_tree().get_column(col_name); }
+    Gtk::TreeViewColumn* get_imap_column() { return NULL; }
+    Gtk::TreeViewColumn* get_omap_column() { return get_tree().get_column(col_omap); }
 
     PF::Layer* get_selected_layer();
     int get_selected_layer_id();

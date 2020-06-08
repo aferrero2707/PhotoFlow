@@ -392,25 +392,49 @@ PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
   tree_modified(true),
   updating(false)
 {
+  int icol = 0;
   treeModel = PF::LayerTreeModel::create();
   treeView.set_model(treeModel);
-  treeView.append_column_editable("V", treeModel->columns.col_visible);
   treeView.append_column("Name", treeModel->columns.col_name);
+  treeView.get_column(0)->add_attribute(*treeView.get_column_cell_renderer(0), "visible", 7);
+  col_name = icol; icol++;
   if( !map_flag ) {
     treeView.append_column("map1", treeModel->columns.col_omap);
     //treeView.append_column("map2", treeModel->columns.col_imap);
+    treeView.get_column(1)->add_attribute(*treeView.get_column_cell_renderer(1), "visible", 7);
+    col_omap = icol; icol++;
   }
+  treeView.append_column_editable("V", treeModel->columns.col_visible);
+  col_vis = icol; icol++;
+  treeView.append_column("sep", treeModel->columns.col_sep);
+  col_sep = icol; icol++;
 
   treeView.set_headers_visible(false);
 
+
+  treeView.get_column(col_vis)->add_attribute(*treeView.get_column_cell_renderer(col_vis), "sensitive", 5);
+  treeView.get_column(col_vis)->add_attribute(*treeView.get_column_cell_renderer(col_vis), "mode", 6);
+  treeView.get_column(col_vis)->add_attribute(*treeView.get_column_cell_renderer(col_vis), "visible", 7);
+  treeView.get_column(col_sep)->add_attribute(*treeView.get_column_cell_renderer(col_sep), "visible", 8);
+  treeView.get_column_cell_renderer(col_sep)->set_fixed_size(1,1);
+
   Gtk::TreeViewColumn* col;
-  col = treeView.get_column(0);
+
+  col = treeView.get_column(col_name);
   col->set_resizable(false); col->set_expand(true);
+  Gtk::CellRendererText* crt = dynamic_cast<Gtk::CellRendererText*>(treeView.get_column_cell_renderer(col_name));
+  if(crt) crt->property_ellipsize() = Pango::EllipsizeMode::ELLIPSIZE_MIDDLE;
+  //col->set_max_width(50);
+  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+  //col->set_fixed_width(80);
+
+  col = treeView.get_column(col_vis);
+  col->set_resizable(false); col->set_expand(false);
   //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
   //col->set_fixed_width(35);
 
   if( !map_flag ) {
-    col = treeView.get_column(2);
+    col = treeView.get_column(col_omap);
     col->set_resizable(false); col->set_expand(false);
     //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
     col->set_fixed_width(30);
@@ -422,11 +446,8 @@ PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
      */
   }
 
-  col = treeView.get_column(1);
-  col->set_resizable(false); col->set_expand(true);
-  //col->set_max_width(50);
-  //col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
-  //col->set_fixed_width(80);
+  std::cout<<"columns: "<<treeView.get_column(0)<<"  "<<treeView.get_column(1)<<"  "<<treeView.get_column(2)<<std::endl;
+  std::cout<<"CellRendererToggle: "<<dynamic_cast<Gtk::CellRendererToggle*>( treeView.get_column_cell_renderer(col_vis) )<<std::endl;
 
 
   treeView.enable_model_drag_source();
@@ -437,7 +458,9 @@ PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
   //treeView.set_size_request( 150, -1 );
 
   Gtk::CellRendererToggle* cell = 
-    dynamic_cast<Gtk::CellRendererToggle*>( treeView.get_column_cell_renderer(0) );
+    dynamic_cast<Gtk::CellRendererToggle*>( treeView.get_column_cell_renderer(col_vis) );
+  std::cout<<"CellRendererToggle: "<<cell<<std::endl;
+  //if(cell)
   cell->signal_toggled().connect( sigc::mem_fun(*this, &PF::LayerTree::on_cell_toggled) ); 
 
   treeModel->signal_dnd_done.
@@ -486,6 +509,7 @@ void PF::LayerTree::on_cell_toggled( const Glib::ustring& path )
     bool enabled = (*iter)[treeModel->columns.col_visible];
     PF::Layer* l = (*iter)[treeModel->columns.col_layer];
     if( !l ) return;
+    if( l->is_sticky() ) return;
 #ifndef NDEBUG
     std::cout<<"Toggled visibility of layer \""<<l->get_name()<<"\": "<<enabled<<std::endl;
 #endif
@@ -561,10 +585,18 @@ void PF::LayerTree::update_model_int( Gtk::TreeModel::Row parent_row )
   PF::Layer* parent_layer = parent_row[treeModel->columns.col_layer];
   if( !parent_layer ) return;
 
-  Gtk::TreeModel::Row row = *(treeModel->append(parent_row.children()));
+  std::cout<<"[update_model_int] parent_row.children().size() "<<parent_row.children()<<std::endl;
+
+  Gtk::TreeModel::Row row;
+  row = *(treeModel->append(parent_row.children()));
   row[treeModel->columns.col_visible] = false;
   row[treeModel->columns.col_name] = std::string( "" );
+  row[treeModel->columns.col_sep] = std::string( "" );
   row[treeModel->columns.col_layer] = NULL;
+  row[treeModel->columns.col_vis_active] = false;
+  row[treeModel->columns.col_vis_mode] = Gtk::CELL_RENDERER_MODE_INERT;
+  row[treeModel->columns.col_active] = false;
+  row[treeModel->columns.col_inactive] = true;
 
   std::list<Layer*> sublayers = parent_layer->get_sublayers();
   for( std::list<Layer*>::iterator li = sublayers.begin();
@@ -572,9 +604,18 @@ void PF::LayerTree::update_model_int( Gtk::TreeModel::Row parent_row )
     PF::Layer* l = *li;
     Gtk::TreeModel::iterator iter = treeModel->prepend(parent_row.children());
     row = *(iter);
-    row[treeModel->columns.col_visible] = l->is_enabled();
-    row[treeModel->columns.col_name] = l->get_name().substr(0,15);
+    row[treeModel->columns.col_visible] = l->is_enabled() || l->is_sticky();
+    row[treeModel->columns.col_name] = l->get_name();
     row[treeModel->columns.col_layer] = l;
+    if( l->is_sticky() ) {
+      row[treeModel->columns.col_vis_active] = false;
+      row[treeModel->columns.col_vis_mode] = Gtk::CELL_RENDERER_MODE_INERT;
+    } else {
+      row[treeModel->columns.col_vis_active] = true;
+      row[treeModel->columns.col_vis_mode] = Gtk::CELL_RENDERER_MODE_ACTIVATABLE;
+    }
+    row[treeModel->columns.col_active] = true;
+    row[treeModel->columns.col_inactive] = false;
     update_mask_icons( row, l );
 
     if( l->get_processor() && l->get_processor()->get_par() ) {
@@ -647,9 +688,19 @@ void PF::LayerTree::update_model()
 #endif
       Gtk::TreeModel::iterator iter = treeModel->prepend();
       Gtk::TreeModel::Row row = *(iter);
+
       row[treeModel->columns.col_visible] = l->is_enabled();
-      row[treeModel->columns.col_name] = l->get_name().substr(0,15);
+      row[treeModel->columns.col_name] = l->get_name();
       row[treeModel->columns.col_layer] = l;
+      if( l->is_sticky() ) {
+        row[treeModel->columns.col_vis_active] = false;
+        row[treeModel->columns.col_vis_mode] = Gtk::CELL_RENDERER_MODE_INERT;
+      } else {
+        row[treeModel->columns.col_vis_active] = true;
+        row[treeModel->columns.col_vis_mode] = Gtk::CELL_RENDERER_MODE_ACTIVATABLE;
+      }
+      row[treeModel->columns.col_active] = true;
+      row[treeModel->columns.col_inactive] = false;
       update_mask_icons( row, l );
 
       if( l->get_processor() && l->get_processor()->get_par() ) {
