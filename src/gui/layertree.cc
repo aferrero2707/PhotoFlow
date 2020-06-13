@@ -398,6 +398,7 @@ PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
   treeView.append_column("Name", treeModel->columns.col_name);
   treeView.get_column(0)->add_attribute(*treeView.get_column_cell_renderer(0), "visible", 7);
   col_name = icol; icol++;
+  col_omap = -1;
   if( !map_flag ) {
     treeView.append_column("map1", treeModel->columns.col_omap);
     //treeView.append_column("map2", treeModel->columns.col_imap);
@@ -497,6 +498,16 @@ PF::LayerTree::LayerTree( PF::ImageEditor* e, bool is_map ):
 
 PF::LayerTree::~LayerTree()
 {
+}
+
+
+void PF::LayerTree::set_layers( std::list<Layer*>* l ) {
+#ifndef NDEBUG
+  std::cout<<"[LayerTree::set_layers] "<<layers<<" -> "<<l<<std::endl;
+#endif
+  layers = l;
+  set_tree_modified();
+  update_model();
 }
 
 

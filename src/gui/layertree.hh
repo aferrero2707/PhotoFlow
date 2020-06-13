@@ -147,7 +147,7 @@ class LayerWidget;
 
     Gtk::TreeViewColumn* get_layer_name_column() { return get_tree().get_column(col_name); }
     Gtk::TreeViewColumn* get_imap_column() { return NULL; }
-    Gtk::TreeViewColumn* get_omap_column() { return get_tree().get_column(col_omap); }
+    Gtk::TreeViewColumn* get_omap_column() { return ((col_omap >= 0) ? get_tree().get_column(col_omap) : NULL); }
 
     PF::Layer* get_selected_layer();
     int get_selected_layer_id();
@@ -173,11 +173,7 @@ class LayerWidget;
     void update_model_async();
 
     std::list<Layer*>* get_layers() { return layers; }
-    void set_layers( std::list<Layer*>* l ) {
-      layers = l;
-      set_tree_modified();
-      update_model();
-    }
+    void set_layers( std::list<Layer*>* l );
 
   };
 
