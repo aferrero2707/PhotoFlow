@@ -349,12 +349,14 @@ std::pair< std::pair<int32_t,int32_t>,bool> PF::LayerManager::get_default_input_
         l->get_processor()->get_par() )
       is_map2 = l->get_processor()->get_par()->is_map();
 
+#ifndef NDEBUG
     if( is_map ) {
       std::cout<<"get_default_input_layer: l->get_name()="<<l->get_name()<<"  is_map2="<<is_map2;
       if( container ) std::cout<<"  container->get_name()="<<container->get_name();
       else std::cout<<"  container=NULL";
       std::cout<<std::endl;
     }
+#endif
 
     if( (container != NULL) && is_map && (!is_map2) ) {
       // new behavior:
@@ -369,17 +371,23 @@ std::pair< std::pair<int32_t,int32_t>,bool> PF::LayerManager::get_default_input_
       // the target is a map layer, while the current layer is not.
       // if the container layer has a user-defined input, we take it as default input for the mask.
       // Otherwise the default input of the container is taken instead.
+#ifndef NDEBUG
       std::cout<<"get_default_input_layer: container->get_inputs().empty()="<<container->get_inputs().empty()<<std::endl;
       if( !container->get_inputs().empty() )
         std::cout<<"get_default_input_layer: container->get_inputs()[0].first.first="<<container->get_inputs()[0].first.first<<std::endl;
+#endif
       if( container->get_inputs().empty() || (container->get_inputs()[0].first.first < 0) ) {
         result = get_default_input_layer( container );
         PF::Layer* rl = get_layer(result.first.first);
+#ifndef NDEBUG
         std::cout<<"get_default_input_layer: result->get_name()="<<(rl?rl->get_name():"")<<std::endl;
+#endif
       } else {
         result = container->get_inputs()[0];
         PF::Layer* rl = get_layer(result.first.first);
+#ifndef NDEBUG
         std::cout<<"get_default_input_layer: result->get_name()="<<(rl?rl->get_name():"")<<"  blended="<<result.second<<std::endl;
+#endif
       }
       break;
     }

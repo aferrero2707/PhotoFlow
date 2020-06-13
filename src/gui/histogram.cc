@@ -165,7 +165,7 @@ void PF::Histogram::on_clip_range_check_toggled()
 #ifdef GTKMM_2
 bool PF::HistogramArea::on_expose_event (GdkEventExpose * event)
 {
-  std::cout<<"HistogramArea::on_expose_event() called"<<std::endl;
+  //std::cout<<"HistogramArea::on_expose_event() called"<<std::endl;
 
   // This is where we draw on the window
   Glib::RefPtr<Gdk::Window> window = get_window();
@@ -275,15 +275,15 @@ bool PF::HistogramArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   dashes[0] = 2.0;
   dashes[1] = 2.0;
   cr->set_dash (dashes, 0.0);
-  std::cout<<"[Histogram] hist_min="<<hist_min<<" hist_max="<<hist_max<<std::endl;
+  //std::cout<<"[Histogram] hist_min="<<hist_min<<" hist_max="<<hist_max<<std::endl;
   if( hist_max > 1.01 ) {
-    std::cout<<"[Histogram] drawin line at 1"<<std::endl;
+    //std::cout<<"[Histogram] drawin line at 1"<<std::endl;
     cr->move_to( x0+x_1, y0);
     cr->line_to( x0+x_1, y0+height );
     cr->stroke();
   }
   if( hist_min < -0.01 ) {
-    std::cout<<"[Histogram] drawin line at 0"<<std::endl;
+    //std::cout<<"[Histogram] drawin line at 0"<<std::endl;
     cr->move_to( x0+x_0, y0);
     cr->line_to( x0+x_0, y0+height );
     cr->stroke();

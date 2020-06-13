@@ -1241,9 +1241,12 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
     PF::Layer* l = (*iter)[columns.col_layer];
     if( !l ) return;
 #ifndef NDEBUG
-    std::cout<<"LayerWidget::on_row_activated: activated row "<<l->get_name()<<std::endl;
+    std::cout<<"[LayerWidget::on_row_activated] activated row "<<l->get_name()<<std::endl;
 #endif
     if( column == layer_views[page]->get_layer_name_column() && floating_tool_dialogs ) {
+#ifndef NDEBUG
+    std::cout<<"[LayerWidget::on_row_activated]  get_layer_name_column"<<std::endl;
+#endif
       // close all dialogs
       if( l && l->get_processor() && l->get_processor()->get_par() &&
           l->get_processor()->get_par()->get_config_ui() ) {
@@ -1255,7 +1258,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       if( !l->get_processor()->get_par()->has_intensity() )
         return;
 #ifndef NDEBUG
-      std::cout<<"Activated IMap column of row "<<l->get_name()<<std::endl;
+      std::cout<<"[LayerWidget::on_row_activated] Activated IMap column of row "<<l->get_name()<<std::endl;
 #endif
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       
@@ -1305,7 +1308,7 @@ void PF::LayerWidget::on_row_activated( const Gtk::TreeModel::Path& path, Gtk::T
       if( !l->get_processor()->get_par()->has_opacity() )
         return;
 #ifndef NDEBUG
-      std::cout<<"Activated OMap column of row "<<l->get_name()<<std::endl;
+      std::cout<<"[LayerWidget::on_row_activated] Activated OMap column of row "<<l->get_name()<<std::endl;
 #endif
       //Gtk::ScrolledWindow* frame = new Gtk::ScrolledWindow();
       

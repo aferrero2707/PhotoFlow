@@ -86,7 +86,7 @@ namespace PF
       float* line = NULL;
       float val;
       //if( profile->get_trc_type()!=PF_TRC_LINEAR ) line = new float[line_size];
-      if( true && r->left==0 && r->top==0 ) {
+      if( false && r->left==0 && r->top==0 ) {
         std::cout<<"ImageToMapProc::render(): profile="<<profile<<std::endl;
         //std::cout<<"ImageToMapProc::render(): profile->has_colorants="<<profile->has_colorants<<std::endl;
         std::cout<<"ImageToMapProc::render(): colorspace="<<convert_colorspace(ireg[in_first]->im->Type)<<std::endl;
