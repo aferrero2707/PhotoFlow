@@ -135,6 +135,8 @@ namespace PF {
     PF::ICCProfile* icc_data;
     bool is_linear;
 
+    bool points_move_vertically;
+
     int grabbed_point;
 
     bool button_pressed;
@@ -160,6 +162,11 @@ namespace PF {
     {
       icc_data = d;
       if( curve_area ) curve_area->set_icc_data( icc_data );
+    }
+
+    void set_points_move_vertically(bool b)
+    {
+      points_move_vertically = b;
     }
 
     virtual void reset() {

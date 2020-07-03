@@ -54,7 +54,8 @@ PF::CurveEditor::CurveEditor( OperationConfigGUI* dialog, std::string pname,
     curve_area( ca ),
     grabbed_point( -1 ),
     button_pressed( false ),
-    inhibit_value_changed( false )
+    inhibit_value_changed( false ),
+    points_move_vertically(false)
 {
 #ifdef GTKMM_3
   xadjustment = Gtk::Adjustment::create( xmax, xmin, xmax, 1, 10, 0 );
@@ -348,11 +349,11 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
           py = curve_area->perceptual2linear( py );
         }
 #ifdef GTKMM_2
-        xadjustment.set_value( px*(xmax-xmin)+xmin );
+        if(!points_move_vertically) xadjustment.set_value( px*(xmax-xmin)+xmin );
         yadjustment.set_value( py*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-        xadjustment->set_value( px*(xmax-xmin)+xmin );
+        if(!points_move_vertically) xadjustment->set_value( px*(xmax-xmin)+xmin );
         yadjustment->set_value( py*(ymax-ymin)+ymin );
 #endif
         inhibit_value_changed = false;
@@ -448,16 +449,17 @@ bool PF::CurveEditor::handle_curve_events(GdkEvent* event)
       lpy = curve_area->linear2perceptual( py );
     }
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if(points_move_vertically) lpx = curve.get_point( grabbed_point ).first;
     if( curve.set_point( grabbed_point, lpx, lpy ) ) {
       curve.update_spline();
       curve_area->queue_draw();
       inhibit_value_changed = true;
 #ifdef GTKMM_2
-      xadjustment.set_value( px*(xmax-xmin)+xmin );
+      if(!points_move_vertically) xadjustment.set_value( px*(xmax-xmin)+xmin );
       yadjustment.set_value( py*(ymax-ymin)+ymin );
 #endif
 #ifdef GTKMM_3
-      xadjustment->set_value( px*(xmax-xmin)+xmin );
+      if(!points_move_vertically) xadjustment->set_value( px*(xmax-xmin)+xmin );
       yadjustment->set_value( py*(ymax-ymin)+ymin );
 #endif
       inhibit_value_changed = false;
@@ -495,12 +497,12 @@ bool PF::CurveEditor::on_key_press_or_release_event(GdkEventKey* event)
       pt.second -= delta;
       result = true;
     }
-    if( event->keyval == GDK_KEY_Left ) {
+    if( event->keyval == GDK_KEY_Left && !points_move_vertically) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       pt.first -= delta;
       result = true;
     }
-    if( event->keyval == GDK_KEY_Right ) {
+    if( event->keyval == GDK_KEY_Right && !points_move_vertically ) {
       std::cout<<"Pressed "<<event->keyval<<" key"<<std::endl;
       pt.first += delta;
       result = true;
