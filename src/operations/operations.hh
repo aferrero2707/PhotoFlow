@@ -79,6 +79,7 @@ namespace PF
   ProcessorBase* new_lensfun();
   ProcessorBase* new_tone_mapping();
   ProcessorBase* new_tone_mapping_v2();
+  ProcessorBase* new_tone_mapping_v3();
   ProcessorBase* new_local_contrast();
   ProcessorBase* new_local_contrast_v2();
   ProcessorBase* new_clahe();

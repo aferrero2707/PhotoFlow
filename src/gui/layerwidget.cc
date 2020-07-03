@@ -765,6 +765,7 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   ADD_TOOL_ITEM( _("Relight"), "relight" );
   ADD_TOOL_ITEM( _("Shadows/Highlights"), "shadows_highlights_v2" );
   ADD_TOOL_ITEM( _("Tone mapping"), "tone_mapping_v2" );
+  ADD_TOOL_ITEM( _("Tone mapping V3"), "tone_mapping_v3" );
   ADD_TOOL_ITEM( _("Dynamic range compressor"), "dynamic_range_compressor_v2" );
   ADD_TOOL_ITEM( _("Shadows/Highlights old"), "shadows_highlights" );
   ADD_TOOL_ITEM( _("Tone mapping old"), "tone_mapping" );

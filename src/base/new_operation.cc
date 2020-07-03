@@ -37,7 +37,7 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 {
   PF::ProcessorBase* processor = NULL;
 
-  std::cout<<"PF::new_operation: creating operation of type \""<<op_type<<"\""<<std::endl;
+  //std::cout<<"PF::new_operation: creating operation of type \""<<op_type<<"\""<<std::endl;
 
   if( op_type == "imageread" ) { 
 
@@ -303,6 +303,9 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
   } else if( op_type == "tone_mapping_v2" ) {
     processor = new_tone_mapping_v2();
 
+  } else if( op_type == "tone_mapping_v3" ) {
+    processor = new_tone_mapping_v3();
+
   } else if( op_type == "local_contrast" ) {
     processor = new_local_contrast();
 
@@ -328,6 +331,7 @@ PF::ProcessorBase* PF::new_operation( std::string op_type, PF::Layer* current_la
 
   if( !processor ) {
     // Try with G'MIC
+    std::cout<<"PF::new_operation: no tool of type \""<<op_type<<"\" found"<<std::endl;
     std::cout<<"PF::new_gmic_operation( "<<op_type<<" );"<<std::endl;
     processor = PF::new_gmic_operation( op_type );
   }

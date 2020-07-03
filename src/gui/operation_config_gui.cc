@@ -78,6 +78,7 @@
 #include "operations/wavdec_config.hh"
 #include "operations/tone_mapping_config.hh"
 #include "operations/tone_mapping_config_v2.hh"
+#include "operations/tone_mapping_config_v3.hh"
 #include "operations/local_contrast_config.hh"
 #include "operations/local_contrast_config_v2.hh"
 #ifdef HAVE_OCIO
@@ -1427,6 +1428,9 @@ PF::ProcessorBase* PF::new_operation_with_gui( std::string op_type, PF::Layer* c
 
   } else if( op_type == "tone_mapping_v2" ) {
     dialog = new PF::ToneMappingConfigGUI_V2( current_layer );
+
+  } else if( op_type == "tone_mapping_v3" ) {
+    dialog = new PF::ToneMappingConfigGUI_V3( current_layer );
 
   } else if( op_type == "local_contrast" ) {
     dialog = new PF::LocalContrastConfigGUI( current_layer );
