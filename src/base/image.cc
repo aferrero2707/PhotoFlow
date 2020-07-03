@@ -1276,6 +1276,7 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       }
     }
 
+
     if( iccprof ) {
       PF::ICCTransformPar* tr_par =
           dynamic_cast<PF::ICCTransformPar*>( convert2outprof->get_par() );
@@ -1294,9 +1295,13 @@ void PF::Image::do_export_merged( std::string filename, image_export_opt_t* expo
       image = out;
       print_embedded_profile( image );
     }
+
     int out_width = image->Xsize;
     int out_height = image->Ysize;
-    int sRGBout = ((iccprof->get_profile_type() == PF::PROF_TYPE_sRGB) && (iccprof->get_trc_type() == PF::PF_TRC_STANDARD)) ? 1 : 0;
+
+    int sRGBout = 1;
+    iccprof = PF::get_icc_profile(image);
+    if(iccprof && ((iccprof->get_profile_type() != PF::PROF_TYPE_sRGB) || (iccprof->get_trc_type() != PF::PF_TRC_STANDARD))) sRGBout = 0;
 
 
     if( ext == "jpg" || ext == "jpeg" ) {
