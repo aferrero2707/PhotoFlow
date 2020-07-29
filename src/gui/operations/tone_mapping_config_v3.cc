@@ -391,9 +391,9 @@ PF::ToneMappingConfigGUI_V3::ToneMappingConfigGUI_V3( PF::Layer* layer ):
           LE_frame( _("contrast curve") ),
           exposure_slider( this, "exposure", _("exposure (EV)"), 0, 0, 10, 0.1, 0.5, 1 ),
           latitude_slider( this, "latitude", _("latitude"), 0, 0, 100, 1, 5, 100 ),
-          contrast_slider( this, "slope", _("mid-tones"), 0, -100, 100, 5, 20, 100 ),
-          slope2_slider( this, "slope2", _("highlights"), 0, -100, 100, 5, 20, 100 ),
-          slope3_slider( this, "slope3", _("shadows"), 0, -100, 100, 5, 20, 100 ),
+          contrast_slider( this, "slope", _("mid-tones slope"), 0, -100, 100, 5, 20, 100 ),
+          slope2_slider( this, "slope2", _("highlights slope"), 0, -100, 100, 5, 20, 100 ),
+          slope3_slider( this, "slope3", _("shadows slope"), 0, -100, 100, 5, 20, 100 ),
           white_point_slider( this, "white_point", _("white level (EV)"), 0, 0, 10, 0.1, 0.5, 1 ),
           lumi_blend_frac_slider( this, "lumi_blend_frac", _("lumi blend"), 1, 0, 100, 1, 5, 100 ),
           tc_frame( _("tone curve") ),
@@ -429,14 +429,14 @@ PF::ToneMappingConfigGUI_V3::ToneMappingConfigGUI_V3( PF::Layer* layer ):
   tc_box.pack_start( latitude_slider, Gtk::PACK_SHRINK );
 
   slope2_slider.set_conversion_functions(contrast_slider_to_prop, cotrast_prop_to_slider);
-  contrast_box.pack_start( slope2_slider, Gtk::PACK_SHRINK );
+  tc_box.pack_start( slope2_slider, Gtk::PACK_SHRINK );
   contrast_slider.set_conversion_functions(contrast_slider_to_prop, cotrast_prop_to_slider);
-  contrast_box.pack_start( contrast_slider, Gtk::PACK_SHRINK );
+  tc_box.pack_start( contrast_slider, Gtk::PACK_SHRINK );
   slope3_slider.set_conversion_functions(contrast_slider_to_prop, cotrast_prop_to_slider);
-  contrast_box.pack_start( slope3_slider, Gtk::PACK_SHRINK );
-  contrast_frame.add(contrast_box);
+  tc_box.pack_start( slope3_slider, Gtk::PACK_SHRINK );
 
-  tc_box.pack_start( contrast_frame, Gtk::PACK_SHRINK );
+  contrast_frame.add(contrast_box);
+  //tc_box.pack_start( contrast_frame, Gtk::PACK_SHRINK );
   //tc_frame.add( tc_box );
   //controlsBox.pack_start( tc_box, Gtk::PACK_SHRINK, 0 );
   notebook.append_page(tc_box, _("Tone mapping"));
@@ -452,7 +452,7 @@ PF::ToneMappingConfigGUI_V3::ToneMappingConfigGUI_V3( PF::Layer* layer ):
   local_contrast_box.pack_start( local_contrast_slider, Gtk::PACK_SHRINK );
   local_contrast_box.pack_start( local_contrast_radius_slider, Gtk::PACK_SHRINK );
   local_contrast_box.pack_start( local_contrast_threshold_slider, Gtk::PACK_SHRINK );
-  notebook.append_page(local_contrast_box, _("Local contrast"));
+  //notebook.append_page(local_contrast_box, _("Local contrast"));
 
   //controlsBox.pack_start( local_contrast_frame, Gtk::PACK_SHRINK, 2 );
 

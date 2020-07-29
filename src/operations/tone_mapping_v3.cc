@@ -412,6 +412,7 @@ PF::ToneMappingParV3::ToneMappingParV3():
 void PF::ToneMappingParV3::pre_build( rendermode_t mode )
 {
   float mid_grey = 0.1845;
+  std::cout<<"[ToneMappingParV3::pre_build] slopes: "<<get_slope()<<", "<<get_slope2()<<", "<<get_slope3()<<std::endl;
   tm.init(get_slope(), get_slope2(), get_slope3(), get_white_point(), get_exposure(), get_latitude());
 }
 
@@ -546,7 +547,7 @@ VipsImage* PF::ToneMappingParV3::build(std::vector<VipsImage*>& in, int first,
   std::cout<<"ToneMappingParV3::build(): radius="<<lc_radius.get()<<std::endl;
 #endif
 
-  for(int gi = 0; gi < 10; gi++) {
+  for(int gi = 0; gi < 0; gi++) {
     PF::GuidedFilterPar* guidedpar = dynamic_cast<PF::GuidedFilterPar*>( guided[gi]->get_par() );
     if( !guidedpar ) break;
     if( rv[gi] == 0 ) break;
@@ -611,7 +612,7 @@ VipsImage* PF::ToneMappingParV3::build(std::vector<VipsImage*>& in, int first,
 
 
   in2.clear();
-  in2.push_back(smoothed);
+  //in2.push_back(smoothed);
   in2.push_back(logimg);
   in2.push_back(in[0]);
 
@@ -665,6 +666,20 @@ public:
 
     TM_V3& tm = opar->get_tm();
 
+    VipsRegion* sreg = NULL;
+    VipsRegion* lreg = NULL;
+    VipsRegion* inreg = NULL;
+    if(n == 3) {
+      sreg = ireg[0];
+      lreg = ireg[1];
+      inreg = ireg[2];
+    }
+    if(n == 2) {
+      lreg = ireg[0];
+      inreg = ireg[1];
+    }
+    if(!inreg) return;
+
     float* lin;
     float* sin;
     float* pin;
@@ -697,9 +712,9 @@ public:
     //std::cout<<"log(gamma+1) / gamma_scale = "<<log(gamma+1) / gamma_scale<<std::endl;
 
     for( y = 0; y < height; y++ ) {
-      sin = (float*)VIPS_REGION_ADDR( ireg[0], r->left, r->top + y );
-      lin = (float*)VIPS_REGION_ADDR( ireg[1], r->left, r->top + y );
-      pin = (float*)VIPS_REGION_ADDR( ireg[2], r->left, r->top + y );
+      sin = (sreg != NULL) ? (float*)VIPS_REGION_ADDR( sreg, r->left, r->top + y ) : NULL;
+      lin = (float*)VIPS_REGION_ADDR( lreg, r->left, r->top + y );
+      pin = (float*)VIPS_REGION_ADDR( inreg, r->left, r->top + y );
       pout = (float*)VIPS_REGION_ADDR( oreg, r->left, r->top + y );
 
       for( x = 0, x0 = 0; x < line_size; x+=3, x0++ ) {
@@ -717,11 +732,11 @@ public:
         RGB[1] = pin[x+1];
         RGB[2] = pin[x+2];
         RGB[3] = lin[x0];
-        RGB[4] = sin[x0];
+        RGB[4] = (sin != NULL) ? sin[x0] : lin[x0];
         if( RGB[0] < 0 ) RGB[0] = 0;
         if( RGB[1] < 0 ) RGB[1] = 0;
         if( RGB[2] < 0 ) RGB[2] = 0;
-        D = (lin[x0] - sin[x0]);
+        D = (sin != NULL) ? (lin[x0] - sin[x0]) : 0.0f;
         //std::cout<<"[TM] [x,y]="<<x0+r->left<<","<<y+r->top<<"  l1: "<<lin[x0]<<"  l2: "<<sin[x0]<<"  delta="<<D<<std::endl;
 
         float min = MIN3(RGB[0], RGB[1], RGB[2]);

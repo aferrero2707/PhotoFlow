@@ -765,7 +765,6 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   ADD_TOOL_ITEM( _("Relight"), "relight" );
   ADD_TOOL_ITEM( _("Shadows/Highlights"), "shadows_highlights_v2" );
   ADD_TOOL_ITEM( _("Tone mapping"), "tone_mapping_v2" );
-  ADD_TOOL_ITEM( _("Tone mapping V3"), "tone_mapping_v3" );
   ADD_TOOL_ITEM( _("Dynamic range compressor"), "dynamic_range_compressor_v2" );
   ADD_TOOL_ITEM( _("Shadows/Highlights old"), "shadows_highlights" );
   ADD_TOOL_ITEM( _("Tone mapping old"), "tone_mapping" );
@@ -881,7 +880,6 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   ADD_TOOL_ITEM( _("Draw"), "draw" );
 
 
-
   item = new Gtk::MenuItem(_("misc"));
   tools_menu.append( *item );
   submenu = new Gtk::Menu;
@@ -891,6 +889,13 @@ PF::LayerWidget::LayerWidget( Image* img, ImageEditor* ed ):
   ADD_TOOL_ITEM( _("Channel selector"), "clone" );
   ADD_TOOL_ITEM( _("Buffer layer"), "buffer" );
   ADD_TOOL_ITEM( _("Digital watermark"), "gmic_watermark_fourier" );
+
+
+  item = new Gtk::MenuItem(_("experimental"));
+  tools_menu.append( *item );
+  submenu = new Gtk::Menu;
+  item->set_submenu( *submenu );
+  ADD_TOOL_ITEM( _("Tone mapping V3"), "tone_mapping_v3" );
 
   tools_menu.show_all();
 
