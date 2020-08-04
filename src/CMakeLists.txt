@@ -337,6 +337,7 @@ SET(BUILD_DOCS OFF CACHE BOOL "Build the documentation (mainly, using Doxygen)."
 SET(BUILD_FUZZERS OFF CACHE BOOL "Build the fuzzing tree." FORCE)
 SET(USE_XMLLINT OFF CACHE BOOL "" FORCE)
 SET(WITH_OPENMP OFF CACHE BOOL "" FORCE)
+SET(USE_BUNDLED_ZLIB ON CACHE BOOL "" FORCE)
 message( "BEFORE add_subdirectory(external/rawspeed)" )
 add_subdirectory(external/rawspeed)
 message( "AFTER add_subdirectory(external/rawspeed)" )
