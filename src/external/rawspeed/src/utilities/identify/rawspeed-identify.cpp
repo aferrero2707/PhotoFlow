@@ -17,11 +17,11 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "RawSpeed-API.h" // for RawImage, RawImageData, iPoint2D, ImageMet...
+#include "RawSpeed-API.h" // for RawImage, RawImageData, iPoint2D, CameraMe...
 
 #include <array>      // for array
 #include <cstddef>    // for size_t
-#include <cstdint>    // for uint16_t
+#include <cstdint>    // for uint32_t, uint8_t, uint16_t
 #include <cstdio>     // for fprintf, stdout, stderr
 #include <memory>     // for unique_ptr, make_unique
 #include <string>     // for string, operator+, basic_string
@@ -34,10 +34,6 @@
 #endif
 
 #include <Windows.h>
-#endif
-
-#ifdef HAVE_OPENMP
-#include <omp.h>
 #endif
 
 namespace rawspeed {
@@ -119,8 +115,6 @@ using rawspeed::CameraMetaData;
 using rawspeed::FileReader;
 using rawspeed::RawParser;
 using rawspeed::RawImage;
-using rawspeed::uchar8;
-using rawspeed::uint32;
 using rawspeed::iPoint2D;
 using rawspeed::TYPE_USHORT16;
 using rawspeed::TYPE_FLOAT32;
@@ -160,17 +154,17 @@ int main(int argc, char* argv[]) { // NOLINT
 #else
     // turn the locale ANSI encoded string into UTF-8 so that FileReader can
     // turn it into UTF-16 later
-    int size = MultiByteToWideChar(CP_ACP, 0, argv[1], -1, NULL, 0);
+    int size = MultiByteToWideChar(CP_ACP, 0, argv[1], -1, nullptr, 0);
     std::wstring wImageFileName;
     wImageFileName.resize(size);
     MultiByteToWideChar(CP_ACP, 0, argv[1], -1, &wImageFileName[0], size);
-    size = WideCharToMultiByte(CP_UTF8, 0, &wImageFileName[0], -1, NULL, 0,
-                               NULL, NULL);
+    size = WideCharToMultiByte(CP_UTF8, 0, &wImageFileName[0], -1, nullptr, 0,
+                               nullptr, nullptr);
     std::string _imageFileName;
     _imageFileName.resize(size);
     char* imageFileName = &_imageFileName[0];
     WideCharToMultiByte(CP_UTF8, 0, &wImageFileName[0], -1, imageFileName, size,
-                        NULL, NULL);
+                        nullptr, nullptr);
 #endif
 
     fprintf(stderr, "Loading file: \"%s\"\n", imageFileName);
@@ -210,7 +204,7 @@ int main(int argc, char* argv[]) { // NOLINT
     r = d->mRaw;
 
     const auto errors = r->getErrors();
-    for (auto& error : errors)
+    for (const auto& error : errors)
       fprintf(stderr, "WARNING: [rawspeed] %s\n", error.c_str());
 
     fprintf(stdout, "blackLevel: %d\n", r->blackLevel);
@@ -225,11 +219,11 @@ int main(int argc, char* argv[]) { // NOLINT
             r->metadata.wbCoeffs[3]);
 
     fprintf(stdout, "isCFA: %d\n", r->isCFA);
-    uint32 filters = r->cfa.getDcrawFilter();
+    uint32_t filters = r->cfa.getDcrawFilter();
     fprintf(stdout, "filters: %d (0x%x)\n", filters, filters);
-    const uint32 bpp = r->getBpp();
+    const uint32_t bpp = r->getBpp();
     fprintf(stdout, "bpp: %d\n", bpp);
-    const uint32 cpp = r->getCpp();
+    const uint32_t cpp = r->getCpp();
     fprintf(stdout, "cpp: %d\n", cpp);
     fprintf(stdout, "dataType: %d\n", r->getDataType());
 
@@ -253,7 +247,7 @@ int main(int argc, char* argv[]) { // NOLINT
 #pragma omp parallel for default(none) OMPFIRSTPRIVATECLAUSE(dimUncropped, raw, bpp) schedule(static) reduction(+ : sum)
 #endif
     for (int y = 0; y < dimUncropped.y; ++y) {
-      uchar8* const data = (*raw)->getDataUncropped(0, y);
+      uint8_t* const data = (*raw)->getDataUncropped(0, y);
 
       for (unsigned x = 0; x < bpp * dimUncropped.x; ++x)
         sum += static_cast<double>(data[x]);

@@ -20,30 +20,19 @@
 
 #pragma once
 
-#include "rawspeedconfig.h"
-
 #include <algorithm>        // IWYU pragma: keep
 #include <cassert>          // for assert
 #include <climits>          // for CHAR_BIT
-#include <cstdint>          // for uintptr_t
+#include <cstdint>          // for uint8_t, uint16_t, uintptr_t
 #include <cstring>          // for size_t, memcpy
 #include <initializer_list> // for initializer_list
 #include <string>           // for string
-#include <type_traits>      // for enable_if, is_pointer, is_signed, is_uns...
+#include <type_traits>      // for enable_if, is_unsigned, is_pointer, make...
 #include <vector>           // for vector
 
 extern "C" int rawspeed_get_number_of_processor_cores();
 
 namespace rawspeed {
-
-using char8 = signed char;
-using uchar8 = unsigned char;
-using uint32 = unsigned int;
-using int64 = long long;
-using uint64 = unsigned long long;
-using int32 = signed int;
-using ushort16 = unsigned short;
-using short16 = signed short;
 
 enum DEBUG_PRIO {
   DEBUG_PRIO_ERROR = 0x10,
@@ -55,9 +44,8 @@ enum DEBUG_PRIO {
 void writeLog(DEBUG_PRIO priority, const char* format, ...)
     __attribute__((format(printf, 2, 3)));
 
-inline void copyPixels(uchar8* dest, int dstPitch, const uchar8* src,
-                       int srcPitch, int rowSize, int height)
-{
+inline void copyPixels(uint8_t* dest, int dstPitch, const uint8_t* src,
+                       int srcPitch, int rowSize, int height) {
   if (height == 1 || (dstPitch == srcPitch && srcPitch == rowSize))
     memcpy(dest, src, static_cast<size_t>(rowSize) * height);
   else {
@@ -122,32 +110,32 @@ inline constexpr __attribute__((const)) bool isAligned(
 template <typename T, typename T2>
 bool __attribute__((pure))
 isIn(const T value, const std::initializer_list<T2>& list) {
-  for (auto t : list)
-    if (t == value)
-      return true;
-  return false;
+  return std::any_of(list.begin(), list.end(),
+                     [value](const T2& t) { return t == value; });
+}
+
+template <class T> inline constexpr unsigned bitwidth(T unused = {}) {
+  return CHAR_BIT * sizeof(T);
 }
 
 // Clamps the given unsigned value to the range 0 .. 2^n-1, with n <= 16
 template <class T>
-inline constexpr __attribute__((const)) ushort16 clampBits(
+inline constexpr __attribute__((const)) uint16_t clampBits(
     T value, unsigned int nBits,
     typename std::enable_if<std::is_unsigned<T>::value>::type* /*unused*/ =
         nullptr) {
-  // We expect to produce ushort16.
+  // We expect to produce uint16_t.
   assert(nBits <= 16);
-  // Check that the clamp is not a no-op. Not of ushort16 to 16 bits e.g.
+  // Check that the clamp is not a no-op. Not of uint16_t to 16 bits e.g.
   // (Well, not really, if we are called from clampBits<signed>, it's ok..).
-  constexpr auto BitWidthOfT = CHAR_BIT * sizeof(T);
-  (void)BitWidthOfT;
-  assert(BitWidthOfT > nBits); // If nBits >= BitWidthOfT, then shift is UB.
+  assert(bitwidth<T>() > nBits); // If nBits >= bitwidth, then shift is UB.
   const T maxVal = (T(1) << nBits) - T(1);
   return std::min(value, maxVal);
 }
 
 // Clamps the given signed value to the range 0 .. 2^n-1, with n <= 16
 template <typename T>
-inline constexpr ushort16 __attribute__((const))
+inline constexpr uint16_t __attribute__((const))
 clampBits(T value, unsigned int nBits,
           typename std::enable_if<std::is_signed<T>::value>::type* /*unused*/ =
               nullptr) {
@@ -156,6 +144,41 @@ clampBits(T value, unsigned int nBits,
   // Now, let the unsigned case clamp to the upper limit.
   using UnsignedT = typename std::make_unsigned<T>::type;
   return clampBits<UnsignedT>(value, nBits);
+}
+
+template <typename T>
+inline constexpr bool __attribute__((const))
+isIntN(T value, unsigned int nBits,
+       typename std::enable_if<std::is_arithmetic<T>::value>::type* /*unused*/ =
+           nullptr) {
+  assert(nBits < bitwidth<T>() && "Check must not be tautological.");
+  using UnsignedT = typename std::make_unsigned<T>::type;
+  const auto highBits = static_cast<UnsignedT>(value) >> nBits;
+  return highBits == 0;
+}
+
+template <class T>
+inline constexpr __attribute__((const)) T extractHighBits(
+    T value, unsigned nBits, unsigned effectiveBitwidth = bitwidth<T>(),
+    typename std::enable_if<std::is_unsigned<T>::value>::type* /*unused*/ =
+        nullptr) {
+  assert(effectiveBitwidth <= bitwidth<T>());
+  assert(nBits <= effectiveBitwidth);
+  auto numLowBitsToSkip = effectiveBitwidth - nBits;
+  assert(numLowBitsToSkip < bitwidth<T>());
+  return value >> numLowBitsToSkip;
+}
+
+template <typename T>
+inline constexpr typename std::make_signed<T>::type __attribute__((const))
+signExtend(
+    T value, unsigned int nBits,
+    typename std::enable_if<std::is_unsigned<T>::value>::type* /*unused*/ =
+        nullptr) {
+  assert(nBits != 0 && "Only valid for non-zero bit count.");
+  const T SpareSignBits = bitwidth<T>() - nBits;
+  using SignedT = typename std::make_signed<T>::type;
+  return static_cast<SignedT>(value << SpareSignBits) >> SpareSignBits;
 }
 
 // Trim both leading and trailing spaces from the string

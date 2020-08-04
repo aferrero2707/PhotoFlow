@@ -20,12 +20,12 @@
 
 #pragma once
 
-#include "common/Common.h"                // for uint32, ushort16
 #include "common/RawImage.h"              // for RawImage
 #include "decoders/AbstractTiffDecoder.h" // for AbstractTiffDecoder
 #include "decoders/RawDecoder.h"          // for RawDecoder::RawSlice
 #include "tiff/TiffIFD.h"                 // for TiffIFD (ptr only), TiffRo...
 #include <array>                          // for array
+#include <cstdint>                        // for uint8_t, uint16_t, uint32_t
 #include <string>                         // for string
 #include <utility>                        // for move
 #include <vector>                         // for vector
@@ -54,22 +54,23 @@ protected:
 
 private:
   int getDecoderVersion() const override { return 5; }
-  bool D100IsCompressed(uint32 offset);
-  bool NEFIsUncompressed(const TiffIFD* raw);
-  bool NEFIsUncompressedRGB(const TiffIFD* raw);
+  bool D100IsCompressed(uint32_t offset);
+  static bool NEFIsUncompressed(const TiffIFD* raw);
+  static bool NEFIsUncompressedRGB(const TiffIFD* raw);
   void DecodeUncompressed();
   void DecodeD100Uncompressed();
   void DecodeSNefUncompressed();
-  void readCoolpixSplitRaw(const ByteStream& input, const iPoint2D& size,
+  void readCoolpixSplitRaw(ByteStream input, const iPoint2D& size,
                            const iPoint2D& offset, int inputPitch);
-  void DecodeNikonSNef(ByteStream* input, uint32 w, uint32 h);
+  void DecodeNikonSNef(const ByteStream& input);
   std::string getMode();
   std::string getExtendedMode(const std::string &mode);
-  std::vector<ushort16> gammaCurve(double pwr, double ts, int mode, int imax);
+  static std::vector<uint16_t> gammaCurve(double pwr, double ts, int mode,
+                                          int imax);
 
   // We use this for the D50 and D2X whacky WB "encryption"
-  static const std::array<uchar8, 256> serialmap;
-  static const std::array<uchar8, 256> keymap;
+  static const std::array<uint8_t, 256> serialmap;
+  static const std::array<uint8_t, 256> keymap;
 };
 
 } // namespace rawspeed

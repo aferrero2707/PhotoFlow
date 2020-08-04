@@ -23,24 +23,21 @@
 
 #ifdef HAVE_JPEG
 
-#include "decompressors/JpegDecompressor.h"
-
-#include "common/Common.h"                // for uchar8, uint32, ushort16
+#include "common/Array2DRef.h"            // for Array2DRef
 #include "common/Memory.h"                // for alignedFree, alignedMalloc...
 #include "common/Point.h"                 // for iPoint2D
 #include "decoders/RawDecoderException.h" // for ThrowRDE
-#include "io/ByteStream.h"                // for ByteStream
-#include <algorithm>                      // for min
-#include <cstdio>                         // for size_t
-#include <jpeglib.h>                      // for jpeg
-#include <memory>                         // for unique_ptr
-#include <vector>                         // for vector
+#include "decompressors/JpegDecompressor.h"
+#include "io/ByteStream.h" // for ByteStream
+#include <algorithm>       // for min
+#include <array>           // for array
+#include <jpeglib.h>       // for jpeg_destroy_decompress
+#include <memory>          // for unique_ptr
 
 #ifndef HAVE_JPEG_MEM_SRC
 #include "io/IOException.h" // for ThrowIOE
 #endif
 
-using std::vector;
 using std::unique_ptr;
 using std::min;
 
@@ -113,11 +110,9 @@ struct JpegDecompressor::JpegDecompressStruct : jpeg_decompress_struct {
   ~JpegDecompressStruct() { jpeg_destroy_decompress(this); }
 };
 
-void JpegDecompressor::decode(uint32 offX,
-                              uint32 offY) { /* Each slice is a JPEG image */
+void JpegDecompressor::decode(uint32_t offX,
+                              uint32_t offY) { /* Each slice is a JPEG image */
   struct JpegDecompressStruct dinfo;
-
-  vector<JSAMPROW> buffer(1);
 
   const auto size = input.getRemainSize();
 
@@ -131,16 +126,19 @@ void JpegDecompressor::decode(uint32 offX,
     ThrowRDE("Component count doesn't match");
   int row_stride = dinfo.output_width * dinfo.output_components;
 
-  unique_ptr<uchar8[], // NOLINT
+  unique_ptr<uint8_t[], // NOLINT
              decltype(&alignedFree)>
       complete_buffer(
-          alignedMallocArray<uchar8, 16>(dinfo.output_height, row_stride),
+          alignedMallocArray<uint8_t, 16>(dinfo.output_height, row_stride),
           &alignedFree);
+
+  const Array2DRef<uint8_t> tmp(&complete_buffer[0],
+                                dinfo.output_components * dinfo.output_width,
+                                dinfo.output_height, row_stride);
+
   while (dinfo.output_scanline < dinfo.output_height) {
-    buffer[0] = static_cast<JSAMPROW>(
-        &complete_buffer[static_cast<size_t>(dinfo.output_scanline) *
-                         row_stride]);
-    if (0 == jpeg_read_scanlines(&dinfo, &buffer[0], 1))
+    auto* rowOut = static_cast<JSAMPROW>(&tmp(dinfo.output_scanline, 0));
+    if (0 == jpeg_read_scanlines(&dinfo, &rowOut, 1))
       ThrowRDE("JPEG Error while decompressing image.");
   }
   jpeg_finish_decompress(&dinfo);
@@ -148,16 +146,11 @@ void JpegDecompressor::decode(uint32 offX,
   // Now the image is decoded, and we copy the image data
   int copy_w = min(mRaw->dim.x - offX, dinfo.output_width);
   int copy_h = min(mRaw->dim.y - offY, dinfo.output_height);
-  for (int y = 0; y < copy_h; y++) {
-    uchar8* src = &complete_buffer[static_cast<size_t>(row_stride) * y];
-    auto* dst = reinterpret_cast<ushort16*>(mRaw->getData(offX, y + offY));
-    for (int x = 0; x < copy_w; x++) {
-      for (int c = 0; c < dinfo.output_components; c++) {
-        *dst = *src;
-        src++;
-        dst++;
-      }
-    }
+
+  const Array2DRef<uint16_t> out(mRaw->getU16DataAsUncroppedArray2DRef());
+  for (int row = 0; row < copy_h; row++) {
+    for (int col = 0; col < dinfo.output_components * copy_w; col++)
+      out(row + offY, dinfo.output_components * offX + col) = tmp(row, col);
   }
 }
 

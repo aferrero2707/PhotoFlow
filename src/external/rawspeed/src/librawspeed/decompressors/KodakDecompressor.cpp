@@ -21,6 +21,8 @@
 */
 
 #include "decompressors/KodakDecompressor.h"
+#include "common/Array2DRef.h"            // for Array2DRef
+#include "common/Common.h"                // for extractHighBits, isIntN
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
@@ -29,6 +31,7 @@
 #include <algorithm>                      // for min
 #include <array>                          // for array
 #include <cassert>                        // for assert
+#include <cstdint>                        // for uint32_t, uint8_t, uint16_t
 #include <utility>                        // for move
 
 namespace rawspeed {
@@ -40,7 +43,7 @@ KodakDecompressor::KodakDecompressor(const RawImage& img, ByteStream bs,
     : mRaw(img), input(std::move(bs)), bps(bps_),
       uncorrectedRawValues(uncorrectedRawValues_) {
   if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
-      mRaw->getBpp() != 2)
+      mRaw->getBpp() != sizeof(uint16_t))
     ThrowRDE("Unexpected component count / data type");
 
   if (mRaw->dim.x == 0 || mRaw->dim.y == 0 || mRaw->dim.x % 4 != 0 ||
@@ -57,7 +60,7 @@ KodakDecompressor::KodakDecompressor(const RawImage& img, ByteStream bs,
 }
 
 KodakDecompressor::segment
-KodakDecompressor::decodeSegment(const uint32 bsize) {
+KodakDecompressor::decodeSegment(const uint32_t bsize) {
   assert(bsize > 0);
   assert(bsize % 4 == 0);
   assert(bsize <= segment_size);
@@ -71,69 +74,67 @@ KodakDecompressor::decodeSegment(const uint32 bsize) {
                                             out.begin() + bsize);
 #endif
 
-  std::array<uchar8, 2 * segment_size> blen;
-  uint64 bitbuf = 0;
-  uint32 bits = 0;
+  std::array<uint8_t, 2 * segment_size> blen;
+  uint64_t bitbuf = 0;
+  uint32_t bits = 0;
 
-  for (uint32 i = 0; i < bsize; i += 2) {
+  for (uint32_t i = 0; i < bsize; i += 2) {
     // One byte per two pixels
     blen[i] = input.peekByte() & 15;
     blen[i + 1] = input.getByte() >> 4;
   }
   if ((bsize & 7) == 4) {
-    bitbuf = (static_cast<uint64>(input.getByte())) << 8UL;
+    bitbuf = (static_cast<uint64_t>(input.getByte())) << 8UL;
     bitbuf += (static_cast<int>(input.getByte()));
     bits = 16;
   }
-  for (uint32 i = 0; i < bsize; i++) {
-    uint32 len = blen[i];
+  for (uint32_t i = 0; i < bsize; i++) {
+    uint32_t len = blen[i];
     assert(len < 16);
 
     if (bits < len) {
-      for (uint32 j = 0; j < 32; j += 8) {
-        bitbuf += static_cast<long long>(static_cast<int>(input.getByte()))
+      for (uint32_t j = 0; j < 32; j += 8) {
+        bitbuf += static_cast<int64_t>(static_cast<int>(input.getByte()))
                   << (bits + (j ^ 8));
       }
       bits += 32;
     }
 
-    uint32 diff = static_cast<uint32>(bitbuf) & (0xffff >> (16 - len));
+    uint32_t diff = static_cast<uint32_t>(bitbuf) &
+                    extractHighBits(0xffffU, len, /*effectiveBitwidth=*/16);
     bitbuf >>= len;
     bits -= len;
 
-    out[i] = len != 0 ? HuffmanTable::signExtended(diff, len) : int(diff);
+    out[i] = len != 0 ? HuffmanTable::extend(diff, len) : int(diff);
   }
 
   return out;
 }
 
 void KodakDecompressor::decompress() {
-  uchar8* data = mRaw->getData();
-  uint32 pitch = mRaw->pitch;
+  const Array2DRef<uint16_t> out(mRaw->getU16DataAsUncroppedArray2DRef());
 
-  uint32 random = 0;
-  for (auto y = 0; y < mRaw->dim.y; y++) {
-    auto* dest = reinterpret_cast<ushort16*>(&data[y * pitch]);
-
-    for (auto x = 0; x < mRaw->dim.x; x += segment_size) {
-      const uint32 len = std::min(segment_size, mRaw->dim.x - x);
+  uint32_t random = 0;
+  for (int row = 0; row < out.height; row++) {
+    for (int col = 0; col < out.width;) {
+      const int len = std::min(segment_size, mRaw->dim.x - col);
 
       const segment buf = decodeSegment(len);
 
       std::array<int, 2> pred;
       pred.fill(0);
 
-      for (uint32 i = 0; i < len; i++) {
+      for (int i = 0; i < len; ++i, ++col) {
         pred[i & 1] += buf[i];
 
         int value = pred[i & 1];
-        if (unsigned(value) >= (1U << bps))
+        if (!isIntN(value, bps))
           ThrowRDE("Value out of bounds %d (bps = %i)", value, bps);
 
         if (uncorrectedRawValues)
-          dest[x + i] = value;
+          out(row, col) = value;
         else
-          mRaw->setWithLookUp(value, reinterpret_cast<uchar8*>(&dest[x + i]),
+          mRaw->setWithLookUp(value, reinterpret_cast<uint8_t*>(&out(row, col)),
                               &random);
       }
     }

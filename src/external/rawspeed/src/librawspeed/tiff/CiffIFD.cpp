@@ -21,13 +21,13 @@
 */
 
 #include "tiff/CiffIFD.h"
-#include "common/Common.h"               // for isIn, uint32, ushort16
+#include "common/Common.h"               // for isIn
 #include "common/NORangesSet.h"          // for set
 #include "io/ByteStream.h"               // for ByteStream
 #include "parsers/CiffParserException.h" // for ThrowCPE
 #include <cassert>                       // for assert
 #include <initializer_list>              // for initializer_list
-#include <map>                           // for map, _Rb_tree_const_iterator
+#include <map>                           // for map, operator!=, _Rb_tree_c...
 #include <memory>                        // for unique_ptr, make_unique
 #include <string>                        // for operator==, string
 #include <utility>                       // for move, pair
@@ -81,14 +81,14 @@ CiffIFD::CiffIFD(CiffIFD* const parent_, ByteStream directory)
     ThrowCPE("CIFF directory is too short.");
 
   directory.setPosition(directory.getSize() - 4);
-  const uint32 valueDataSize = directory.getU32();
+  const uint32_t valueDataSize = directory.getU32();
 
   // The Recursion. Directory entries store data here. May contain IFDs.
   directory.setPosition(0);
   const ByteStream valueData(directory.getStream(valueDataSize));
 
   // count of the Directory entries in this IFD
-  const ushort16 entryCount = directory.getU16();
+  const uint16_t entryCount = directory.getU16();
 
   // each entry is 10 bytes
   ByteStream dirEntries(directory.getStream(entryCount, 10));
@@ -100,7 +100,7 @@ CiffIFD::CiffIFD(CiffIFD* const parent_, ByteStream directory)
   // In that area, no two entries may overlap.
   NORangesSet<Buffer> valueDatas;
 
-  for (uint32 i = 0; i < entryCount; i++)
+  for (uint32_t i = 0; i < entryCount; i++)
     parseIFDEntry(&valueDatas, &valueData, &dirEntries);
 
   assert(valueDatas.size() <= entryCount);
@@ -175,7 +175,7 @@ std::vector<const CiffIFD*> CiffIFD::getIFDsWithTagIf(CiffTag tag,
 
   const auto found = mEntry.find(tag);
   if (found != mEntry.end()) {
-    const auto entry = found->second.get();
+    const auto* const entry = found->second.get();
     if (f(entry))
       matchingIFDs.push_back(this);
   }
@@ -195,7 +195,7 @@ const CiffEntry* CiffIFD::getEntryRecursiveIf(CiffTag tag,
 
   const auto found = mEntry.find(tag);
   if (found != mEntry.end()) {
-    const auto entry = found->second.get();
+    const auto* const entry = found->second.get();
     if (f(entry))
       return entry;
   }
@@ -216,7 +216,7 @@ vector<const CiffIFD*> CiffIFD::getIFDsWithTag(CiffTag tag) const {
 }
 
 vector<const CiffIFD*> CiffIFD::getIFDsWithTagWhere(CiffTag tag,
-                                                    uint32 isValue) const {
+                                                    uint32_t isValue) const {
   assert(isIn(tag, CiffTagsWeCareAbout));
   return getIFDsWithTagIf(tag, [&isValue](const CiffEntry* entry) {
     return entry->isInt() && entry->getU32() == isValue;
@@ -243,12 +243,10 @@ bool __attribute__((pure)) CiffIFD::hasEntryRecursive(CiffTag tag) const {
   if (mEntry.count(tag) > 0)
     return true;
 
-  for (const auto& i : mSubIFD) {
-    if (i->hasEntryRecursive(tag))
-      return true;
-  }
-
-  return false;
+  return std::any_of(mSubIFD.begin(), mSubIFD.end(),
+                     [tag](const std::unique_ptr<const CiffIFD>& i) {
+                       return i->hasEntryRecursive(tag);
+                     });
 }
 
 const CiffEntry* CiffIFD::getEntry(CiffTag tag) const {
@@ -268,7 +266,7 @@ const CiffEntry* CiffIFD::getEntryRecursive(CiffTag tag) const {
 }
 
 const CiffEntry* CiffIFD::getEntryRecursiveWhere(CiffTag tag,
-                                                 uint32 isValue) const {
+                                                 uint32_t isValue) const {
   assert(isIn(tag, CiffTagsWeCareAbout));
   return getEntryRecursiveIf(tag, [&isValue](const CiffEntry* entry) {
     return entry->isInt() && entry->getU32() == isValue;

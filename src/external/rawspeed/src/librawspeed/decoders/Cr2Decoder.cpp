@@ -21,13 +21,12 @@
 */
 
 #include "decoders/Cr2Decoder.h"
-#include "common/Common.h"                     // for uint32, ushort16
 #include "common/Point.h"                      // for iPoint2D
 #include "common/RawspeedException.h"          // for RawspeedException
 #include "decoders/RawDecoderException.h"      // for ThrowRDE
 #include "decompressors/Cr2Decompressor.h"     // for Cr2Decompressor, Cr2S...
 #include "interpolators/Cr2sRawInterpolator.h" // for Cr2sRawInterpolator
-#include "io/Buffer.h"                         // for Buffer
+#include "io/Buffer.h"                         // for Buffer, DataBuffer
 #include "io/ByteStream.h"                     // for ByteStream
 #include "io/Endianness.h"                     // for Endianness, Endiannes...
 #include "metadata/Camera.h"                   // for Hints
@@ -37,6 +36,7 @@
 #include "tiff/TiffTag.h"                      // for TiffTag, CANONCOLORDATA
 #include <array>                               // for array
 #include <cassert>                             // for assert
+#include <cstdint>                             // for uint32_t, uint16_t
 #include <memory>                              // for unique_ptr, allocator...
 #include <string>                              // for operator==, string
 #include <vector>                              // for vector
@@ -59,19 +59,19 @@ bool Cr2Decoder::isAppropriateDecoder(const TiffRootIFD* rootIFD,
 }
 
 RawImage Cr2Decoder::decodeOldFormat() {
-  uint32 offset = 0;
+  uint32_t offset = 0;
   if (mRootIFD->getEntryRecursive(CANON_RAW_DATA_OFFSET))
     offset = mRootIFD->getEntryRecursive(CANON_RAW_DATA_OFFSET)->getU32();
   else {
     // D2000 is oh so special...
-    auto ifd = mRootIFD->getIFDWithTag(CFAPATTERN);
+    const auto* ifd = mRootIFD->getIFDWithTag(CFAPATTERN);
     if (! ifd->hasEntry(STRIPOFFSETS))
       ThrowRDE("Couldn't find offset");
 
     offset = ifd->getEntry(STRIPOFFSETS)->getU32();
   }
 
-  ByteStream b(mFile, offset, Endianness::big);
+  ByteStream b(DataBuffer(mFile->getSubView(offset), Endianness::big));
   b.skipBytes(41);
   int height = b.getU16();
   int width = b.getU16();
@@ -86,7 +86,8 @@ RawImage Cr2Decoder::decodeOldFormat() {
 
   mRaw->dim = {width, height};
 
-  const ByteStream bs(mFile->getSubView(offset), 0);
+  const ByteStream bs(
+      DataBuffer(mFile->getSubView(offset), Endianness::little));
 
   Cr2Decompressor l(bs, mRaw);
   mRaw->createData();
@@ -118,8 +119,8 @@ RawImage Cr2Decoder::decodeNewFormat() {
 
   assert(sensorInfoE != nullptr);
 
-  const ushort16 width = sensorInfoE->getU16(1);
-  const ushort16 height = sensorInfoE->getU16(2);
+  const uint16_t width = sensorInfoE->getU16(1);
+  const uint16_t height = sensorInfoE->getU16(2);
   mRaw->dim = {width, height};
 
   int componentsPerPixel = 1;
@@ -163,10 +164,11 @@ RawImage Cr2Decoder::decodeNewFormat() {
     }
   } // EOS 20D, EOS-1D Mark II, let Cr2Decompressor guess.
 
-  const uint32 offset = raw->getEntry(STRIPOFFSETS)->getU32();
-  const uint32 count = raw->getEntry(STRIPBYTECOUNTS)->getU32();
+  const uint32_t offset = raw->getEntry(STRIPOFFSETS)->getU32();
+  const uint32_t count = raw->getEntry(STRIPBYTECOUNTS)->getU32();
 
-  const ByteStream bs(mFile->getSubView(offset, count), 0);
+  const ByteStream bs(
+      DataBuffer(mFile->getSubView(offset, count), Endianness::little));
 
   Cr2Decompressor d(bs, mRaw);
   mRaw->createData();
@@ -232,7 +234,7 @@ void Cr2Decoder::decodeMetaDataInternal(const CameraMetaData* meta) {
         TiffEntry *shot_info = mRootIFD->getEntryRecursive(CANONSHOTINFO);
         TiffEntry *g9_wb = mRootIFD->getEntryRecursive(CANONPOWERSHOTG9WB);
 
-        ushort16 wb_index = shot_info->getU16(7);
+        uint16_t wb_index = shot_info->getU16(7);
         int wb_offset = (wb_index < 18) ? "012347800000005896"[wb_index]-'0' : 0;
         wb_offset = wb_offset*8 + 2;
 
@@ -268,7 +270,7 @@ int Cr2Decoder::getHue() {
   if (!mRootIFD->hasEntryRecursive(static_cast<TiffTag>(0x10))) {
     return 0;
   }
-  uint32 model_id =
+  uint32_t model_id =
       mRootIFD->getEntryRecursive(static_cast<TiffTag>(0x10))->getU32();
   if (model_id >= 0x80000281 || model_id == 0x80000218 || (hints.has("force_new_sraw_hue")))
     return ((mRaw->metadata.subsampling.y * mRaw->metadata.subsampling.x) - 1) >> 1;
@@ -283,7 +285,7 @@ void Cr2Decoder::sRawInterpolate() {
     ThrowRDE("Unable to locate WB info.");
 
   // Offset to sRaw coefficients used to reconstruct uncorrected RGB data.
-  uint32 offset = 78;
+  uint32_t offset = 78;
 
   std::array<int, 3> sraw_coeffs;
 

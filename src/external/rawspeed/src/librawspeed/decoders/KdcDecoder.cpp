@@ -20,19 +20,22 @@
 */
 
 #include "decoders/KdcDecoder.h"
-#include "common/Common.h"                          // for uint32, ushort16
-#include "common/NORangesSet.h"                     // for NORangesSet
+#include "common/NORangesSet.h"                     // for set
 #include "common/Point.h"                           // for iPoint2D
-#include "decoders/RawDecoderException.h"           // for RawDecoderExcept...
+#include "decoders/RawDecoderException.h"           // for ThrowRDE
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
-#include "io/Buffer.h"                              // for Buffer
-#include "io/Endianness.h"                          // for Endianness
+#include "io/Buffer.h"                              // for Buffer, DataBuffer
+#include "io/ByteStream.h"                          // for ByteStream
+#include "io/Endianness.h"                          // for Endianness, Endi...
 #include "metadata/Camera.h"                        // for Hints
 #include "parsers/TiffParserException.h"            // for TiffParserException
 #include "tiff/TiffEntry.h"                         // for TiffEntry
-#include "tiff/TiffIFD.h"                           // for TiffRootIFD
-#include "tiff/TiffTag.h"                           // for TiffTag::COMPRES...
+#include "tiff/TiffIFD.h"                           // for TiffRootIFD, TiffID
+#include "tiff/TiffTag.h"                           // for KODAK_IFD2, COMP...
+#include <array>                                    // for array
 #include <cassert>                                  // for assert
+#include <cstdint>                                  // for uint32_t, uint64_t
+#include <limits>                                   // for numeric_limits
 #include <memory>                                   // for unique_ptr
 #include <string>                                   // for operator==, string
 
@@ -54,8 +57,8 @@ Buffer KdcDecoder::getInputBuffer() {
     ThrowRDE("Couldn't find the KDC offset");
 
   assert(offset != nullptr);
-  uint64 off = uint64(offset->getU32(4)) + uint64(offset->getU32(12));
-  if (off > std::numeric_limits<uint32>::max())
+  uint64_t off = uint64_t(offset->getU32(4)) + uint64_t(offset->getU32(12));
+  if (off > std::numeric_limits<uint32_t>::max())
     ThrowRDE("Offset is too large.");
 
   // Offset hardcoding gotten from dcraw
@@ -95,8 +98,8 @@ RawImage KdcDecoder::decodeRawInternal() {
   TiffRootIFD kodakifd(nullptr, &ifds, ifdoffset->getRootIfdData(),
                        ifdoffset->getU32());
 
-  uint32 width = 0;
-  uint32 height = 0;
+  uint32_t width = 0;
+  uint32_t height = 0;
   TiffEntry* ew = kodakifd.getEntryRecursive(KODAK_KDC_SENSOR_WIDTH);
   TiffEntry* eh = kodakifd.getEntryRecursive(KODAK_KDC_SENSOR_HEIGHT);
   if (ew && eh) {
@@ -111,7 +114,8 @@ RawImage KdcDecoder::decodeRawInternal() {
 
   mRaw->createData();
 
-  UncompressedDecompressor u(inputBuffer, mRaw);
+  UncompressedDecompressor u(
+      ByteStream(DataBuffer(inputBuffer, Endianness::little)), mRaw);
 
   u.decode12BitRaw<Endianness::big>(width, height);
 
@@ -148,12 +152,12 @@ void KdcDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
     TiffEntry *wb = mRootIFD->getEntryRecursive(KODAKWB);
     if (wb->count == 734 || wb->count == 1502) {
       mRaw->metadata.wbCoeffs[0] =
-          static_cast<float>(((static_cast<ushort16>(wb->getByte(148))) << 8) |
+          static_cast<float>(((static_cast<uint16_t>(wb->getByte(148))) << 8) |
                              wb->getByte(149)) /
           256.0F;
       mRaw->metadata.wbCoeffs[1] = 1.0F;
       mRaw->metadata.wbCoeffs[2] =
-          static_cast<float>(((static_cast<ushort16>(wb->getByte(150))) << 8) |
+          static_cast<float>(((static_cast<uint16_t>(wb->getByte(150))) << 8) |
                              wb->getByte(151)) /
           256.0F;
     }

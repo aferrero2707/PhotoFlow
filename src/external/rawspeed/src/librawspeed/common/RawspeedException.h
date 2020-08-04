@@ -21,31 +21,29 @@
 
 #pragma once
 
-#include "rawspeedconfig.h"
+#include "rawspeedconfig.h" // for RAWSPEED_NOINLINE, RAWSPEED_UNLIKELY_FUN...
 
-#include "common/Common.h"
-#include <array>
-#include <cstdarg>
-#include <cstdio>
-#include <stdexcept>
-#include <string>
+#include "common/Common.h" // for writeLog, DEBUG_PRIO_EXTRA
+#include <array>           // for array
+#include <cstdarg>         // for va_end, va_list, va_start
+#include <cstdio>          // for vsnprintf, size_t
+#include <stdexcept>       // for runtime_error
 
 namespace rawspeed {
 
 template <typename T>
-[[noreturn]] void __attribute__((noreturn, noinline, format(printf, 1, 2)))
-ThrowException(const char* fmt, ...) {
+[[noreturn]] void RAWSPEED_UNLIKELY_FUNCTION RAWSPEED_NOINLINE
+    __attribute__((noreturn, format(printf, 1, 2)))
+    ThrowException(const char* fmt, ...) {
   static constexpr size_t bufSize = 8192;
 #if defined(HAVE_CXX_THREAD_LOCAL)
   static thread_local std::array<char, bufSize> buf;
 #elif defined(HAVE_GCC_THREAD_LOCAL)
-  //static __thread char buf[bufSize];
-  static __thread std::array<char, bufSize> buf;
+  static __thread char buf[bufSize];
 #else
 #pragma message                                                                \
     "Don't have thread-local-storage! Exception text may be garbled if used multithreaded"
-  //static char buf[bufSize];
-  static std::array<char, bufSize> buf;
+  static char buf[bufSize];
 #endif
 
   va_list val;
@@ -58,15 +56,15 @@ ThrowException(const char* fmt, ...) {
 
 class RawspeedException : public std::runtime_error {
 private:
-  void log(const char* msg) {
+  static void RAWSPEED_UNLIKELY_FUNCTION RAWSPEED_NOINLINE
+  log(const char* msg) {
     writeLog(DEBUG_PRIO_EXTRA, "EXCEPTION: %s", msg);
   }
 
 public:
-  explicit RawspeedException(const std::string& msg) : std::runtime_error(msg) {
-    log(msg.c_str());
-  }
-  explicit RawspeedException(const char* msg) : std::runtime_error(msg) {
+  explicit RAWSPEED_UNLIKELY_FUNCTION RAWSPEED_NOINLINE
+  RawspeedException(const char* msg)
+      : std::runtime_error(msg) {
     log(msg);
   }
 };

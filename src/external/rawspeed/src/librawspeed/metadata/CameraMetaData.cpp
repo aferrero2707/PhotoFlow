@@ -19,7 +19,7 @@
 */
 
 #include "metadata/CameraMetaData.h"
-#include "common/Common.h"                    // for uint32, trimSpaces
+#include "common/Common.h"                    // for uint32_t, trimSpaces
 #include "metadata/Camera.h"                  // for Camera
 #include "metadata/CameraMetadataException.h" // for ThrowCME
 #include <algorithm>                          // for find_if
@@ -51,8 +51,8 @@ CameraMetaData::CameraMetaData(const char *docname) {
 
   if (!result) {
     ThrowCME(
-        "XML Document could not be parsed successfully. Error was: %s in %s",
-        result.description(), doc.child("node").attribute("attr").value());
+        "XML Document \"%s\" could not be parsed successfully. Error was: %s in %s",
+        docname, result.description(), doc.child("node").attribute("attr").value());
   }
 
   for (xml_node camera : doc.child("Cameras").children("Camera")) {
@@ -108,13 +108,13 @@ bool CameraMetaData::hasCamera(const string& make, const string& model,
 }
 
 const Camera* __attribute__((pure))
-CameraMetaData::getChdkCamera(uint32 filesize) const {
+CameraMetaData::getChdkCamera(uint32_t filesize) const {
   auto camera = chdkCameras.find(filesize);
   return camera == chdkCameras.end() ? nullptr : camera->second;
 }
 
 bool __attribute__((pure))
-CameraMetaData::hasChdkCamera(uint32 filesize) const {
+CameraMetaData::hasChdkCamera(uint32_t filesize) const {
   return chdkCameras.end() != chdkCameras.find(filesize);
 }
 

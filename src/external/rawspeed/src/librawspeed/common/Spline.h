@@ -21,15 +21,15 @@
 
 #pragma once
 
-#include "common/Common.h" // for ushort16
-#include "common/Point.h"  // for iPoint2D
-#include <algorithm>       // for max, min, adjacent_find, for_each
-#include <cassert>         // for assert
-#include <functional>      // for greater_equal
-#include <limits>          // for numeric_limits
-#include <memory>          // for allocator_traits<>::value_type
-#include <type_traits>     // for is_floating_point, enable_if_t, is_arithm...
-#include <vector>          // for vector
+#include "common/Point.h" // for iPoint2D
+#include <algorithm>      // for max, min, adjacent_find, for_each
+#include <cassert>        // for assert
+#include <cstdint>        // for uint16_t
+#include <functional>     // for greater_equal
+#include <limits>         // for numeric_limits
+#include <memory>         // for allocator_traits<>::value_type
+#include <type_traits>    // for is_floating_point, enable_if_t, is_arithmetic
+#include <vector>         // for vector
 
 namespace rawspeed {
 
@@ -37,7 +37,7 @@ namespace rawspeed {
 // See https://en.wikipedia.org/wiki/Spline_(mathematics)
 // section "Algorithm for computing natural cubic splines"
 
-template <typename T = ushort16,
+template <typename T = uint16_t,
           typename = std::enable_if_t<std::is_arithmetic<T>::value>>
 class Spline final {
 public:
@@ -97,7 +97,7 @@ private:
       s.d = (sn.c - s.c) / (3. * h[i]);
     }
 
-    // The last segment is nonsensical, and was only used to temporairly store
+    // The last segment is nonsensical, and was only used to temporarily store
     // the a and c to simplify calculations, so drop that 'segment' now
     segments.pop_back();
 

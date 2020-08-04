@@ -20,17 +20,19 @@
 */
 
 #include "decoders/ThreefrDecoder.h"
-#include "common/Common.h"                        // for uint32
 #include "common/Point.h"                         // for iPoint2D
 #include "decoders/RawDecoderException.h"         // for ThrowRDE
 #include "decompressors/HasselbladDecompressor.h" // for HasselbladDecompre...
-#include "io/Buffer.h"                            // for Buffer
+#include "io/Buffer.h"                            // for Buffer, DataBuffer
 #include "io/ByteStream.h"                        // for ByteStream
+#include "io/Endianness.h"                        // for Endianness, Endian...
 #include "metadata/Camera.h"                      // for Hints
 #include "metadata/ColorFilterArray.h"            // for CFA_GREEN, CFA_BLUE
 #include "tiff/TiffEntry.h"                       // for TiffEntry
 #include "tiff/TiffIFD.h"                         // for TiffRootIFD, TiffIFD
 #include "tiff/TiffTag.h"                         // for ASSHOTNEUTRAL, STR...
+#include <array>                                  // for array
+#include <cstdint>                                // for uint32_t
 #include <memory>                                 // for unique_ptr
 #include <string>                                 // for operator==, string
 
@@ -49,13 +51,13 @@ bool ThreefrDecoder::isAppropriateDecoder(const TiffRootIFD* rootIFD,
 }
 
 RawImage ThreefrDecoder::decodeRawInternal() {
-  auto raw = mRootIFD->getIFDWithTag(STRIPOFFSETS, 1);
-  uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
-  uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
-  uint32 off = raw->getEntry(STRIPOFFSETS)->getU32();
+  const auto* raw = mRootIFD->getIFDWithTag(STRIPOFFSETS, 1);
+  uint32_t width = raw->getEntry(IMAGEWIDTH)->getU32();
+  uint32_t height = raw->getEntry(IMAGELENGTH)->getU32();
+  uint32_t off = raw->getEntry(STRIPOFFSETS)->getU32();
   // STRIPBYTECOUNTS is strange/invalid for the existing 3FR samples...
 
-  const ByteStream bs(mFile->getSubView(off), 0);
+  const ByteStream bs(DataBuffer(mFile->getSubView(off), Endianness::little));
 
   mRaw->dim = iPoint2D(width, height);
 
@@ -73,11 +75,23 @@ void ThreefrDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
 
   setMetaData(meta, "", 0);
 
+  if (mRootIFD->hasEntryRecursive(BLACKLEVEL)) {
+    TiffEntry* bl = mRootIFD->getEntryRecursive(BLACKLEVEL);
+    if (bl->count == 1)
+      mRaw->blackLevel = bl->getFloat();
+  }
+
+  if (mRootIFD->hasEntryRecursive(WHITELEVEL)) {
+    TiffEntry* wl = mRootIFD->getEntryRecursive(WHITELEVEL);
+    if (wl->count == 1)
+      mRaw->whitePoint = wl->getFloat();
+  }
+
   // Fetch the white balance
   if (mRootIFD->hasEntryRecursive(ASSHOTNEUTRAL)) {
     TiffEntry *wb = mRootIFD->getEntryRecursive(ASSHOTNEUTRAL);
     if (wb->count == 3) {
-      for (uint32 i = 0; i < 3; i++) {
+      for (uint32_t i = 0; i < 3; i++) {
         const float div = wb->getFloat(i);
         if (div == 0.0F)
           ThrowRDE("Can not decode WB, multiplier is zero/");

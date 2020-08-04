@@ -22,17 +22,17 @@
 
 #pragma once
 
+#include "rawspeedconfig.h"             // for RAWSPEED_NOINLINE, RAWSPEED_...
 #include "common/RawspeedException.h"   // for ThrowExceptionHelper
-#include "parsers/RawParserException.h" // for ThrowRPE, RawParserException
-#include <string>
+#include "parsers/RawParserException.h" // for RawParserException
 
 namespace rawspeed {
 
 class CiffParserException final : public RawParserException {
 public:
-  explicit CiffParserException(const std::string& msg)
+  explicit RAWSPEED_UNLIKELY_FUNCTION RAWSPEED_NOINLINE
+  CiffParserException(const char* msg)
       : RawParserException(msg) {}
-  explicit CiffParserException(const char* msg) : RawParserException(msg) {}
 };
 
 #define ThrowCPE(...)                                                          \

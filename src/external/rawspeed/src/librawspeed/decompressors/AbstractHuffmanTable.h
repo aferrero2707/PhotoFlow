@@ -21,12 +21,13 @@
 
 #pragma once
 
-#include "common/Common.h"                // for uchar8, uint32, ushort16
+#include "common/Common.h"                // for extractHighBits
 #include "decoders/RawDecoderException.h" // for ThrowRDE
 #include "io/Buffer.h"                    // for Buffer
-#include <algorithm>                      // for copy, adjacent_find, max_e...
+#include <algorithm>                      // for equal, copy, fill, max
 #include <cassert>                        // for assert
 #include <cstddef>                        // for size_t
+#include <cstdint>                        // for uint8_t, uint32_t, uint16_t
 #include <functional>                     // for less, less_equal
 #include <iterator>                       // for back_insert_iterator, back...
 #include <numeric>                        // for accumulate
@@ -37,12 +38,12 @@ namespace rawspeed {
 class AbstractHuffmanTable {
 public:
   struct CodeSymbol final {
-    ushort16 code;   // the code (bit pattern found inside the stream)
-    uchar8 code_len; // the code length in bits, valid values are 1..16
+    uint16_t code;    // the code (bit pattern found inside the stream)
+    uint8_t code_len; // the code length in bits, valid values are 1..16
 
     CodeSymbol() = default;
 
-    CodeSymbol(ushort16 code_, uchar8 code_len_)
+    CodeSymbol(uint16_t code_, uint8_t code_len_)
         : code(code_), code_len(code_len_) {
       assert(code_len > 0);
       assert(code_len <= 16);
@@ -53,19 +54,28 @@ public:
                                  const CodeSymbol& partial) {
       assert(partial.code_len <= symbol.code_len);
 
-      auto getNHighBits = [](const CodeSymbol& s, unsigned bits) -> ushort16 {
-        const auto shift = s.code_len - bits;
-        return s.code >> shift;
-      };
-
-      const auto s0 = getNHighBits(symbol, partial.code_len);
+      const auto s0 = extractHighBits(symbol.code, partial.code_len,
+                                      /*effectiveBitwidth=*/symbol.code_len);
       const auto s1 = partial.code;
 
       return s0 == s1;
     }
   };
 
+  void verifyCodeSymbolsAreValidDiffLenghts() const {
+    for (const auto cValue : codeValues) {
+      if (cValue <= 16)
+        continue;
+      ThrowRDE("Corrupt Huffman code: difference length %u longer than 16",
+               cValue);
+    }
+    assert(maxCodePlusDiffLength() <= 32U);
+  }
+
 protected:
+  bool fullDecode = true;
+  bool fixDNGBug16 = false;
+
   inline size_t __attribute__((pure)) maxCodePlusDiffLength() const {
     return nCodesPerLength.size() - 1 +
            *(std::max_element(codeValues.cbegin(), codeValues.cend()));
@@ -84,13 +94,26 @@ protected:
   // 2. This is the actual huffman encoded data, i.e. the 'alphabet'. Each value
   // is the number of bits following the code that encode the difference to the
   // last pixel. Valid values are in the range 0..16.
-  // signExtended() is used to decode the difference bits to a signed int.
-  std::vector<uchar8> codeValues; // index is just sequential number
+  // extend() is used to decode the difference bits to a signed int.
+  std::vector<uint8_t> codeValues; // index is just sequential number
+
+  void setup(bool fullDecode_, bool fixDNGBug16_) {
+    this->fullDecode = fullDecode_;
+    this->fixDNGBug16 = fixDNGBug16_;
+
+    if (fullDecode) {
+      // If we are in a full-decoding mode, we will be interpreting code values
+      // as bit length of the following difference, which incurs hard limit
+      // of 16 (since we want to need to read at most 32 bits max for a symbol
+      // plus difference). Though we could enforce it per-code instead?
+      verifyCodeSymbolsAreValidDiffLenghts();
+    }
+  }
 
   static void VerifyCodeSymbols(const std::vector<CodeSymbol>& symbols) {
 #ifndef NDEBUG
     // The code symbols are ordered so that all the code values are strictly
-    // increasing and code lenghts are not decreasing.
+    // increasing and code lengths are not decreasing.
     const auto symbolSort = [](const CodeSymbol& lhs,
                                const CodeSymbol& rhs) -> bool {
       return std::less<>()(lhs.code, rhs.code) &&
@@ -126,7 +149,7 @@ protected:
 
     // Figure C.1: make table of Huffman code length for each symbol
     // Figure C.2: generate the codes themselves
-    uint32 code = 0;
+    uint32_t code = 0;
     for (unsigned int l = 1; l <= maxCodeLength; ++l) {
       for (unsigned int i = 0; i < nCodesPerLength[l]; ++i) {
         assert(code <= 0xffff);
@@ -150,7 +173,7 @@ public:
            codeValues == other.codeValues;
   }
 
-  uint32 setNCodesPerLength(const Buffer& data) {
+  uint32_t setNCodesPerLength(const Buffer& data) {
     assert(data.getSize() == 16);
 
     nCodesPerLength.resize(17, 0);
@@ -178,7 +201,7 @@ public:
     for (auto codeLen = 1UL; codeLen < nCodesPerLength.size(); codeLen++) {
       // we have codeLen bits. make sure that that code count can actually fit
       // E.g. for len 1 we could have two codes: 0b0 and 0b1
-      // (but in that case there can be no other codes (with higher lenghts))
+      // (but in that case there can be no other codes (with higher lengths))
       const auto maxCodesInCurrLen = (1U << codeLen);
       const auto nCodes = nCodesPerLength[codeLen];
       if (nCodes > maxCodesInCurrLen) {
@@ -186,7 +209,7 @@ public:
                  nCodes, codeLen);
       }
 
-      // Also, check that we actually can have this much leafs for this lenght
+      // Also, check that we actually can have this much leafs for this length
       if (nCodes > maxCodes) {
         ThrowRDE(
             "Corrupt Huffman. Can only fit %u out of %u codes in %lu-bit len",
@@ -212,29 +235,39 @@ public:
     codeValues.reserve(maxCodesCount());
     std::copy(data.begin(), data.end(), std::back_inserter(codeValues));
     assert(codeValues.size() == maxCodesCount());
-
-    for (const auto cValue : codeValues) {
-      if (cValue > 16)
-        ThrowRDE("Corrupt Huffman. Code value %u is bigger than 16", cValue);
-    }
   }
 
-  // WARNING: the caller should check that len != 0 before calling the function
-  inline static int __attribute__((const))
-  signExtended(uint32 diff, uint32 len) {
-    int32 ret = diff;
-#if 0
-#define _X(x) (1 << x) - 1
-    constexpr static int offset[16] = {
-      0,     _X(1), _X(2),  _X(3),  _X(4),  _X(5),  _X(6),  _X(7),
-      _X(8), _X(9), _X(10), _X(11), _X(12), _X(13), _X(14), _X(15)};
-#undef _X
-    if ((diff & (1 << (len - 1))) == 0)
-      ret -= offset[len];
-#else
+  template <typename BIT_STREAM, bool FULL_DECODE>
+  inline int processSymbol(BIT_STREAM& bs, CodeSymbol symbol,
+                           int codeValue) const {
+    assert(symbol.code_len >= 0 && symbol.code_len <= 16);
+
+    // If we were only looking for symbol's code value, then just return it.
+    if (!FULL_DECODE)
+      return codeValue;
+
+    // Else, treat it as the length of following difference
+    // that we need to read and extend.
+    int diff_l = codeValue;
+    assert(diff_l >= 0 && diff_l <= 16);
+
+    if (diff_l == 16) {
+      if (fixDNGBug16)
+        bs.skipBitsNoFill(16);
+      return -32768;
+    }
+
+    assert(symbol.code_len + diff_l <= 32);
+    return diff_l ? extend(bs.getBitsNoFill(diff_l), diff_l) : 0;
+  }
+
+  // Figure F.12 – Extending the sign bit of a decoded value in V
+  // WARNING: this is *not* your normal 2's complement sign extension!
+  inline static int __attribute__((const)) extend(uint32_t diff, uint32_t len) {
+    assert(len > 0);
+    int32_t ret = diff;
     if ((diff & (1 << (len - 1))) == 0)
       ret -= (1 << len) - 1;
-#endif
     return ret;
   }
 };

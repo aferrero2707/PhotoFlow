@@ -27,9 +27,10 @@
   implementation.
  */
 
-#include "rawspeedconfig.h"
+#include "rawspeedconfig.h" // for HAVE_OPENMP
 #include "decompressors/VC5Decompressor.h"
 #include "common/Array2DRef.h"            // for Array2DRef
+#include "common/Common.h"                // for clampBits, roundUpDivision
 #include "common/Optional.h"              // for Optional
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawspeedException.h"     // for RawspeedException
@@ -73,7 +74,7 @@ constexpr int16_t decompand(int16_t val) {
 }
 
 #ifndef NDEBUG
-int ignore = []() {
+const int ignore = []() {
   for (const RLV& entry : table17.entries) {
     assert(((-decompand(entry.value)) == decompand(-int16_t(entry.value))) &&
            "negation of decompanded value is the same as decompanding of "
@@ -110,7 +111,7 @@ bool VC5Decompressor::Wavelet::isBandValid(const int band) const {
 }
 
 bool VC5Decompressor::Wavelet::allBandsValid() const {
-  return mDecodedBandMask == static_cast<uint32>((1 << numBands) - 1);
+  return mDecodedBandMask == static_cast<uint32_t>((1 << numBands) - 1);
 }
 
 Array2DRef<const int16_t>
@@ -119,10 +120,10 @@ VC5Decompressor::Wavelet::bandAsArray2DRef(const unsigned int iBand) const {
 }
 
 namespace {
-auto convolute = [](int x, int y, std::array<int, 4> muls,
-                    const Array2DRef<const int16_t> high, auto lowGetter,
-                    int DescaleShift = 0) {
-  auto highCombined = muls[0] * high(x, y);
+const auto convolute = [](int row, int col, std::array<int, 4> muls,
+                          const Array2DRef<const int16_t> high, auto lowGetter,
+                          int DescaleShift = 0) {
+  auto highCombined = muls[0] * high(row, col);
   auto lowsCombined = [muls, lowGetter]() {
     int lows = 0;
     for (int i = 0; i < 3; i++)
@@ -178,38 +179,38 @@ constexpr std::array<int, 4> ConvolutionParams::Last::mul_odd;
 void VC5Decompressor::Wavelet::reconstructPass(
     const Array2DRef<int16_t> dst, const Array2DRef<const int16_t> high,
     const Array2DRef<const int16_t> low) const noexcept {
-  auto process = [low, high, dst](auto segment, int x, int y) {
-    auto lowGetter = [&x, &y, low](int delta) {
-      return low(x, y + decltype(segment)::coord_shift + delta);
+  auto process = [low, high, dst](auto segment, int row, int col) {
+    auto lowGetter = [&row, &col, low](int delta) {
+      return low(row + decltype(segment)::coord_shift + delta, col);
     };
-    auto convolution = [&x, &y, high, lowGetter](std::array<int, 4> muls) {
-      return convolute(x, y, muls, high, lowGetter, /*DescaleShift*/ 0);
+    auto convolution = [&row, &col, high, lowGetter](std::array<int, 4> muls) {
+      return convolute(row, col, muls, high, lowGetter, /*DescaleShift*/ 0);
     };
 
     int even = convolution(decltype(segment)::mul_even);
     int odd = convolution(decltype(segment)::mul_odd);
 
-    dst(x, 2 * y) = static_cast<int16_t>(even);
-    dst(x, 2 * y + 1) = static_cast<int16_t>(odd);
+    dst(2 * row, col) = static_cast<int16_t>(even);
+    dst(2 * row + 1, col) = static_cast<int16_t>(odd);
   };
 
   // Vertical reconstruction
 #ifdef HAVE_OPENMP
 #pragma omp for schedule(static)
 #endif
-  for (int y = 0; y < height; ++y) {
-    if (y == 0) {
+  for (int row = 0; row < height; ++row) {
+    if (row == 0) {
       // 1st row
-      for (int x = 0; x < width; ++x)
-        process(ConvolutionParams::First, x, y);
-    } else if (y + 1 < height) {
+      for (int col = 0; col < width; ++col)
+        process(ConvolutionParams::First, row, col);
+    } else if (row + 1 < height) {
       // middle rows
-      for (int x = 0; x < width; ++x)
-        process(ConvolutionParams::Middle, x, y);
+      for (int col = 0; col < width; ++col)
+        process(ConvolutionParams::Middle, row, col);
     } else {
       // last row
-      for (int x = 0; x < width; ++x)
-        process(ConvolutionParams::Last, x, y);
+      for (int col = 0; col < width; ++col)
+        process(ConvolutionParams::Last, row, col);
     }
   }
 }
@@ -218,14 +219,14 @@ void VC5Decompressor::Wavelet::combineLowHighPass(
     const Array2DRef<int16_t> dst, const Array2DRef<const int16_t> low,
     const Array2DRef<const int16_t> high, int descaleShift,
     bool clampUint = false) const noexcept {
-  auto process = [low, high, descaleShift, clampUint, dst](auto segment, int x,
-                                                           int y) {
-    auto lowGetter = [&x, &y, low](int delta) {
-      return low(x + decltype(segment)::coord_shift + delta, y);
+  auto process = [low, high, descaleShift, clampUint, dst](auto segment,
+                                                           int row, int col) {
+    auto lowGetter = [&row, &col, low](int delta) {
+      return low(row, col + decltype(segment)::coord_shift + delta);
     };
-    auto convolution = [&x, &y, high, lowGetter,
+    auto convolution = [&row, &col, high, lowGetter,
                         descaleShift](std::array<int, 4> muls) {
-      return convolute(x, y, muls, high, lowGetter, descaleShift);
+      return convolute(row, col, muls, high, lowGetter, descaleShift);
     };
 
     int even = convolution(decltype(segment)::mul_even);
@@ -235,24 +236,24 @@ void VC5Decompressor::Wavelet::combineLowHighPass(
       even = clampBits(even, 14);
       odd = clampBits(odd, 14);
     }
-    dst(2 * x, y) = static_cast<int16_t>(even);
-    dst(2 * x + 1, y) = static_cast<int16_t>(odd);
+    dst(row, 2 * col) = static_cast<int16_t>(even);
+    dst(row, 2 * col + 1) = static_cast<int16_t>(odd);
   };
 
   // Horizontal reconstruction
 #ifdef HAVE_OPENMP
 #pragma omp for schedule(static)
 #endif
-  for (int y = 0; y < dst.height; ++y) {
+  for (int row = 0; row < dst.height; ++row) {
     // First col
-    int x = 0;
-    process(ConvolutionParams::First, x, y);
+    int col = 0;
+    process(ConvolutionParams::First, row, col);
     // middle cols
-    for (x = 1; x + 1 < width; ++x) {
-      process(ConvolutionParams::Middle, x, y);
+    for (col = 1; col + 1 < width; ++col) {
+      process(ConvolutionParams::Middle, row, col);
     }
     // last col
-    process(ConvolutionParams::Last, x, y);
+    process(ConvolutionParams::Last, row, col);
   }
 }
 
@@ -365,7 +366,7 @@ void VC5Decompressor::initVC5LogTable() {
         };
 
         auto normalizeI = [tableSize](auto x) { return x / (tableSize - 1.0); };
-        auto denormalizeY = [maxVal = std::numeric_limits<ushort16>::max()](
+        auto denormalizeY = [maxVal = std::numeric_limits<uint16_t>::max()](
                                 auto y) { return maxVal * y; };
         // Adjust for output whitelevel bitdepth.
         auto rescaleY = [outputBits](auto y) {
@@ -393,7 +394,7 @@ void VC5Decompressor::parseVC5() {
   bool done = false;
   while (!done) {
     auto tag = static_cast<VC5Tag>(mBs.getU16());
-    ushort16 val = mBs.getU16();
+    uint16_t val = mBs.getU16();
 
     bool optional = matches(tag, VC5Tag::Optional);
     if (optional)
@@ -450,11 +451,11 @@ void VC5Decompressor::parseVC5() {
       mVC5.iSubband = val;
       break;
     case VC5Tag::Quantization:
-      mVC5.quantization = static_cast<short16>(val);
+      mVC5.quantization = static_cast<int16_t>(val);
       break;
     case VC5Tag::ComponentsPerSample:
       if (val != mVC5.cps)
-        ThrowRDE("Bad compnent per sample count %u, not %u", val, mVC5.cps);
+        ThrowRDE("Bad component per sample count %u, not %u", val, mVC5.cps);
       break;
     case VC5Tag::PrescaleShift:
       // FIXME: something is wrong. We get this before VC5Tag::ChannelNumber.
@@ -462,7 +463,8 @@ void VC5Decompressor::parseVC5() {
       for (int iWavelet = 0; iWavelet < numWaveletLevels; ++iWavelet) {
         auto& channel = channels[mVC5.iChannel];
         auto& wavelet = channel.wavelets[iWavelet];
-        wavelet.prescale = (val >> (14 - 2 * iWavelet)) & 0x03;
+        wavelet.prescale =
+            extractHighBits(val, 2 * iWavelet, /*effectiveBitwidth=*/14) & 0x03;
       }
       break;
     default: { // A chunk.
@@ -513,7 +515,7 @@ void VC5Decompressor::parseVC5() {
 
 VC5Decompressor::Wavelet::LowPassBand::LowPassBand(const Wavelet& wavelet,
                                                    ByteStream bs_,
-                                                   ushort16 lowpassPrecision_)
+                                                   uint16_t lowpassPrecision_)
     : AbstractDecodeableBand(std::move(bs_)),
       lowpassPrecision(lowpassPrecision_) {
   // Low-pass band is a uncompressed version of the image, hugely downscaled.
@@ -532,7 +534,7 @@ void VC5Decompressor::Wavelet::LowPassBand::decode(const Wavelet& wavelet) {
   BitPumpMSB bits(bs);
   for (auto row = 0; row < dst.height; ++row) {
     for (auto col = 0; col < dst.width; ++col)
-      dst(col, row) = static_cast<int16_t>(bits.getBits(lowpassPrecision));
+      dst(row, col) = static_cast<int16_t>(bits.getBits(lowpassPrecision));
   }
 }
 
@@ -558,7 +560,7 @@ void VC5Decompressor::Wavelet::HighPassBand::decode(const Wavelet& wavelet) {
     }
   }
   getRLV(&bits, &pixelValue, &count);
-  static_assert(decompand(MARKER_BAND_END) == MARKER_BAND_END, "passthrought");
+  static_assert(decompand(MARKER_BAND_END) == MARKER_BAND_END, "passthrough");
   if (pixelValue != MARKER_BAND_END || count != 0)
     ThrowRDE("EndOfBand marker not found");
 }
@@ -766,9 +768,7 @@ void VC5Decompressor::reconstructLowpassBands() const noexcept {
 }
 
 void VC5Decompressor::combineFinalLowpassBands() const noexcept {
-  const Array2DRef<uint16_t> out(reinterpret_cast<uint16_t*>(mRaw->getData()),
-                                 mRaw->dim.x, mRaw->dim.y,
-                                 mRaw->pitch / sizeof(uint16_t));
+  const Array2DRef<uint16_t> out(mRaw->getU16DataAsUncroppedArray2DRef());
 
   const int width = out.width / 2;
   const int height = out.height / 2;
@@ -790,20 +790,20 @@ void VC5Decompressor::combineFinalLowpassBands() const noexcept {
     for (int col = 0; col < width; ++col) {
       const int mid = 2048;
 
-      int gs = lowbands0(col, row);
-      int rg = lowbands1(col, row) - mid;
-      int bg = lowbands2(col, row) - mid;
-      int gd = lowbands3(col, row) - mid;
+      int gs = lowbands0(row, col);
+      int rg = lowbands1(row, col) - mid;
+      int bg = lowbands2(row, col) - mid;
+      int gd = lowbands3(row, col) - mid;
 
       int r = gs + 2 * rg;
       int b = gs + 2 * bg;
       int g1 = gs + gd;
       int g2 = gs - gd;
 
-      out(2 * col + 0, 2 * row + 0) = static_cast<uint16_t>(mVC5LogTable[r]);
-      out(2 * col + 1, 2 * row + 0) = static_cast<uint16_t>(mVC5LogTable[g1]);
-      out(2 * col + 0, 2 * row + 1) = static_cast<uint16_t>(mVC5LogTable[g2]);
-      out(2 * col + 1, 2 * row + 1) = static_cast<uint16_t>(mVC5LogTable[b]);
+      out(2 * row + 0, 2 * col + 0) = static_cast<uint16_t>(mVC5LogTable[r]);
+      out(2 * row + 0, 2 * col + 1) = static_cast<uint16_t>(mVC5LogTable[g1]);
+      out(2 * row + 1, 2 * col + 0) = static_cast<uint16_t>(mVC5LogTable[g2]);
+      out(2 * row + 1, 2 * col + 1) = static_cast<uint16_t>(mVC5LogTable[b]);
     }
   }
 }

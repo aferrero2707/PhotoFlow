@@ -20,11 +20,13 @@
 */
 
 #include "decoders/RawDecoder.h"
-#include "common/Common.h"                          // for uint32, roundUpD...
+#include "common/Common.h"                          // for roundUpDivision
 #include "common/Point.h"                           // for iPoint2D, iRecta...
 #include "decoders/RawDecoderException.h"           // for ThrowRDE
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
-#include "io/Buffer.h"                              // for Buffer
+#include "io/Buffer.h"                              // for Buffer, DataBuffer
+#include "io/ByteStream.h"                          // for ByteStream
+#include "io/Endianness.h"                          // for Endianness, Endi...
 #include "io/FileIOException.h"                     // for FileIOException
 #include "io/IOException.h"                         // for IOException
 #include "metadata/BlackArea.h"                     // for BlackArea
@@ -36,6 +38,7 @@
 #include "tiff/TiffEntry.h"                         // for TiffEntry
 #include "tiff/TiffIFD.h"                           // for TiffIFD
 #include "tiff/TiffTag.h"                           // for BITSPERSAMPLE
+#include <algorithm>                                // for max
 #include <array>                                    // for array
 #include <cassert>                                  // for assert
 #include <string>                                   // for string, basic_st...
@@ -59,10 +62,10 @@ RawDecoder::RawDecoder(const Buffer* file)
 void RawDecoder::decodeUncompressed(const TiffIFD *rawIFD, BitOrder order) {
   TiffEntry *offsets = rawIFD->getEntry(STRIPOFFSETS);
   TiffEntry *counts = rawIFD->getEntry(STRIPBYTECOUNTS);
-  uint32 yPerSlice = rawIFD->getEntry(ROWSPERSTRIP)->getU32();
-  uint32 width = rawIFD->getEntry(IMAGEWIDTH)->getU32();
-  uint32 height = rawIFD->getEntry(IMAGELENGTH)->getU32();
-  uint32 bitPerPixel = rawIFD->getEntry(BITSPERSAMPLE)->getU32();
+  uint32_t yPerSlice = rawIFD->getEntry(ROWSPERSTRIP)->getU32();
+  uint32_t width = rawIFD->getEntry(IMAGEWIDTH)->getU32();
+  uint32_t height = rawIFD->getEntry(IMAGELENGTH)->getU32();
+  uint32_t bitPerPixel = rawIFD->getEntry(BITSPERSAMPLE)->getU32();
 
   if (width == 0 || height == 0 || width > 5632 || height > 3720)
     ThrowRDE("Unexpected image dimensions found: (%u; %u)", width, height);
@@ -75,7 +78,7 @@ void RawDecoder::decodeUncompressed(const TiffIFD *rawIFD, BitOrder order) {
              counts->count, offsets->count);
   }
 
-  if (yPerSlice == 0 || yPerSlice > static_cast<uint32>(mRaw->dim.y) ||
+  if (yPerSlice == 0 || yPerSlice > static_cast<uint32_t>(mRaw->dim.y) ||
       roundUpDivision(mRaw->dim.y, yPerSlice) != counts->count) {
     ThrowRDE("Invalid y per slice %u or strip count %u (height = %u)",
              yPerSlice, counts->count, mRaw->dim.y);
@@ -91,9 +94,9 @@ void RawDecoder::decodeUncompressed(const TiffIFD *rawIFD, BitOrder order) {
 
   vector<RawSlice> slices;
   slices.reserve(counts->count);
-  uint32 offY = 0;
+  uint32_t offY = 0;
 
-  for (uint32 s = 0; s < counts->count; s++) {
+  for (uint32_t s = 0; s < counts->count; s++) {
     RawSlice slice;
     slice.offset = offsets->getU32(s);
     slice.count = counts->getU32(s);
@@ -127,11 +130,14 @@ void RawDecoder::decodeUncompressed(const TiffIFD *rawIFD, BitOrder order) {
 
   offY = 0;
   for (const RawSlice& slice : slices) {
-    UncompressedDecompressor u(*mFile, slice.offset, slice.count, mRaw);
+    UncompressedDecompressor u(
+        ByteStream(DataBuffer(mFile->getSubView(slice.offset, slice.count),
+                              Endianness::little)),
+        mRaw);
     iPoint2D size(width, slice.h);
     iPoint2D pos(0, offY);
     bitPerPixel = static_cast<int>(
-        static_cast<uint64>(static_cast<uint64>(slice.count) * 8U) /
+        static_cast<uint64_t>(static_cast<uint64_t>(slice.count) * 8U) /
         (slice.h * width));
     const auto inputPitch = width * bitPerPixel / 8;
     if (!inputPitch)
@@ -144,7 +150,7 @@ void RawDecoder::decodeUncompressed(const TiffIFD *rawIFD, BitOrder order) {
 }
 
 void RawDecoder::askForSamples(const CameraMetaData* meta, const string& make,
-                               const string& model, const string& mode) const {
+                               const string& model, const string& mode) {
   if ("dng" == mode)
     return;
 
@@ -232,7 +238,7 @@ void RawDecoder::setMetaData(const CameraMetaData* meta, const string& make,
         mRaw->blackLevelSeparate[i] = sensor->mBlackLevelSeparate[i];
       }
     } else if (!mRaw->isCFA && mRaw->getCpp() <= sensor->mBlackLevelSeparate.size()) {
-      for (uint32 i = 0; i < mRaw->getCpp(); i++) {
+      for (uint32_t i = 0; i < mRaw->getCpp(); i++) {
         mRaw->blackLevelSeparate[i] = sensor->mBlackLevelSeparate[i];
       }
     }

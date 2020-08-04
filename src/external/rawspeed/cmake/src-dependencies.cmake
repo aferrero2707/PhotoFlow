@@ -43,21 +43,11 @@ if(WITH_OPENMP)
     message(STATUS "Looking for OpenMP - found (system)")
   endif()
 
-  # FIXME: OpenMP::OpenMP_CXX target, and ${OpenMP_CXX_LIBRARIES} were both
-  # added in cmake-3.9. Until then, this is correct:
-  if(NOT TARGET OpenMP::OpenMP_CXX)
-    add_library(OpenMP::OpenMP_CXX INTERFACE IMPORTED)
-    if(OpenMP_CXX_FLAGS)
-      set_property(TARGET OpenMP::OpenMP_CXX PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
-      set_property(TARGET OpenMP::OpenMP_CXX PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS})
-      # Yes, both of them to the same value.
-    endif()
-  endif()
-
   # The wrapper library that *actually* should be linked to.
   add_library(RawSpeed::OpenMP_CXX INTERFACE IMPORTED)
   set_property(TARGET RawSpeed::OpenMP_CXX        PROPERTY INTERFACE_COMPILE_OPTIONS $<TARGET_PROPERTY:OpenMP::OpenMP_CXX,INTERFACE_COMPILE_OPTIONS>)
   set_property(TARGET RawSpeed::OpenMP_CXX APPEND PROPERTY INTERFACE_COMPILE_OPTIONS ${OPENMP_VERSION_SPECIFIER})
+  set_property(TARGET RawSpeed::OpenMP_CXX        PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:OpenMP::OpenMP_CXX,INTERFACE_INCLUDE_DIRECTORIES>)
   if(NOT USE_BUNDLED_LLVMOPENMP)
     set_property(TARGET RawSpeed::OpenMP_CXX      PROPERTY INTERFACE_LINK_LIBRARIES  $<TARGET_PROPERTY:OpenMP::OpenMP_CXX,INTERFACE_LINK_LIBRARIES>)
   else()
@@ -77,7 +67,8 @@ if(WITH_OPENMP)
 
   if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
       CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0) OR
-     (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
+     (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
+      CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11.0.3
       # XCode 10 is broken. Maybe XCode 11 will be ok?
      ))
     # See https://bugs.llvm.org/show_bug.cgi?id=35873
@@ -105,7 +96,7 @@ unset(HAVE_PUGIXML)
 if(WITH_PUGIXML)
   message(STATUS "Looking for pugixml")
   if(NOT USE_BUNDLED_PUGIXML)
-    find_package(Pugixml 1.2)
+    find_package(Pugixml 1.8)
     if(NOT Pugixml_FOUND)
       message(SEND_ERROR "Did not find Pugixml! Either make it find Pugixml, or pass -DUSE_BUNDLED_PUGIXML=ON to enable in-tree pugixml.")
     else()
@@ -175,7 +166,7 @@ unset(HAVE_ZLIB)
 if (WITH_ZLIB)
   message(STATUS "Looking for ZLIB")
   if(NOT USE_BUNDLED_ZLIB)
-    find_package(ZLIB)
+    find_package(ZLIB 1.2.11)
     if(NOT ZLIB_FOUND)
       message(SEND_ERROR "Did not find ZLIB! Either make it find ZLIB, or pass -DWITH_ZLIB=OFF to disable ZLIB, or pass -DUSE_BUNDLED_ZLIB=ON to enable in-tree ZLIB.")
     else()

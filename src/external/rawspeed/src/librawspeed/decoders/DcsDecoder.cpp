@@ -20,11 +20,14 @@
 */
 
 #include "decoders/DcsDecoder.h"
-#include "decoders/RawDecoderException.h"           // for RawDecoderExcept...
+#include "decoders/RawDecoderException.h"           // for ThrowRDE
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
-#include "tiff/TiffEntry.h"                         // for TiffEntry, TiffD...
-#include "tiff/TiffIFD.h"                           // for TiffRootIFD
-#include "tiff/TiffTag.h"                           // for TiffTag::GRAYRES...
+#include "io/Buffer.h"                              // for Buffer, DataBuffer
+#include "io/ByteStream.h"                          // for ByteStream
+#include "io/Endianness.h"                          // for Endianness, Endi...
+#include "tiff/TiffEntry.h"                         // for TiffEntry, TIFF_...
+#include "tiff/TiffIFD.h"                           // for TiffRootIFD, TiffID
+#include "tiff/TiffTag.h"                           // for GRAYRESPONSECURVE
 #include <cassert>                                  // for assert
 #include <memory>                                   // for unique_ptr
 #include <string>                                   // for operator==, string
@@ -60,7 +63,9 @@ RawImage DcsDecoder::decodeRawInternal() {
 
   RawImageCurveGuard curveHandler(&mRaw, table, uncorrectedRawValues);
 
-  UncompressedDecompressor u(*mFile, off, c2, mRaw);
+  UncompressedDecompressor u(
+      ByteStream(DataBuffer(mFile->getSubView(off, c2), Endianness::little)),
+      mRaw);
 
   if (uncorrectedRawValues)
     u.decode8BitRaw<true>(width, height);

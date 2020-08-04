@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include "common/Common.h"                             // for int32
 #include "decompressors/AbstractSamsungDecompressor.h" // for AbstractSamsu...
 #include "io/BitPumpMSB.h"                             // for BitPumpMSB
+#include <cstdint>                                     // for int32_t
 #include <vector>                                      // for vector
 
 namespace rawspeed {
@@ -33,11 +33,12 @@ class RawImage;
 // Decoder for compressed srw files (NX3000 and later)
 class SamsungV1Decompressor final : public AbstractSamsungDecompressor {
   struct encTableItem;
-  static int32 samsungDiff(BitPumpMSB* pump,
-                           const std::vector<encTableItem>& tbl);
+
+  static inline int32_t samsungDiff(BitPumpMSB* pump,
+                                    const std::vector<encTableItem>& tbl);
 
   const ByteStream* bs;
-  int bits;
+  static constexpr int bits = 12;
 
 public:
   SamsungV1Decompressor(const RawImage& image, const ByteStream* bs_, int bit);

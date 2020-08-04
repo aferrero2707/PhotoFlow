@@ -20,19 +20,21 @@
 
 #include "decompressors/DeflateDecompressor.h" // for DeflateDecompressor
 #include "bench/Common.h"                      // for areaToRectangle
-#include "common/Common.h"                     // for isAligned, isPowerOfTwo
+#include "common/Common.h"                     // for isAligned
 #include "common/Memory.h"                     // for alignedFree
 #include "common/Point.h"                      // for iPoint2D
 #include "common/RawImage.h"                   // for RawImage, RawImageData
-#include "io/Buffer.h"                         // for Buffer
+#include "io/Buffer.h"                         // for Buffer, Buffer::size_...
 #include "io/ByteStream.h"                     // for ByteStream
-#include <benchmark/benchmark.h>               // for Benchmark, BENCHMARK_...
+#include "io/Endianness.h"                     // for Endianness, Endiannes...
+#include <benchmark/benchmark.h>               // for State, Benchmark, BEN...
 #include <cassert>                             // for assert
 #include <cstddef>                             // for size_t
-#include <memory>                              // for unique_ptr
+#include <cstdint>                             // for uint8_t
+#include <memory>                              // for operator!=, unique_ptr
 #include <type_traits>                         // for integral_constant
 #include <utility>                             // for move
-#include <zlib.h>
+#include <zlib.h>                              // for compressBound, compress
 
 #ifndef NDEBUG
 #include <limits> // for numeric_limits
@@ -45,7 +47,7 @@ template <size_t N> using BPS = std::integral_constant<size_t, N>;
 template <int N> using Pf = std::integral_constant<int, N>;
 
 template <typename BPS>
-static std::unique_ptr<rawspeed::uchar8, decltype(&rawspeed::alignedFree)>
+static std::unique_ptr<uint8_t, decltype(&rawspeed::alignedFree)>
 compressChunk(const rawspeed::RawImage& mRaw, uLong* bufSize) {
   static_assert(BPS::value > 0, "bad bps");
   static_assert(rawspeed::isAligned(BPS::value, 8), "not byte count");
@@ -111,7 +113,8 @@ static inline void BM_DeflateDecompressor(benchmark::State& state) {
 
   std::unique_ptr<unsigned char[]> uBuffer; // NOLINT
 
-  const rawspeed::ByteStream bs(buf, 0, buf.getSize());
+  const rawspeed::ByteStream bs(
+      rawspeed::DataBuffer(buf, rawspeed::Endianness::little));
 
   for (auto _ : state) {
     DeflateDecompressor d(bs, mRaw, predictor, BPS::value);

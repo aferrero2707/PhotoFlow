@@ -19,10 +19,9 @@
 */
 
 #include "io/FileWriter.h"
-#include "common/Common.h"      // for uint32
 #include "io/Buffer.h"          // for Buffer
-#include "io/FileIOException.h" // for FileIOException
-#include <cstdio>               // for fclose, fopen, fwrite, FILE, NULL
+#include "io/FileIOException.h" // for ThrowFIE
+#include <cstdio>               // for fclose, fopen, fwrite, FILE, size_t
 
 #if !defined(__unix__) && !defined(__APPLE__)
 #ifndef NOMINMAX
@@ -30,7 +29,7 @@
 #endif
 
 #include "io/FileIO.h" // for widenFileName
-#include <windows.h>
+#include <Windows.h>
 #include <io.h>
 #include <tchar.h>
 #endif // !defined(__unix__) && !defined(__APPLE__)
@@ -39,7 +38,7 @@ namespace rawspeed {
 
 FileWriter::FileWriter(const char *_filename) : mFilename(_filename) {}
 
-void FileWriter::writeFile(Buffer* filemap, uint32 size) {
+void FileWriter::writeFile(Buffer* filemap, uint32_t size) {
   if (size > filemap->getSize())
     size = filemap->getSize();
 #if defined(__unix__) || defined(__APPLE__)
@@ -50,7 +49,7 @@ void FileWriter::writeFile(Buffer* filemap, uint32 size) {
   if (file == nullptr)
     ThrowFIE("Could not open file.");
 
-  const auto src = filemap->getData(0, filemap->getSize());
+  const auto* const src = filemap->getData(0, filemap->getSize());
   bytes_written = fwrite(src, 1, size != 0 ? size : filemap->getSize(), file);
   fclose(file);
   if (size != bytes_written) {

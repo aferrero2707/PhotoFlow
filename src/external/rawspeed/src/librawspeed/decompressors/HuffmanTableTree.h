@@ -23,13 +23,15 @@
 
 #include "decoders/RawDecoderException.h"       // for ThrowRDE
 #include "decompressors/AbstractHuffmanTable.h" // for AbstractHuffmanTable...
-#include "decompressors/BinaryHuffmanTree.h"    // IWYU pragma: export
+#include "decompressors/BinaryHuffmanTree.h"    // for BinaryHuffmanTree<>:...
 #include "io/BitStream.h"                       // for BitStreamTraits
 #include <algorithm>                            // for for_each
 #include <cassert>                              // for assert
 #include <initializer_list>                     // for initializer_list
 #include <iterator>                             // for advance, next
 #include <memory>                               // for unique_ptr, make_unique
+#include <tuple>                                // for tie
+#include <utility>                              // for pair
 #include <vector>                               // for vector, vector<>::co...
 
 namespace rawspeed {
@@ -39,24 +41,22 @@ class HuffmanTableTree final : public AbstractHuffmanTable {
 
   BinaryHuffmanTree<ValueType> tree;
 
-  bool fullDecode = true;
-  bool fixDNGBug16 = false;
-
 protected:
   template <typename BIT_STREAM>
-  inline ValueType getValue(BIT_STREAM& bs) const {
+  inline std::pair<CodeSymbol, ValueType /*codeValue*/>
+  readSymbol(BIT_STREAM& bs) const {
     static_assert(BitStreamTraits<BIT_STREAM>::canUseWithHuffmanTable,
                   "This BitStream specialization is not marked as usable here");
     CodeSymbol partial;
 
     const auto* top = &(tree.root->getAsBranch());
 
-    // Read bits until either find the code or detect the uncorrect code
+    // Read bits until either find the code or detect the incorrect code
     for (partial.code = 0, partial.code_len = 1;; ++partial.code_len) {
       assert(partial.code_len <= 16);
 
       // Read one more bit
-      const bool bit = bs.getBits(1);
+      const bool bit = bs.getBitsNoFill(1);
 
       partial.code <<= 1;
       partial.code |= bit;
@@ -75,25 +75,20 @@ protected:
       if (static_cast<decltype(tree)::Node::Type>(*newNode) ==
           decltype(tree)::Node::Type::Leaf) {
         // Ok, great, hit a Leaf. This is it.
-        return newNode->getAsLeaf().value;
+        return {partial, newNode->getAsLeaf().value};
       }
 
       // Else, this is a branch, continue looking.
       top = &(newNode->getAsBranch());
     }
 
-    // We have either returned the found symbol, or thrown on uncorrect symbol.
+    // We have either returned the found symbol, or thrown on incorrect symbol.
     __builtin_unreachable();
   }
 
 public:
   void setup(bool fullDecode_, bool fixDNGBug16_) {
-    this->fullDecode = fullDecode_;
-    this->fixDNGBug16 = fixDNGBug16_;
-
-    assert(!nCodesPerLength.empty());
-    assert(maxCodesCount() > 0);
-    assert(codeValues.size() == maxCodesCount());
+    AbstractHuffmanTable::setup(fullDecode_, fixDNGBug16_);
 
     auto currValue = codeValues.cbegin();
     for (auto codeLen = 1UL; codeLen < nCodesPerLength.size(); codeLen++) {
@@ -121,14 +116,16 @@ public:
     tree.pruneLeaflessBranches();
   }
 
-  template <typename BIT_STREAM> inline int decodeLength(BIT_STREAM& bs) const {
+  template <typename BIT_STREAM>
+  inline int decodeCodeValue(BIT_STREAM& bs) const {
     static_assert(BitStreamTraits<BIT_STREAM>::canUseWithHuffmanTable,
                   "This BitStream specialization is not marked as usable here");
     assert(!fullDecode);
     return decode<BIT_STREAM, false>(bs);
   }
 
-  template <typename BIT_STREAM> inline int decodeNext(BIT_STREAM& bs) const {
+  template <typename BIT_STREAM>
+  inline int decodeDifference(BIT_STREAM& bs) const {
     static_assert(BitStreamTraits<BIT_STREAM>::canUseWithHuffmanTable,
                   "This BitStream specialization is not marked as usable here");
     assert(fullDecode);
@@ -145,20 +142,13 @@ public:
                   "This BitStream specialization is not marked as usable here");
     assert(FULL_DECODE == fullDecode);
 
-    const auto codeValue = getValue(bs);
+    bs.fill(32);
 
-    const int diff_l = codeValue;
+    CodeSymbol symbol;
+    int codeValue;
+    std::tie(symbol, codeValue) = readSymbol(bs);
 
-    if (!FULL_DECODE)
-      return diff_l;
-
-    if (diff_l == 16) {
-      if (fixDNGBug16)
-        bs.skipBits(16);
-      return -32768;
-    }
-
-    return diff_l ? signExtended(bs.getBits(diff_l), diff_l) : 0;
+    return processSymbol<BIT_STREAM, FULL_DECODE>(bs, symbol, codeValue);
   }
 };
 

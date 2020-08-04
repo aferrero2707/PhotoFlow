@@ -20,12 +20,15 @@
 */
 
 #include "decoders/ErfDecoder.h"
-#include "decoders/RawDecoderException.h"           // for RawDecoderExcept...
+#include "decoders/RawDecoderException.h"           // for ThrowRDE
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
-#include "io/Endianness.h"                          // for Endianness::big
+#include "io/Buffer.h"                              // for Buffer, DataBuffer
+#include "io/ByteStream.h"                          // for ByteStream
+#include "io/Endianness.h"                          // for Endianness, Endi...
 #include "tiff/TiffEntry.h"                         // for TiffEntry
-#include "tiff/TiffIFD.h"                           // for TiffRootIFD
-#include "tiff/TiffTag.h"                           // for TiffTag::EPSONWB
+#include "tiff/TiffIFD.h"                           // for TiffRootIFD, TiffID
+#include "tiff/TiffTag.h"                           // for EPSONWB
+#include <array>                                    // for array
 #include <memory>                                   // for unique_ptr
 #include <string>                                   // for operator==, string
 
@@ -51,7 +54,9 @@ void ErfDecoder::checkImageDimensions() {
 RawImage ErfDecoder::decodeRawInternal() {
   SimpleTiffDecoder::prepareForRawDecoding();
 
-  UncompressedDecompressor u(*mFile, off, c2, mRaw);
+  UncompressedDecompressor u(
+      ByteStream(DataBuffer(mFile->getSubView(off, c2), Endianness::little)),
+      mRaw);
 
   u.decode12BitRaw<Endianness::big, false, true>(width, height);
 

@@ -34,7 +34,7 @@ target_sources(rawspeed PRIVATE
 
 # Provide naive implementation of rawspeed_get_number_of_processor_cores().
 
-if(CMAKE_BUILD_TYPE STREQUAL "COVERAGE")
+if(RAWSPEED_COVERAGE_BUILD)
   # want all the symbols.
   rawspeed_add_library(rawspeed_get_number_of_processor_cores SHARED)
 else()
@@ -50,3 +50,7 @@ target_sources(rawspeed_get_number_of_processor_cores PRIVATE
 )
 
 target_link_libraries(rawspeed_get_number_of_processor_cores PRIVATE rawspeed)
+
+if(TARGET RawSpeed::OpenMP_CXX)
+  target_link_libraries(rawspeed_get_number_of_processor_cores PRIVATE RawSpeed::OpenMP_CXX)
+endif()

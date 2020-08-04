@@ -21,16 +21,16 @@
 
 #pragma once
 
-#include "common/RawspeedException.h"
-#include <string> // for string
+#include "rawspeedconfig.h"           // for RAWSPEED_NOINLINE, RAWSPEED_UN...
+#include "common/RawspeedException.h" // for ThrowExceptionHelper, Rawspeed...
 
 namespace rawspeed {
 
 class CameraMetadataException final : public RawspeedException {
 public:
-  explicit CameraMetadataException(const std::string& msg)
+  explicit RAWSPEED_UNLIKELY_FUNCTION RAWSPEED_NOINLINE
+  CameraMetadataException(const char* msg)
       : RawspeedException(msg) {}
-  explicit CameraMetadataException(const char* msg) : RawspeedException(msg) {}
 };
 
 #define ThrowCME(...)                                                          \

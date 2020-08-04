@@ -21,7 +21,6 @@
 */
 
 #include "parsers/FiffParser.h"
-#include "common/Common.h"               // for uint32, ushort16
 #include "decoders/RafDecoder.h"         // for RafDecoder
 #include "decoders/RawDecoder.h"         // for RawDecoder
 #include "io/Buffer.h"                   // for Buffer, DataBuffer
@@ -34,6 +33,7 @@
 #include "tiff/TiffEntry.h"              // for TiffEntry, TIFF_SHORT, TIFF...
 #include "tiff/TiffIFD.h"                // for TiffIFD, TiffRootIFDOwner
 #include "tiff/TiffTag.h"                // for FUJIOLDWB, FUJI_STRIPBYTECO...
+#include <cstdint>                       // for uint32_t, uint16_t
 #include <limits>                        // for numeric_limits
 #include <memory>                        // for make_unique, unique_ptr
 #include <utility>                       // for move
@@ -48,16 +48,16 @@ void FiffParser::parseData() {
   ByteStream bs(DataBuffer(*mInput, Endianness::big));
   bs.skipBytes(0x54);
 
-  uint32 first_ifd = bs.getU32();
-  if (first_ifd >= numeric_limits<uint32>::max() - 12)
+  uint32_t first_ifd = bs.getU32();
+  if (first_ifd >= numeric_limits<uint32_t>::max() - 12)
     ThrowFPE("Not Fiff. First IFD too far away");
 
   first_ifd += 12;
 
   bs.skipBytes(4);
-  const uint32 third_ifd = bs.getU32();
+  const uint32_t third_ifd = bs.getU32();
   bs.skipBytes(4);
-  const uint32 second_ifd = bs.getU32();
+  const uint32_t second_ifd = bs.getU32();
 
   rootIFD = TiffParser::parse(nullptr, mInput->getSubView(first_ifd));
   TiffIFDOwner subIFD = std::make_unique<TiffIFD>(rootIFD.get());
@@ -75,11 +75,11 @@ void FiffParser::parseData() {
       if (second_ifd <= first_ifd)
         ThrowFPE("Fiff is corrupted: second IFD is not after the first IFD");
 
-      uint32 rawOffset = second_ifd - first_ifd;
+      uint32_t rawOffset = second_ifd - first_ifd;
       subIFD->add(std::make_unique<TiffEntry>(
           subIFD.get(), FUJI_STRIPOFFSETS, TIFF_OFFSET, 1,
           ByteStream::createCopy(&rawOffset, 4)));
-      uint32 max_size = mInput->getSize() - second_ifd;
+      uint32_t max_size = mInput->getSize() - second_ifd;
       subIFD->add(std::make_unique<TiffEntry>(
           subIFD.get(), FUJI_STRIPBYTECOUNTS, TIFF_LONG, 1,
           ByteStream::createCopy(&max_size, 4)));
@@ -93,21 +93,22 @@ void FiffParser::parseData() {
     // differences:
     //   a) no type info and b) data is always stored in place.
     // 4b: # of entries, for each entry: 2b tag, 2b len, xb data
-    ByteStream bytes(mInput, third_ifd, Endianness::big);
-    uint32 entries = bytes.getU32();
+    ByteStream bytes(
+        DataBuffer(mInput->getSubView(third_ifd), Endianness::big));
+    uint32_t entries = bytes.getU32();
 
     if (entries > 255)
       ThrowFPE("Too many entries");
 
-    for (uint32 i = 0; i < entries; i++) {
-      ushort16 tag = bytes.getU16();
-      ushort16 length = bytes.getU16();
+    for (uint32_t i = 0; i < entries; i++) {
+      uint16_t tag = bytes.getU16();
+      uint16_t length = bytes.getU16();
       TiffDataType type = TIFF_UNDEFINED;
 
       if (tag == IMAGEWIDTH || tag == FUJIOLDWB) // also 0x121?
         type = TIFF_SHORT;
 
-      uint32 count = type == TIFF_SHORT ? length / 2 : length;
+      uint32_t count = type == TIFF_SHORT ? length / 2 : length;
       subIFD->add(std::make_unique<TiffEntry>(
           subIFD.get(), static_cast<TiffTag>(tag), type, count,
           bytes.getSubStream(bytes.getPosition(), length)));

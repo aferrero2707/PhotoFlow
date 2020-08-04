@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include "common/Common.h"                      // for ushort16
 #include "common/RawImage.h"                    // for RawImage
 #include "decompressors/AbstractDecompressor.h" // for AbstractDecompressor
 #include "io/BitPumpMSB.h"                      // for BitPumpMSB
@@ -29,12 +28,11 @@
 #include "metadata/ColorFilterArray.h"          // for CFAColor
 #include <array>                                // for array
 #include <cassert>                              // for assert
+#include <cstdint>                              // for uint16_t, uint8_t
 #include <utility>                              // for move
 #include <vector>                               // for vector
 
 namespace rawspeed {
-
-class RawImage;
 
 class FujiDecompressor final : public AbstractDecompressor {
   RawImage mRaw;
@@ -48,16 +46,16 @@ public:
     explicit FujiHeader(ByteStream* input_);
     explicit __attribute__((pure)) operator bool() const; // validity check
 
-    ushort16 signature;
-    uchar8 version;
-    uchar8 raw_type;
-    uchar8 raw_bits;
-    ushort16 raw_height;
-    ushort16 raw_rounded_width;
-    ushort16 raw_width;
-    ushort16 block_size;
-    uchar8 blocks_in_row;
-    ushort16 total_lines;
+    uint16_t signature;
+    uint8_t version;
+    uint8_t raw_type;
+    uint8_t raw_bits;
+    uint16_t raw_height;
+    uint16_t raw_rounded_width;
+    uint16_t raw_width;
+    uint16_t block_size;
+    uint8_t blocks_in_row;
+    uint16_t total_lines;
   };
 
   FujiHeader header;
@@ -97,6 +95,7 @@ public:
 
     // where vertically does this block start?
     int offsetY(int line = 0) const {
+      (void)height(); // A note for NDEBUG builds that *this is used.
       assert(line >= 0 && line < height());
       return lineHeight() * line;
     }
@@ -124,7 +123,7 @@ protected:
     int raw_bits;
     int total_values;
     int maxDiff;
-    ushort16 line_width;
+    uint16_t line_width;
   };
 
   fuji_compressed_params common_info;
@@ -134,26 +133,26 @@ protected:
     int value2;
   };
 
-  enum _xt_lines {
-    _R0 = 0,
-    _R1,
-    _R2,
-    _R3,
-    _R4,
-    _G0,
-    _G1,
-    _G2,
-    _G3,
-    _G4,
-    _G5,
-    _G6,
-    _G7,
-    _B0,
-    _B1,
-    _B2,
-    _B3,
-    _B4,
-    _ltotal
+  enum xt_lines {
+    R0 = 0,
+    R1,
+    R2,
+    R3,
+    R4,
+    G0,
+    G1,
+    G2,
+    G3,
+    G4,
+    G5,
+    G6,
+    G7,
+    B0,
+    B1,
+    B2,
+    B3,
+    B4,
+    ltotal
   };
 
   struct fuji_compressed_block {
@@ -167,8 +166,8 @@ protected:
     std::array<std::array<int_pair, 41>, 3> grad_even;
     std::array<std::array<int_pair, 41>, 3> grad_odd;
 
-    std::vector<ushort16> linealloc;
-    std::array<ushort16*, _ltotal> linebuf;
+    std::vector<uint16_t> linealloc;
+    std::array<uint16_t*, ltotal> linebuf;
   };
 
 private:
@@ -190,28 +189,28 @@ private:
   void copy_line_to_bayer(fuji_compressed_block* info, const FujiStrip& strip,
                           int cur_line) const;
 
-  inline void fuji_zerobits(BitPumpMSB* pump, int* count) const;
-  int bitDiff(int value1, int value2) const;
+  static inline void fuji_zerobits(BitPumpMSB* pump, int* count);
+  static int bitDiff(int value1, int value2);
 
   template <typename T1, typename T2>
   void fuji_decode_sample(T1&& func_0, T2&& func_1, fuji_compressed_block* info,
-                          ushort16* line_buf, int* pos,
+                          uint16_t* line_buf, int* pos,
                           std::array<int_pair, 41>* grads) const;
-  void fuji_decode_sample_even(fuji_compressed_block* info, ushort16* line_buf,
+  void fuji_decode_sample_even(fuji_compressed_block* info, uint16_t* line_buf,
                                int* pos, std::array<int_pair, 41>* grads) const;
-  void fuji_decode_sample_odd(fuji_compressed_block* info, ushort16* line_buf,
+  void fuji_decode_sample_odd(fuji_compressed_block* info, uint16_t* line_buf,
                               int* pos, std::array<int_pair, 41>* grads) const;
 
-  void fuji_decode_interpolation_even(int line_width, ushort16* line_buf,
-                                      int* pos) const;
-  void fuji_extend_generic(std::array<ushort16*, _ltotal> linebuf,
-                           int line_width, int start, int end) const;
-  void fuji_extend_red(std::array<ushort16*, _ltotal> linebuf,
-                       int line_width) const;
-  void fuji_extend_green(std::array<ushort16*, _ltotal> linebuf,
-                         int line_width) const;
-  void fuji_extend_blue(std::array<ushort16*, _ltotal> linebuf,
-                        int line_width) const;
+  static void fuji_decode_interpolation_even(int line_width, uint16_t* line_buf,
+                                             int* pos);
+  static void fuji_extend_generic(std::array<uint16_t*, ltotal> linebuf,
+                                  int line_width, int start, int end);
+  static void fuji_extend_red(std::array<uint16_t*, ltotal> linebuf,
+                              int line_width);
+  static void fuji_extend_green(std::array<uint16_t*, ltotal> linebuf,
+                                int line_width);
+  static void fuji_extend_blue(std::array<uint16_t*, ltotal> linebuf,
+                               int line_width);
   void xtrans_decode_block(fuji_compressed_block* info, int cur_line) const;
   void fuji_bayer_decode_block(fuji_compressed_block* info, int cur_line) const;
 };

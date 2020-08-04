@@ -21,14 +21,14 @@
 
 #pragma once
 
-#include "AddressSanitizer.h" // for ASan::RegionIsPoisoned
-#include "common/Common.h"    // for uchar8, int32, uint32, ushort16, roundUp
+#include "AddressSanitizer.h" // for ASan
+#include "common/Common.h"    // for roundUp
 #include "common/Memory.h"    // for alignedMalloc
-#include "io/Buffer.h"        // for Buffer::size_type, Buffer, DataBuffer
-#include "io/Endianness.h"    // for Endianness, Endianness::little
-#include "io/IOException.h"   // for IOException (ptr only), ThrowIOE
+#include "io/Buffer.h"        // for Buffer::size_type, DataBuffer, Buffer
+#include "io/IOException.h"   // for ThrowIOE
 #include <cassert>            // for assert
-#include <cstring>            // for memcmp, memcpy
+#include <cstdint>            // for uint8_t, uint16_t, int32_t, uint32_t
+#include <cstring>            // for memchr, memcmp, memcpy
 #include <limits>             // for numeric_limits
 
 namespace rawspeed {
@@ -40,38 +40,21 @@ protected:
 
 public:
   ByteStream() = default;
-  explicit ByteStream(const DataBuffer& buffer) : DataBuffer(buffer) {}
-  ByteStream(const Buffer& buffer, size_type offset, size_type size_,
-             Endianness endianness_ = Endianness::little)
-      : DataBuffer(buffer.getSubView(offset, size_), endianness_) {
-    check(0);
-  }
-  ByteStream(const Buffer& buffer, size_type offset,
-             Endianness endianness_ = Endianness::little)
-      : DataBuffer(buffer, endianness_), pos(offset) {
-    check(0);
-  }
 
-  // deprecated:
-  ByteStream(const Buffer* f, size_type offset, size_type size_,
-             Endianness endianness_ = Endianness::little)
-      : ByteStream(*f, offset, size_, endianness_) {}
-  ByteStream(const Buffer* f, size_type offset,
-             Endianness endianness_ = Endianness::little)
-      : ByteStream(*f, offset, endianness_) {}
+  explicit ByteStream(const DataBuffer& buffer) : DataBuffer(buffer) {}
 
   // return ByteStream that starts at given offset
   // i.e. this->data + offset == getSubStream(offset).data
   ByteStream getSubStream(size_type offset, size_type size_) const {
-    return ByteStream(getSubView(offset, size_), 0, getByteOrder());
+    return ByteStream(DataBuffer(getSubView(offset, size_), getByteOrder()));
   }
 
   ByteStream getSubStream(size_type offset) const {
-    return ByteStream(getSubView(offset), 0, getByteOrder());
+    return ByteStream(DataBuffer(getSubView(offset), getByteOrder()));
   }
 
   inline size_type check(size_type bytes) const {
-    if (static_cast<uint64>(pos) + bytes > size)
+    if (static_cast<uint64_t>(pos) + bytes > size)
       ThrowIOE("Out of bounds access in ByteStream");
     assert(!ASan::RegionIsPoisoned(data + pos, bytes));
     return bytes;
@@ -97,11 +80,11 @@ public:
     check(0);
     return size - pos;
   }
-  inline const uchar8* peekData(size_type count) const {
+  inline const uint8_t* peekData(size_type count) const {
     return Buffer::getData(pos, count);
   }
-  inline const uchar8* getData(size_type count) {
-    const uchar8* ret = Buffer::getData(pos, count);
+  inline const uint8_t* getData(size_type count) {
+    const uint8_t* ret = Buffer::getData(pos, count);
     pos += count;
     return ret;
   }
@@ -129,7 +112,7 @@ public:
     return getStream(nmemb * size_);
   }
 
-  inline uchar8 peekByte(size_type i = 0) const {
+  inline uint8_t peekByte(size_type i = 0) const {
     assert(data);
     check(i+1);
     return data[pos+i];
@@ -159,7 +142,7 @@ public:
     return has_prefix;
   }
 
-  inline uchar8 getByte() {
+  inline uint8_t getByte() {
     assert(data);
     check(1);
     return data[pos++];
@@ -169,7 +152,7 @@ public:
     return DataBuffer::get<T>(pos, i);
   }
 
-  inline ushort16 peekU16() { return peek<ushort16>(); }
+  inline uint16_t peekU16() const { return peek<uint16_t>(); }
 
   template<typename T> inline T get() {
     auto ret = peek<T>();
@@ -177,9 +160,9 @@ public:
     return ret;
   }
 
-  inline ushort16 getU16() { return get<ushort16>(); }
-  inline int32 getI32() { return get<int32>(); }
-  inline uint32 getU32() { return get<uint32>(); }
+  inline uint16_t getU16() { return get<uint16_t>(); }
+  inline int32_t getI32() { return get<int32_t>(); }
+  inline uint32_t getU32() { return get<uint32_t>(); }
   inline float getFloat() { return get<float>(); }
 
   const char* peekString() const {
@@ -203,31 +186,11 @@ public:
     return reinterpret_cast<const char*>(&data[start]);
   }
 
-  // recalculate the internal data/position information such that current position
-  // i.e. getData() before == getData() after but getPosition() after == newPosition
-  // this is only used for DNGPRIVATEDATA handling to restore the original offset
-  // in case the private data / maker note has been moved within in the file
-  // TODO: could add a lower bound check later if required.
-  void rebase(const size_type newPosition, const size_type newSize) {
-    const uchar8* const oldData = getData(newSize);
-
-    pos = newPosition;
-    size = pos + newSize;
-    data = oldData - pos;
-
-#ifndef NDEBUG
-    // check that all the assumptions still hold, and we rebased correctly
-    assert(getData(0) == oldData);
-    assert(getPosition() == newPosition);
-    assert(getRemainSize() == newSize);
-#endif
-  }
-
   // special factory function to set up internal buffer with copy of passed data.
   // only necessary to create 'fake' TiffEntries (see e.g. RAF)
   static ByteStream createCopy(void* data_, size_type size_) {
     ByteStream bs;
-    auto* new_data = alignedMalloc<uchar8, 8>(roundUp(size_, 8));
+    auto* new_data = alignedMalloc<uint8_t, 8>(roundUp(size_, 8));
     memcpy(new_data, data_, size_);
     bs.data = new_data;
     bs.size = size_;

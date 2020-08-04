@@ -21,15 +21,17 @@
 */
 
 #include "parsers/CiffParser.h"
-#include "common/Common.h"               // for trimSpaces, uint32, ushort16
+#include "common/Common.h"               // for trimSpaces
 #include "decoders/CrwDecoder.h"         // for CrwDecoder
 #include "decoders/RawDecoder.h"         // for RawDecoder
+#include "io/Buffer.h"                   // for Buffer (ptr only), DataBuffer
 #include "io/ByteStream.h"               // for ByteStream
 #include "io/Endianness.h"               // for Endianness, Endianness::little
 #include "parsers/CiffParserException.h" // for ThrowCPE
 #include "tiff/CiffEntry.h"              // for CiffEntry
 #include "tiff/CiffIFD.h"                // for CiffIFD
 #include "tiff/CiffTag.h"                // for CIFF_MAKEMODEL
+#include <cstdint>                       // for uint16_t, uint32_t
 #include <memory>                        // for unique_ptr, make_unique
 #include <string>                        // for operator==, string
 #include <utility>                       // for move
@@ -42,15 +44,14 @@ namespace rawspeed {
 CiffParser::CiffParser(const Buffer* inputData) : RawParser(inputData) {}
 
 void CiffParser::parseData() {
-  ByteStream bs(*mInput, 0);
-  bs.setByteOrder(Endianness::little);
+  ByteStream bs(DataBuffer(*mInput, Endianness::little));
 
-  const ushort16 byteOrder = bs.getU16();
+  const uint16_t byteOrder = bs.getU16();
   if (byteOrder != 0x4949) // "II" / little-endian
     ThrowCPE("Not a CIFF file (endianness)");
 
   // Offset to the beginning of the CIFF
-  const uint32 headerLength = bs.getU32();
+  const uint32_t headerLength = bs.getU32();
 
   // 8 bytes of Signature
   if (!CrwDecoder::isCRW(mInput))
@@ -68,7 +69,7 @@ std::unique_ptr<RawDecoder> CiffParser::getDecoder(const CameraMetaData* meta) {
   const auto potentials(mRootIFD->getIFDsWithTag(CIFF_MAKEMODEL));
 
   for (const auto& potential : potentials) {
-    const auto mm = potential->getEntry(CIFF_MAKEMODEL);
+    const auto* const mm = potential->getEntry(CIFF_MAKEMODEL);
     const string make = trimSpaces(mm->getString());
 
     if (make == "Canon")

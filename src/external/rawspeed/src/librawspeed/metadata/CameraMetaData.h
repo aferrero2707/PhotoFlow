@@ -20,17 +20,15 @@
 
 #pragma once
 
-#include "rawspeedconfig.h"
-#include "common/Common.h"   // for uint32
-#include "metadata/Camera.h" // for Camera
+#include "rawspeedconfig.h"  // for HAVE_PUGIXML
+#include "metadata/Camera.h" // IWYU pragma: keep
+#include <cstdint>           // for uint32_t
 #include <map>               // for map
 #include <memory>            // for unique_ptr
 #include <string>            // for string
-#include <tuple>             // for tuple
+#include <tuple>             // for tie, operator<, tuple
 
 namespace rawspeed {
-
-class Camera;
 
 struct CameraId {
   std::string make;
@@ -52,7 +50,7 @@ public:
 #endif
 
   std::map<CameraId, std::unique_ptr<Camera>> cameras;
-  std::map<uint32,Camera*> chdkCameras;
+  std::map<uint32_t, Camera*> chdkCameras;
 
   // searches for camera with given make + model + mode
   const Camera* getCamera(const std::string& make, const std::string& model,
@@ -64,8 +62,8 @@ public:
 
   bool hasCamera(const std::string& make, const std::string& model,
                  const std::string& mode) const;
-  const Camera* __attribute__((pure)) getChdkCamera(uint32 filesize) const;
-  bool __attribute__((pure)) hasChdkCamera(uint32 filesize) const;
+  const Camera* __attribute__((pure)) getChdkCamera(uint32_t filesize) const;
+  bool __attribute__((pure)) hasChdkCamera(uint32_t filesize) const;
   void disableMake(const std::string &make);
   void disableCamera(const std::string &make, const std::string &model);
 

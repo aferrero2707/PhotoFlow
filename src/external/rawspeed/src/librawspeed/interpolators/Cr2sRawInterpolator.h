@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include "common/Common.h" // for ushort16
-#include <array>           // for array
+#include <array>   // for array
+#include <cstdint> // for uint16_t
 
 namespace rawspeed {
 
@@ -42,15 +42,15 @@ public:
   void interpolate(int version);
 
 protected:
-  template <int version> inline void YUV_TO_RGB(const YCbCr& p, ushort16* X);
+  template <int version> inline void YUV_TO_RGB(const YCbCr& p, uint16_t* X);
 
-  inline void STORE_RGB(ushort16* X, int r, int g, int b);
+  static inline void STORE_RGB(uint16_t* X, int r, int g, int b);
 
-  template <int version> inline void interpolate_422_row(ushort16* data, int w);
+  template <int version> inline void interpolate_422_row(uint16_t* data, int w);
   template <int version> inline void interpolate_422(int w, int h);
 
   template <int version>
-  inline void interpolate_420_row(std::array<ushort16*, 3> line, int w);
+  inline void interpolate_420_row(std::array<uint16_t*, 3> line, int w);
   template <int version> inline void interpolate_420(int w, int h);
 };
 

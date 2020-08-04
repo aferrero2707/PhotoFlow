@@ -20,14 +20,18 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "rawspeedconfig.h"
+#include "rawspeedconfig.h" // for HAVE_OPENMP
 #include "decompressors/SonyArw2Decompressor.h"
-#include "common/Common.h"                // for uint32
+#include "common/Array2DRef.h"            // for Array2DRef
+#include "common/Common.h"                // for rawspeed_get_number_of_pro...
 #include "common/Point.h"                 // for iPoint2D
-#include "common/RawImage.h"              // for RawImage
+#include "common/RawImage.h"              // for RawImageData, RawImage
+#include "common/RawspeedException.h"     // for RawspeedException
 #include "decoders/RawDecoderException.h" // for ThrowRDE
 #include "io/BitPumpLSB.h"                // for BitPumpLSB
 #include <cassert>                        // for assert
+#include <cstdint>                        // for uint16_t, uint32_t, uint8_t
+#include <string>                         // for string
 
 namespace rawspeed {
 
@@ -35,13 +39,13 @@ SonyArw2Decompressor::SonyArw2Decompressor(const RawImage& img,
                                            const ByteStream& input_)
     : mRaw(img) {
   if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
-      mRaw->getBpp() != 2)
+      mRaw->getBpp() != sizeof(uint16_t))
     ThrowRDE("Unexpected component count / data type");
 
-  const uint32 w = mRaw->dim.x;
-  const uint32 h = mRaw->dim.y;
+  const uint32_t w = mRaw->dim.x;
+  const uint32_t h = mRaw->dim.y;
 
-  if (w == 0 || h == 0 || w % 32 != 0 || w > 8000 || h > 5320)
+  if (w == 0 || h == 0 || w % 32 != 0 || w > 9600 || h > 6376)
     ThrowRDE("Unexpected image dimensions found: (%u; %u)", w, h);
 
   // 1 byte per pixel
@@ -49,25 +53,23 @@ SonyArw2Decompressor::SonyArw2Decompressor(const RawImage& img,
 }
 
 void SonyArw2Decompressor::decompressRow(int row) const {
-  uchar8* data = mRaw->getData();
-  uint32 pitch = mRaw->pitch;
-  int32 w = mRaw->dim.x;
+  const Array2DRef<uint16_t> out(mRaw->getU16DataAsUncroppedArray2DRef());
+  assert(out.width > 0);
+  assert(out.width % 32 == 0);
 
-  assert(mRaw->dim.x > 0);
-  assert(mRaw->dim.x % 32 == 0);
-
-  auto* dest = reinterpret_cast<ushort16*>(&data[row * pitch]);
+  // Allow compiler to devirtualize the calls below.
+  auto& rawdata = reinterpret_cast<RawImageDataU16&>(*mRaw);
 
   ByteStream rowBs = input;
-  rowBs.skipBytes(row * mRaw->dim.x);
-  rowBs = rowBs.peekStream(mRaw->dim.x);
+  rowBs.skipBytes(row * out.width);
+  rowBs = rowBs.peekStream(out.width);
 
   BitPumpLSB bits(rowBs);
 
-  uint32 random = bits.peekBits(24);
+  uint32_t random = bits.peekBits(24);
 
   // Each loop iteration processes 16 pixels, consuming 128 bits of input.
-  for (int32 x = 0; x < w;) {
+  for (int col = 0; col < out.width; col += ((col & 1) != 0) ? 31 : 1) {
     // 30 bits.
     int _max = bits.getBits(11);
     int _min = bits.getBits(11);
@@ -99,10 +101,9 @@ void SonyArw2Decompressor::decompressRow(int row) const {
             p = 0x7ff;
         }
       }
-      mRaw->setWithLookUp(p << 1, reinterpret_cast<uchar8*>(&dest[x + i * 2]),
-                          &random);
+      rawdata.setWithLookUp(
+          p << 1, reinterpret_cast<uint8_t*>(&out(row, col + i * 2)), &random);
     }
-    x += ((x & 1) != 0) ? 31 : 1; // Skip to next 32 pixels
   }
 }
 

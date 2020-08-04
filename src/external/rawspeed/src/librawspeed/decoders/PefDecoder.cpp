@@ -20,16 +20,19 @@
 */
 
 #include "decoders/PefDecoder.h"
-#include "common/Common.h"                    // for uint32, BitOrder_MSB
+#include "common/Common.h"                    // for BitOrder_MSB
 #include "common/Point.h"                     // for iPoint2D
 #include "decoders/RawDecoderException.h"     // for ThrowRDE
 #include "decompressors/PentaxDecompressor.h" // for PentaxDecompressor
+#include "io/Buffer.h"                        // for Buffer, DataBuffer
 #include "io/ByteStream.h"                    // for ByteStream
+#include "io/Endianness.h"                    // for Endianness, Endianness...
 #include "metadata/ColorFilterArray.h"        // for CFA_GREEN, CFA_BLUE
 #include "tiff/TiffEntry.h"                   // for TiffEntry, TIFF_UNDEFINED
 #include "tiff/TiffIFD.h"                     // for TiffRootIFD, TiffIFD
 #include "tiff/TiffTag.h"                     // for TiffTag, ISOSPEEDRATINGS
 #include <array>                              // for array
+#include <cstdint>                            // for uint32_t
 #include <memory>                             // for unique_ptr
 #include <string>                             // for operator==, string
 
@@ -47,7 +50,7 @@ bool PefDecoder::isAppropriateDecoder(const TiffRootIFD* rootIFD,
 }
 
 RawImage PefDecoder::decodeRawInternal() {
-  auto raw = mRootIFD->getIFDWithTag(STRIPOFFSETS);
+  const auto* raw = mRootIFD->getIFDWithTag(STRIPOFFSETS);
 
   int compression = raw->getEntry(COMPRESSION)->getU32();
 
@@ -70,10 +73,12 @@ RawImage PefDecoder::decodeRawInternal() {
         "Byte count number does not match strip size: count:%u, strips:%u ",
         counts->count, offsets->count);
   }
-  ByteStream bs(mFile, offsets->getU32(), counts->getU32());
+  ByteStream bs(
+      DataBuffer(mFile->getSubView(offsets->getU32(), counts->getU32()),
+                 Endianness::little));
 
-  uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
-  uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
+  uint32_t width = raw->getEntry(IMAGEWIDTH)->getU32();
+  uint32_t height = raw->getEntry(IMAGELENGTH)->getU32();
 
   mRaw->dim = iPoint2D(width, height);
 

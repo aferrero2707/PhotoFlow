@@ -21,39 +21,38 @@
 
 #pragma once
 
-#include "common/Common.h"                      // for uint32
+#include "common/Common.h"                      // for roundUpDivision
 #include "common/Point.h"                       // for iPoint2D
 #include "common/RawImage.h"                    // for RawImage
 #include "decompressors/AbstractDecompressor.h" // for AbstractDecompressor
 #include "io/ByteStream.h"                      // for ByteStream
 #include <cassert>                              // for assert
+#include <cstdint>                              // for uint32_t
 #include <utility>                              // for move
 #include <vector>                               // for vector
 
 namespace rawspeed {
-
-class RawImage;
 
 struct DngTilingDescription final {
   // The dimensions of the whole image.
   const iPoint2D& dim;
 
   // How many horizontal pixels does one tile represent?
-  const uint32 tileW;
+  const uint32_t tileW;
 
   // How many vertical pixels does one tile represent?
-  const uint32 tileH;
+  const uint32_t tileH;
 
   // How many tiles per row is there?
-  const uint32 tilesX;
+  const uint32_t tilesX;
 
   // How many rows is there?
-  const uint32 tilesY;
+  const uint32_t tilesY;
 
   // How many tiles are there total?
   const unsigned numTiles;
 
-  DngTilingDescription(const iPoint2D& dim_, uint32 tileW_, uint32 tileH_)
+  DngTilingDescription(const iPoint2D& dim_, uint32_t tileW_, uint32_t tileH_)
       : dim(dim_), tileW(tileW_), tileH(tileH_),
         tilesX(roundUpDivision(dim.x, tileW)),
         tilesY(roundUpDivision(dim.y, tileH)), numTiles(tilesX * tilesY) {
@@ -125,8 +124,8 @@ class AbstractDngDecompressor final : public AbstractDecompressor {
 
 public:
   AbstractDngDecompressor(const RawImage& img, DngTilingDescription dsc_,
-                          int compression_, bool mFixLjpeg_, uint32 mBps_,
-                          uint32 mPredictor_)
+                          int compression_, bool mFixLjpeg_, uint32_t mBps_,
+                          uint32_t mPredictor_)
       : mRaw(img), dsc(dsc_), compression(compression_), mFixLjpeg(mFixLjpeg_),
         mBps(mBps_), mPredictor(mPredictor_) {}
 
@@ -138,8 +137,8 @@ public:
 
   const int compression;
   const bool mFixLjpeg = false;
-  const uint32 mBps;
-  const uint32 mPredictor;
+  const uint32_t mBps;
+  const uint32_t mPredictor;
 };
 
 } // namespace rawspeed

@@ -21,16 +21,14 @@
 */
 
 #include "decompressors/OlympusDecompressor.h"
-#include "common/Common.h"                // for uint32, ushort16, uchar8
+#include "common/Array2DRef.h"            // for Array2DRef
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
 #include "io/BitPumpMSB.h"                // for BitPumpMSB
 #include "io/ByteStream.h"                // for ByteStream
-#include <algorithm>                      // for min
-#include <array>                          // for array, array<>::value_type
+#include <array>                          // for array
 #include <cassert>                        // for assert
-#include <cmath>                          // for abs
 #include <cstdlib>                        // for abs
 #include <type_traits>                    // for enable_if_t, is_integral
 
@@ -52,11 +50,11 @@ namespace rawspeed {
 
 OlympusDecompressor::OlympusDecompressor(const RawImage& img) : mRaw(img) {
   if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
-      mRaw->getBpp() != 2)
+      mRaw->getBpp() != sizeof(uint16_t))
     ThrowRDE("Unexpected component count / data type");
 
-  const uint32 w = mRaw->dim.x;
-  const uint32 h = mRaw->dim.y;
+  const uint32_t w = mRaw->dim.x;
+  const uint32_t h = mRaw->dim.y;
 
   if (w == 0 || h == 0 || w % 2 != 0 || w > 10400 || h > 7792)
     ThrowRDE("Unexpected image dimensions found: (%u; %u)", w, h);
@@ -75,7 +73,7 @@ OlympusDecompressor::parseCarry(BitPumpMSB* bits,
   bits->fill();
   int i = 2 * ((*carry)[2] < 3);
   int nbits;
-  for (nbits = 2 + i; static_cast<ushort16>((*carry)[0]) >> (nbits + i);
+  for (nbits = 2 + i; static_cast<uint16_t>((*carry)[0]) >> (nbits + i);
        nbits++)
     ;
 
@@ -99,18 +97,18 @@ OlympusDecompressor::parseCarry(BitPumpMSB* bits,
   return (diff * 4) | low;
 }
 
-inline int OlympusDecompressor::getPred(int row, int x, ushort16* dest,
-                                        const ushort16* up_ptr) const {
-  auto getLeft = [dest]() { return dest[-2]; };
-  auto getUp = [up_ptr]() { return up_ptr[0]; };
-  auto getLeftUp = [up_ptr]() { return up_ptr[-2]; };
+inline int OlympusDecompressor::getPred(const Array2DRef<uint16_t> out, int row,
+                                        int col) {
+  auto getLeft = [&]() { return out(row, col - 2); };
+  auto getUp = [&]() { return out(row - 2, col); };
+  auto getLeftUp = [&]() { return out(row - 2, col - 2); };
 
   int pred;
-  if (row < 2 && x < 2)
+  if (row < 2 && col < 2)
     pred = 0;
   else if (row < 2)
     pred = getLeft();
-  else if (x < 2)
+  else if (col < 2)
     pred = getUp();
   else {
     int left = getLeft();
@@ -139,23 +137,19 @@ void OlympusDecompressor::decompressRow(BitPumpMSB* bits, int row) const {
   assert(mRaw->dim.x > 0);
   assert(mRaw->dim.x % 2 == 0);
 
-  int pitch = mRaw->pitch;
+  const Array2DRef<uint16_t> out(mRaw->getU16DataAsUncroppedArray2DRef());
 
   std::array<std::array<int, 3>, 2> acarry{{}};
 
-  auto* dest = reinterpret_cast<ushort16*>(mRaw->getData(0, row));
-  const auto* up_ptr = row > 0 ? &dest[-pitch] : &dest[0];
-  for (int x = 0; x < mRaw->dim.x; x++) {
-    int c = x & 1;
+  for (int col = 0; col < out.width; col++) {
+    int c = col & 1;
 
     std::array<int, 3>& carry = acarry[c];
 
     int diff = parseCarry(bits, &carry);
-    int pred = getPred(row, x, dest, up_ptr);
+    int pred = getPred(out, row, col);
 
-    *dest = pred + diff;
-    dest++;
-    up_ptr++;
+    out(row, col) = pred + diff;
   }
 }
 

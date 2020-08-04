@@ -20,15 +20,19 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "rawspeedconfig.h"
+#include "rawspeedconfig.h" // for HAVE_OPENMP
 #include "decompressors/PanasonicDecompressorV5.h"
+#include "common/Array2DRef.h"            // for Array2DRef
+#include "common/Common.h"                // for rawspeed_get_number_of_pro...
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
 #include "io/BitPumpLSB.h"                // for BitPumpLSB
-#include "io/Buffer.h"                    // for Buffer, DataBuffer
-#include <algorithm>                      // for generate_n
+#include "io/Buffer.h"                    // for Buffer, Buffer::size_type
+#include "io/Endianness.h"                // for Endianness, Endianness::li...
+#include <algorithm>                      // for generate_n, max
 #include <cassert>                        // for assert
+#include <cstdint>                        // for uint8_t, uint16_t, uint32_t
 #include <iterator>                       // for back_insert_iterator, back...
 #include <memory>                         // for allocator_traits<>::value_...
 #include <utility>                        // for move
@@ -57,10 +61,10 @@ constexpr PanasonicDecompressorV5::PacketDsc
 
 PanasonicDecompressorV5::PanasonicDecompressorV5(const RawImage& img,
                                                  const ByteStream& input_,
-                                                 uint32 bps_)
+                                                 uint32_t bps_)
     : mRaw(img), bps(bps_) {
   if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
-      mRaw->getBpp() != 2)
+      mRaw->getBpp() != sizeof(uint16_t))
     ThrowRDE("Unexpected component count / data type");
 
   const PacketDsc* dsc = nullptr;
@@ -94,7 +98,7 @@ PanasonicDecompressorV5::PanasonicDecompressorV5(const RawImage& img,
 
   // Does the input contain enough blocks?
   if (haveBlocks < numBlocks)
-    ThrowRDE("Unsufficient count of input blocks for a given image");
+    ThrowRDE("Insufficient count of input blocks for a given image");
 
   // We only want those blocks we need, no extras.
   input = input_.peekStream(numBlocks, BlockSize);
@@ -135,7 +139,7 @@ void PanasonicDecompressorV5::chopInputIntoBlocks(const PacketDsc& dsc) {
 
 class PanasonicDecompressorV5::ProxyStream {
   ByteStream block;
-  std::vector<uchar8> buf;
+  std::vector<uint8_t> buf;
   ByteStream input;
 
   void parseBlock() {
@@ -159,7 +163,8 @@ class PanasonicDecompressorV5::ProxyStream {
     assert(block.getRemainSize() == 0);
 
     // And reset the clock.
-    input = ByteStream(DataBuffer(Buffer(buf.data(), buf.size())));
+    input = ByteStream(
+        DataBuffer(Buffer(buf.data(), buf.size()), Endianness::little));
     // input.setByteOrder(Endianness::big); // does not seem to matter?!
   }
 
@@ -173,21 +178,19 @@ public:
 };
 
 template <const PanasonicDecompressorV5::PacketDsc& dsc>
-void PanasonicDecompressorV5::processPixelPacket(BitPumpLSB* bs,
-                                                 ushort16* dest) const {
+inline void PanasonicDecompressorV5::processPixelPacket(BitPumpLSB* bs, int row,
+                                                        int col) const {
   static_assert(dsc.pixelsPerPacket > 0, "dsc should be compile-time const");
   static_assert(dsc.bps > 0 && dsc.bps <= 16, "");
 
+  const Array2DRef<uint16_t> out(mRaw->getU16DataAsUncroppedArray2DRef());
+
   assert(bs->getFillLevel() == 0);
 
-  const ushort16* const endDest = dest + dsc.pixelsPerPacket;
-  for (; dest != endDest;) {
+  for (int p = 0; p < dsc.pixelsPerPacket;) {
     bs->fill();
-    for (; bs->getFillLevel() >= dsc.bps; dest++) {
-      assert(dest != endDest);
-
-      *dest = bs->getBitsNoFill(dsc.bps);
-    }
+    for (; bs->getFillLevel() >= dsc.bps; ++p, ++col)
+      out(row, col) = bs->getBitsNoFill(dsc.bps);
   }
   bs->skipBitsNoFill(bs->getFillLevel()); // get rid of padding.
 }
@@ -200,28 +203,22 @@ void PanasonicDecompressorV5::processBlock(const Block& block) const {
   ProxyStream proxy(block.bs);
   BitPumpLSB bs(proxy.getStream());
 
-  for (int y = block.beginCoord.y; y <= block.endCoord.y; y++) {
-    int x = 0;
+  for (int row = block.beginCoord.y; row <= block.endCoord.y; row++) {
+    int col = 0;
     // First row may not begin at the first column.
-    if (block.beginCoord.y == y)
-      x = block.beginCoord.x;
+    if (block.beginCoord.y == row)
+      col = block.beginCoord.x;
 
     int endx = mRaw->dim.x;
     // Last row may end before the last column.
-    if (block.endCoord.y == y)
+    if (block.endCoord.y == row)
       endx = block.endCoord.x;
 
-    auto* dest = reinterpret_cast<ushort16*>(mRaw->getData(x, y));
-
-    assert(x % dsc.pixelsPerPacket == 0);
+    assert(col % dsc.pixelsPerPacket == 0);
     assert(endx % dsc.pixelsPerPacket == 0);
 
-    for (; x < endx;) {
-      processPixelPacket<dsc>(&bs, dest);
-
-      x += dsc.pixelsPerPacket;
-      dest += dsc.pixelsPerPacket;
-    }
+    for (; col < endx; col += dsc.pixelsPerPacket)
+      processPixelPacket<dsc>(&bs, row, col);
   }
 }
 

@@ -20,30 +20,28 @@
 
 #include "RawSpeed-API.h"
 
-#include "md5.h"       // for md5_state, md5_hash, hash_to_string, md5_init
-#include <array>       // for array
-#include <cassert>     // for assert
-#include <chrono>      // for milliseconds, steady_clock, duration_cast
-#include <cstdarg>     // for va_end, va_list, va_start
-#include <cstdint>     // for uint8_t
-#include <cstdio>      // for fprintf, fclose, size_t, fopen, ftell, fwrite
-#include <cstdlib>     // for system
-#include <fstream>     // IWYU pragma: keep
-#include <iostream>    // for cout, left, cerr, internal
-#include <map>         // for map
-#include <memory>      // for allocator, unique_ptr
-#include <sstream>     // IWYU pragma: keep
-#include <string>      // for string, operator+, operator<<, char_traits
-#include <utility>     // for pair
-#include <vector>      // for vector
+#include "md5.h"     // for md5_state, md5_hash, hash_to_string, md5_init
+#include <algorithm> // for fill, max
+#include <array>     // for array
+#include <cassert>   // for assert
+#include <chrono>    // for milliseconds, steady_clock, duration_cast
+#include <cstdarg>   // for va_end, va_list, va_start
+#include <cstdint>   // for uint16_t, uint32_t, uint8_t
+#include <cstdio>    // for fprintf, fclose, fopen, ftell, fwrite, size_t
+#include <cstdlib>   // for system
+#include <fstream>   // IWYU pragma: keep
+#include <iostream>  // for cout, cerr
+#include <iterator>  // for istreambuf_iterator, operator!=
+#include <map>       // for map
+#include <memory>    // for allocator, unique_ptr
+#include <sstream>   // IWYU pragma: keep
+#include <string>    // for string, operator+, operator<<, char_traits
+#include <utility>   // for pair
+#include <vector>    // for vector
 // IWYU pragma: no_include <ext/alloc_traits.h>
 
 #if !defined(__has_feature) || !__has_feature(thread_sanitizer)
 #include <iomanip> // for operator<<, setw
-#endif
-
-#ifdef HAVE_OPENMP
-#include <omp.h>
 #endif
 
 using std::chrono::steady_clock;
@@ -61,8 +59,6 @@ using rawspeed::CameraMetaData;
 using rawspeed::FileReader;
 using rawspeed::RawParser;
 using rawspeed::RawImage;
-using rawspeed::uchar8;
-using rawspeed::uint32;
 using rawspeed::iPoint2D;
 using rawspeed::TYPE_USHORT16;
 using rawspeed::TYPE_FLOAT32;
@@ -103,9 +99,8 @@ class RstestHashMismatch final : public rawspeed::RawspeedException {
 public:
   size_t time;
 
-  explicit RstestHashMismatch(const std::string& msg, size_t time_)
-      : RawspeedException(msg), time(time_) {}
-  explicit RstestHashMismatch(const char* msg, size_t time_)
+  explicit RAWSPEED_UNLIKELY_FUNCTION RAWSPEED_NOINLINE
+  RstestHashMismatch(const char* msg, size_t time_)
       : RawspeedException(msg), time(time_) {}
 };
 
@@ -199,7 +194,7 @@ string img_hash(const RawImage& r) {
   APPEND(&oss, "cropOffset: %dx%d\n", cropTL.x, cropTL.y);
 
   // NOTE: pitch is internal property, a function of dimUncropped.x, bpp and
-  // some additional padding overhead, to align each line lenght to be a
+  // some additional padding overhead, to align each line length to be a
   // multiple of (currently) 16 bytes. And maybe with some additional
   // const offset. there is no point in showing it here, it may differ.
   // APPEND(&oss, "pitch: %d\n", r->pitch);
@@ -215,7 +210,7 @@ string img_hash(const RawImage& r) {
   APPEND(&oss, "badPixelPositions: ");
   {
     MutexLocker guard(&r->mBadPixelMutex);
-    for (uint32 p : r->mBadPixelPositions)
+    for (uint32_t p : r->mBadPixelPositions)
       APPEND(&oss, "%d, ", p);
   }
 
@@ -251,7 +246,7 @@ void writePPM(const RawImage& raw, const string& fn) {
 
   // Write pixels
   for (int y = 0; y < height; ++y) {
-    auto* row = reinterpret_cast<unsigned short*>(raw->getDataUncropped(0, y));
+    auto* row = reinterpret_cast<uint16_t*>(raw->getDataUncropped(0, y));
     // PPM is big-endian
     for (int x = 0; x < width; ++x)
       row[x] = getU16BE(row + x);

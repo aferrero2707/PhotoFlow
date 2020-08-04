@@ -1,4 +1,4 @@
-rawspeed |travis-ci| |appveyor-ci| OBS_ |codecov| |coverity status|
+rawspeed |travis-ci| |appveyor-ci| OBS_ |codecov| |oss-fuzz|
 
 .. |travis-ci| image:: https://travis-ci.org/darktable-org/rawspeed.svg?branch=develop
     :target: https://travis-ci.org/darktable-org/rawspeed
@@ -11,12 +11,13 @@ rawspeed |travis-ci| |appveyor-ci| OBS_ |codecov| |coverity status|
 .. |codecov| image:: https://codecov.io/gh/darktable-org/rawspeed/branch/develop/graph/badge.svg
     :target: https://codecov.io/gh/darktable-org/rawspeed
 
-.. |coverity status| image:: https://scan.coverity.com/projects/11256/badge.svg
-    :target: https://scan.coverity.com/projects/darktable-org-rawspeed
+.. |oss-fuzz| image:: https://oss-fuzz-build-logs.storage.googleapis.com/badges/librawspeed.svg
+    :target: https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:librawspeed
 
 ================================================================================
 RawSpeed Developer Information
 ================================================================================
+
 What is RawSpeed?
 --------------------------------------------------------------------------------
 
@@ -31,7 +32,7 @@ RawSpeed…
 - optionally crops off  “junk” areas of images, containing no valid image information.
 - can add support for new cameras by adding definitions to an xml file.
 - decodes images from memory, not a file stream.
-- is being continuously fuzzed as part of the `oss-fuzz`_ project.
+- is being continuously fuzzed |oss-fuzz| as part of the `oss-fuzz`_ project.
 - is currently tested on |rpu-button-cameras| unique cameras, on |rpu-button-samples| unique samples.
   **Please read** `this <rpu-post_>`_ **for more info on how to contribute samples!**
 - open source under the `LGPL v2`_ license.
@@ -70,7 +71,7 @@ Version 2, new cameras and features
 
 Getting Source Code
 --------------------------------------------------------------------------------
-You can get access to the lastest version using `from here <rawspeed_>`_. You will need to include the “RawSpeed” and “data” folder in your own project.
+You can get access to the latest version using `from here <rawspeed_>`_. You will need to include the “RawSpeed” and “data” folder in your own project.
 
 CMake-based build system is provided.
 

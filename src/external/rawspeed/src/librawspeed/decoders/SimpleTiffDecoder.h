@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include "common/Common.h"                // for uint32
 #include "decoders/AbstractTiffDecoder.h" // for AbstractTiffDecoder
 #include "tiff/TiffIFD.h"                 // for TiffIFD (ptr only), TiffRo...
+#include <cstdint>                        // for uint32_t
 #include <utility>                        // for move
 
 namespace rawspeed {
@@ -42,10 +42,10 @@ public:
 
 protected:
   const TiffIFD* raw;
-  uint32 width;
-  uint32 height;
-  uint32 off;
-  uint32 c2;
+  uint32_t width;
+  uint32_t height;
+  uint32_t off;
+  uint32_t c2;
 };
 
 } // namespace rawspeed

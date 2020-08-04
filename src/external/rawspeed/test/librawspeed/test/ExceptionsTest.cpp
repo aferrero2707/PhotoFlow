@@ -18,21 +18,20 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "common/RawspeedException.h"         // for RawspeedException
+#include "common/RawspeedException.h"         // for RawspeedException (ptr...
 #include "decoders/RawDecoderException.h"     // for RawDecoderException (p...
 #include "io/FileIOException.h"               // for FileIOException (ptr o...
 #include "io/IOException.h"                   // for IOException (ptr only)
 #include "metadata/CameraMetadataException.h" // for CameraMetadataExceptio...
 #include "parsers/CiffParserException.h"      // for CiffParserException (p...
 #include "parsers/FiffParserException.h"      // for FiffParserException (p...
-#include "parsers/RawParserException.h"       // for ThrowRPE, RawParserEx...
-#include "parsers/TiffParserException.h"      // for ThrowTPE, TiffParserEx...
-#include <exception>                          // IWYU pragma: keep
-#include <gmock/gmock.h>                      // for MakePredicateFormatter...
+#include "parsers/RawParserException.h"       // for RawParserException (pt...
+#include "parsers/TiffParserException.h"      // for TiffParserException (p...
+#include <exception>                          // for exception
+#include <gmock/gmock.h>                      // for HasSubstr, ASSERT_THAT
 #include <gtest/gtest.h>                      // for Message, TestPartResult
 #include <memory>                             // for unique_ptr
 #include <stdexcept>                          // for runtime_error
-#include <string>                             // for string
 
 using rawspeed::CameraMetadataException;
 using rawspeed::CiffParserException;
@@ -47,7 +46,7 @@ using std::unique_ptr;
 
 namespace rawspeed_test {
 
-static const std::string msg("my very Smart error Message #1 !");
+static const char* msg = "my very Smart error Message #1 !";
 
 #define FMT "%s"
 
@@ -191,15 +190,15 @@ TYPED_TEST(ExceptionsTest, ThrowMessage) {
 }
 
 TYPED_TEST(ExceptionsTest, ThrowHelperTest) {
-  ASSERT_ANY_THROW(MetaHelper<TypeParam>(msg.c_str()));
-  EXPECT_THROW(MetaHelper<TypeParam>(msg.c_str()), std::runtime_error);
-  EXPECT_THROW(MetaHelper<TypeParam>(msg.c_str()), RawspeedException);
-  EXPECT_THROW(MetaHelper<TypeParam>(msg.c_str()), TypeParam);
+  ASSERT_ANY_THROW(MetaHelper<TypeParam>(msg));
+  EXPECT_THROW(MetaHelper<TypeParam>(msg), std::runtime_error);
+  EXPECT_THROW(MetaHelper<TypeParam>(msg), RawspeedException);
+  EXPECT_THROW(MetaHelper<TypeParam>(msg), TypeParam);
 }
 
 TYPED_TEST(ExceptionsTest, ThrowHelperTestMessage) {
   try {
-    MetaHelper<TypeParam>(msg.c_str());
+    MetaHelper<TypeParam>(msg);
   } catch (std::exception& ex) {
     ASSERT_THAT(ex.what(), testing::HasSubstr(msg));
   }

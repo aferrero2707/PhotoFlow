@@ -22,8 +22,7 @@
 #pragma once
 
 #include "common/Array2DRef.h"                  // for Array2DRef
-#include "common/Common.h"                      // for ushort16, short16
-#include "common/DefaultInitAllocatorAdaptor.h" // for DefaultInitAllocatorA...
+#include "common/DefaultInitAllocatorAdaptor.h" // for DefaultInitAllocator...
 #include "common/Optional.h"                    // for Optional
 #include "common/RawImage.h"                    // for RawImage
 #include "common/SimpleLUT.h"                   // for SimpleLUT, SimpleLUT...
@@ -33,7 +32,7 @@
 #include <array>                                // for array
 #include <cstdint>                              // for int16_t, uint16_t
 #include <memory>                               // for unique_ptr
-#include <type_traits>                          // for underlying_type, und...
+#include <type_traits>                          // for __underlying_type_im...
 #include <utility>                              // for move
 #include <vector>                               // for vector
 
@@ -104,15 +103,15 @@ class VC5Decompressor final : public AbstractDecompressor {
       numLowPassBands + numHighPassBands * numWaveletLevels;
 
   struct {
-    ushort16 iChannel = 0; // 0'th channel is the default
-    Optional<ushort16> iSubband;
-    Optional<ushort16> lowpassPrecision;
-    Optional<short16> quantization;
+    uint16_t iChannel = 0; // 0'th channel is the default
+    Optional<uint16_t> iSubband;
+    Optional<uint16_t> lowpassPrecision;
+    Optional<int16_t> quantization;
 
-    const ushort16 imgFormat = 4;
-    const ushort16 patternWidth = 2;
-    const ushort16 patternHeight = 2;
-    const ushort16 cps = 1;
+    const uint16_t imgFormat = 4;
+    const uint16_t patternWidth = 2;
+    const uint16_t patternHeight = 2;
+    const uint16_t cps = 1;
   } mVC5;
 
   class Wavelet {
@@ -143,9 +142,9 @@ class VC5Decompressor final : public AbstractDecompressor {
       explicit AbstractDecodeableBand(ByteStream bs_) : bs(std::move(bs_)) {}
     };
     struct LowPassBand final : AbstractDecodeableBand {
-      ushort16 lowpassPrecision;
+      uint16_t lowpassPrecision;
       LowPassBand(const Wavelet& wavelet, ByteStream bs_,
-                  ushort16 lowpassPrecision_);
+                  uint16_t lowpassPrecision_);
       void decode(const Wavelet& wavelet) final;
     };
     struct HighPassBand final : AbstractDecodeableBand {
@@ -180,7 +179,7 @@ class VC5Decompressor final : public AbstractDecompressor {
     Array2DRef<const int16_t> bandAsArray2DRef(unsigned int iBand) const;
 
   protected:
-    uint32 mDecodedBandMask = 0;
+    uint32_t mDecodedBandMask = 0;
   };
 
   struct Channel {

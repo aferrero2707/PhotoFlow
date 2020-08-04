@@ -34,7 +34,7 @@
 #endif
 
 #include "io/FileIO.h" // for widenFileName
-#include <windows.h>
+#include <Windows.h>
 #include <io.h>
 #include <tchar.h>
 #endif

@@ -19,7 +19,8 @@
 */
 
 #include "decompressors/NikonDecompressor.h"
-#include "common/Common.h"                // for uint32, clampBits, ushort16
+#include "common/Array2DRef.h"            // for Array2DRef
+#include "common/Common.h"                // for extractHighBits, clampBits
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
@@ -28,12 +29,13 @@
 #include "io/Buffer.h"                    // for Buffer
 #include "io/ByteStream.h"                // for ByteStream
 #include <cassert>                        // for assert
+#include <cstdint>                        // for uint32_t, uint16_t, int16_t
 #include <cstdio>                         // for size_t
 #include <vector>                         // for vector
 
 namespace rawspeed {
 
-const std::array<std::array<std::array<uchar8, 16>, 2>, 6>
+const std::array<std::array<std::array<uint8_t, 16>, 2>, 6>
     NikonDecompressor::nikon_tree = {{
         {{/* 12-bit lossy */
           {0, 1, 5, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0},
@@ -57,7 +59,7 @@ const std::array<std::array<std::array<uchar8, 16>, 2>, 6>
 
 namespace {
 
-const std::array<uint32, 32> bitMask = {
+const std::array<uint32_t, 32> bitMask = {
     {0xffffffff, 0x7fffffff, 0x3fffffff, 0x1fffffff, 0x0fffffff, 0x07ffffff,
      0x03ffffff, 0x01ffffff, 0x00ffffff, 0x007fffff, 0x003fffff, 0x001fffff,
      0x000fffff, 0x0007ffff, 0x0003ffff, 0x0001ffff, 0x0000ffff, 0x00007fff,
@@ -74,8 +76,8 @@ class NikonLASDecompressor {
      * These two fields directly represent the contents of a JPEG DHT
      * marker
      */
-    std::array<uint32, 17> bits;
-    std::array<uint32, 256> huffval;
+    std::array<uint32_t, 17> bits;
+    std::array<uint32_t, 256> huffval;
 
     /*
      * The remaining fields are computed from the above to allow more
@@ -83,10 +85,10 @@ class NikonLASDecompressor {
      * private to the Huffman compression & decompression modules.
      */
 
-    std::array<ushort16, 17> mincode;
+    std::array<uint16_t, 17> mincode;
     std::array<int, 18> maxcode;
-    std::array<short, 17> valptr;
-    std::array<uint32, 256> numbits;
+    std::array<int16_t, 17> valptr;
+    std::array<uint32_t, 256> numbits;
     std::vector<int> bigTable;
     bool initialized;
   } dctbl1;
@@ -98,8 +100,8 @@ class NikonLASDecompressor {
     int lastp;
     int si;
     std::array<char, 257> huffsize;
-    std::array<ushort16, 257> huffcode;
-    ushort16 code;
+    std::array<uint16_t, 257> huffcode;
+    uint16_t code;
     int size;
     int value;
     int ll;
@@ -209,25 +211,25 @@ class NikonLASDecompressor {
    ************************************/
 
   void createBigTable() {
-    const uint32 bits =
+    const uint32_t bits =
         14; // HuffDecode functions must be changed, if this is modified.
-    const uint32 size = 1 << bits;
+    const uint32_t size = 1 << bits;
     int rv = 0;
     int temp;
-    uint32 l;
+    uint32_t l;
 
     dctbl1.bigTable.resize(size);
-    for (uint32 i = 0; i < size; i++) {
-      ushort16 input = i << 2; // Calculate input value
+    for (uint32_t i = 0; i < size; i++) {
+      uint16_t input = i << 2; // Calculate input value
       int code = input >> 8;   // Get 8 bits
-      uint32 val = dctbl1.numbits[code];
+      uint32_t val = dctbl1.numbits[code];
       l = val & 15;
       if (l) {
         rv = val >> 4;
       } else {
         l = 8;
         while (code > dctbl1.maxcode[l]) {
-          temp = input >> (15 - l) & 1;
+          temp = extractHighBits(input, l, /*effectiveBitwidth=*/15) & 1;
           code = (code << 1) | temp;
           l++;
         }
@@ -257,7 +259,7 @@ class NikonLASDecompressor {
       }
 
       if (rv) {
-        int x = input >> (16 - l - rv) & ((1 << rv) - 1);
+        int x = extractHighBits(input, l + rv) & ((1 << rv) - 1);
         if ((x & (1 << (rv - 1))) == 0)
           x -= (1 << rv) - 1;
         dctbl1.bigTable[i] =
@@ -269,9 +271,9 @@ class NikonLASDecompressor {
   }
 
 public:
-  uint32 setNCodesPerLength(const Buffer& data) {
-    uint32 acc = 0;
-    for (uint32 i = 0; i < 16; i++) {
+  uint32_t setNCodesPerLength(const Buffer& data) {
+    uint32_t acc = 0;
+    for (uint32_t i = 0; i < 16; i++) {
       dctbl1.bits[i + 1] = data[i];
       acc += dctbl1.bits[i + 1];
     }
@@ -280,7 +282,7 @@ public:
   }
 
   void setCodeValues(const Buffer& data) {
-    for (uint32 i = 0; i < data.getSize(); i++)
+    for (uint32_t i = 0; i < data.getSize(); i++)
       dctbl1.huffval[i] = data[i];
   }
 
@@ -302,7 +304,7 @@ public:
    *
    *--------------------------------------------------------------
    */
-  int decodeNext(BitPumpMSB& bits) { // NOLINT: google-runtime-references
+  int decodeDifference(BitPumpMSB& bits) { // NOLINT: google-runtime-references
     int rv;
     int l;
     int temp;
@@ -325,7 +327,7 @@ public:
       bits.skipBitsNoFill(l);
       rv = static_cast<int>(val) >> 4;
     } else {
-      bits.skipBits(8);
+      bits.skipBitsNoFill(8);
       l = 8;
       while (code > dctbl1.maxcode[l]) {
         temp = bits.getBitsNoFill(1);
@@ -347,8 +349,8 @@ public:
      * Section F.2.2.1: decode the difference and
      * Figure F.12: extend sign bit
      */
-    uint32 len = rv & 15;
-    uint32 shl = rv >> 4;
+    uint32_t len = rv & 15;
+    uint32_t shl = rv >> 4;
     int diff = ((bits.getBits(len - shl) << 1) + 1) << shl >> 1;
     if ((diff & (1 << (len - 1))) == 0)
       diff -= (1 << len) - !shl;
@@ -358,9 +360,10 @@ public:
 
 } // namespace
 
-std::vector<ushort16> NikonDecompressor::createCurve(ByteStream* metadata,
-                                                     uint32 bitsPS, uint32 v0,
-                                                     uint32 v1, uint32* split) {
+std::vector<uint16_t> NikonDecompressor::createCurve(ByteStream* metadata,
+                                                     uint32_t bitsPS,
+                                                     uint32_t v0, uint32_t v1,
+                                                     uint32_t* split) {
   // Nikon Z7 12/14 bit compressed hack.
   if (v0 == 68 && v1 == 64)
     bitsPS -= 2;
@@ -370,14 +373,14 @@ std::vector<ushort16> NikonDecompressor::createCurve(ByteStream* metadata,
   // the very last value is not part of the used table but necessary
   // to linearly interpolate the last segment, therefore the '+1/-1'
   // size adjustments of 'curve'.
-  std::vector<ushort16> curve((1 << bitsPS & 0x7fff) + 1);
+  std::vector<uint16_t> curve((1 << bitsPS & 0x7fff) + 1);
   assert(curve.size() > 1);
 
   for (size_t i = 0; i < curve.size(); i++)
     curve[i] = i;
 
-  uint32 step = 0;
-  uint32 csize = metadata->getU16();
+  uint32_t step = 0;
+  uint32_t csize = metadata->getU16();
   if (csize > 1)
     step = curve.size() / (csize - 1);
 
@@ -388,16 +391,16 @@ std::vector<ushort16> NikonDecompressor::createCurve(ByteStream* metadata,
     for (size_t i = 0; i < csize; i++)
       curve[i * step] = metadata->getU16();
     for (size_t i = 0; i < curve.size() - 1; i++) {
-      const uint32 b_scale = i % step;
+      const uint32_t b_scale = i % step;
 
-      const uint32 a_pos = i - b_scale;
-      const uint32 b_pos = a_pos + step;
+      const uint32_t a_pos = i - b_scale;
+      const uint32_t b_pos = a_pos + step;
       assert(a_pos < curve.size());
       assert(b_pos > 0);
       assert(b_pos < curve.size());
       assert(a_pos < b_pos);
 
-      const uint32 a_scale = step - b_scale;
+      const uint32_t a_scale = step - b_scale;
       curve[i] = (a_scale * curve[a_pos] + b_scale * curve[b_pos]) / step;
     }
 
@@ -410,7 +413,7 @@ std::vector<ushort16> NikonDecompressor::createCurve(ByteStream* metadata,
     curve.resize(csize + 1UL);
     assert(curve.size() > 1);
 
-    for (uint32 i = 0; i < csize; i++) {
+    for (uint32_t i = 0; i < csize; i++) {
       curve[i] = metadata->getU16();
     }
   }
@@ -423,9 +426,9 @@ std::vector<ushort16> NikonDecompressor::createCurve(ByteStream* metadata,
 }
 
 template <typename Huffman>
-Huffman NikonDecompressor::createHuffmanTable(uint32 huffSelect) {
+Huffman NikonDecompressor::createHuffmanTable(uint32_t huffSelect) {
   Huffman ht;
-  uint32 count =
+  uint32_t count =
       ht.setNCodesPerLength(Buffer(nikon_tree[huffSelect][0].data(), 16));
   ht.setCodeValues(Buffer(nikon_tree[huffSelect][1].data(), count));
   ht.setup(true, false);
@@ -433,10 +436,10 @@ Huffman NikonDecompressor::createHuffmanTable(uint32 huffSelect) {
 }
 
 NikonDecompressor::NikonDecompressor(const RawImage& raw, ByteStream metadata,
-                                     uint32 bitsPS_)
+                                     uint32_t bitsPS_)
     : mRaw(raw), bitsPS(bitsPS_) {
   if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
-      mRaw->getBpp() != 2)
+      mRaw->getBpp() != sizeof(uint16_t))
     ThrowRDE("Unexpected component count / data type");
 
   if (mRaw->dim.x == 0 || mRaw->dim.y == 0 || mRaw->dim.x % 2 != 0 ||
@@ -452,8 +455,8 @@ NikonDecompressor::NikonDecompressor(const RawImage& raw, ByteStream metadata,
     ThrowRDE("Invalid bpp found: %u", bitsPS);
   }
 
-  uint32 v0 = metadata.getByte();
-  uint32 v1 = metadata.getByte();
+  uint32_t v0 = metadata.getByte();
+  uint32_t v1 = metadata.getByte();
 
   writeLog(DEBUG_PRIO_EXTRA, "Nef version v0:%u, v1:%u", v0, v1);
 
@@ -465,10 +468,10 @@ NikonDecompressor::NikonDecompressor(const RawImage& raw, ByteStream metadata,
   if (bitsPS == 14)
     huffSelect += 3;
 
-  pUp1[0] = metadata.getU16();
-  pUp1[1] = metadata.getU16();
-  pUp2[0] = metadata.getU16();
-  pUp2[1] = metadata.getU16();
+  pUp[0][0] = metadata.getU16();
+  pUp[1][0] = metadata.getU16();
+  pUp[0][1] = metadata.getU16();
+  pUp[1][1] = metadata.getU16();
 
   curve = createCurve(&metadata, bitsPS, v0, v1, &split);
 
@@ -481,43 +484,22 @@ template <typename Huffman>
 void NikonDecompressor::decompress(BitPumpMSB* bits, int start_y, int end_y) {
   Huffman ht = createHuffmanTable<Huffman>(huffSelect);
 
-  uchar8* draw = mRaw->getData();
-  uint32 pitch = mRaw->pitch;
-
-  int pLeft1 = 0;
-  int pLeft2 = 0;
+  const Array2DRef<uint16_t> out(mRaw->getU16DataAsUncroppedArray2DRef());
 
   // allow gcc to devirtualize the calls below
   auto* rawdata = reinterpret_cast<RawImageDataU16*>(mRaw.get());
 
-  const iPoint2D& size = mRaw->dim;
-  assert(size.x % 2 == 0);
-  assert(size.x >= 2);
-  for (uint32 y = start_y; y < static_cast<uint32>(end_y); y++) {
-    auto* dest =
-        reinterpret_cast<ushort16*>(&draw[y * pitch]); // Adjust destination
-    pUp1[y & 1] += ht.decodeNext(*bits);
-    pUp2[y & 1] += ht.decodeNext(*bits);
-    pLeft1 = pUp1[y & 1];
-    pLeft2 = pUp2[y & 1];
-
-    rawdata->setWithLookUp(clampBits(pLeft1, 15),
-                           reinterpret_cast<uchar8*>(dest + 0), &random);
-    rawdata->setWithLookUp(clampBits(pLeft2, 15),
-                           reinterpret_cast<uchar8*>(dest + 1), &random);
-
-    dest += 2;
-
-    for (uint32 x = 2; x < static_cast<uint32>(size.x); x += 2) {
-      pLeft1 += ht.decodeNext(*bits);
-      pLeft2 += ht.decodeNext(*bits);
-
-      rawdata->setWithLookUp(clampBits(pLeft1, 15),
-                             reinterpret_cast<uchar8*>(dest + 0), &random);
-      rawdata->setWithLookUp(clampBits(pLeft2, 15),
-                             reinterpret_cast<uchar8*>(dest + 1), &random);
-
-      dest += 2;
+  assert(out.width % 2 == 0);
+  assert(out.width >= 2);
+  for (int row = start_y; row < end_y; row++) {
+    std::array<int, 2> pred = pUp[row & 1];
+    for (int col = 0; col < out.width; col++) {
+      pred[col & 1] += ht.decodeDifference(*bits);
+      if (col < 2)
+        pUp[row & 1][col & 1] = pred[col & 1];
+      rawdata->setWithLookUp(clampBits(pred[col & 1], 15),
+                             reinterpret_cast<uint8_t*>(&out(row, col)),
+                             &random);
     }
   }
 }

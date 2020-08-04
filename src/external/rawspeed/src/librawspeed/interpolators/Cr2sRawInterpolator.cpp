@@ -20,15 +20,14 @@
 */
 
 #include "interpolators/Cr2sRawInterpolator.h"
-#include "common/Common.h"                 // for ushort16, clampBits
-#include "common/Point.h"                  // for iPoint2D
-#include "common/RawImage.h"               // for RawImage, RawImageData
-#include "decoders/RawDecoderException.h"  // for RawDecoderException (ptr o...
-#include <array>                           // for array
-#include <cassert>                         // for assert
-#include <type_traits>                     // for is_pod
+#include "common/Common.h"                // for clampBits
+#include "common/Point.h"                 // for iPoint2D
+#include "common/RawImage.h"              // for RawImage, RawImageData
+#include "decoders/RawDecoderException.h" // for ThrowRDE
+#include <array>                          // for array
+#include <cassert>                        // for assert
+#include <cstdint>                        // for uint16_t
 
-using std::is_pod;
 using std::array;
 
 namespace rawspeed {
@@ -38,20 +37,14 @@ struct Cr2sRawInterpolator::YCbCr final {
   int Cb;
   int Cr;
 
-  inline static void LoadY(YCbCr* dst, const YCbCr& src) {
-    assert(dst);
-
-    dst->Y = src.Y;
-  }
-
-  inline static void LoadY(YCbCr* p, const ushort16* data) {
+  inline static void LoadY(YCbCr* p, const uint16_t* data) {
     assert(p);
     assert(data);
 
     p->Y = data[0];
   }
 
-  inline static void LoadCbCr(YCbCr* p, const ushort16* data) {
+  inline static void LoadCbCr(YCbCr* p, const uint16_t* data) {
     assert(p);
     assert(data);
 
@@ -59,7 +52,7 @@ struct Cr2sRawInterpolator::YCbCr final {
     p->Cr = data[2];
   }
 
-  inline static void Load(YCbCr* p, const ushort16* data) {
+  inline static void LoadYCbCr(YCbCr* p, const uint16_t* data) {
     assert(p);
     assert(data);
 
@@ -68,14 +61,6 @@ struct Cr2sRawInterpolator::YCbCr final {
   }
 
   YCbCr() = default;
-
-  explicit YCbCr(ushort16* data) {
-    static_assert(is_pod<YCbCr>::value, "not a POD");
-
-    assert(data);
-
-    Load(this, data);
-  }
 
   inline void signExtend() {
     Cb -= 16384;
@@ -110,7 +95,7 @@ struct Cr2sRawInterpolator::YCbCr final {
 
 // NOTE: Thread safe.
 template <int version>
-inline void Cr2sRawInterpolator::interpolate_422_row(ushort16* data, int w) {
+inline void Cr2sRawInterpolator::interpolate_422_row(uint16_t* data, int w) {
   assert(data);
   assert(w >= 2);
   assert(w % 2 == 0);
@@ -130,7 +115,8 @@ inline void Cr2sRawInterpolator::interpolate_422_row(ushort16* data, int w) {
     assert(x % 2 == 0);
 
     // load, process and output first pixel, which is full
-    YCbCr p0(data);
+    YCbCr p0;
+    YCbCr::LoadYCbCr(&p0, data);
     p0.process(hue);
     YUV_TO_RGB<version>(p0, data);
     data += 3;
@@ -140,7 +126,8 @@ inline void Cr2sRawInterpolator::interpolate_422_row(ushort16* data, int w) {
     YCbCr::LoadY(&p, data);
 
     // load third pixel, which is full, process
-    YCbCr p1(data + 3);
+    YCbCr p1;
+    YCbCr::LoadYCbCr(&p1, data + 3);
     p1.process(hue);
 
     // and finally, interpolate and output the middle pixel
@@ -157,7 +144,8 @@ inline void Cr2sRawInterpolator::interpolate_422_row(ushort16* data, int w) {
   //  .. [ Y1 Cb  Cr  ] [ Y2 ... ... ]
 
   // load, process and output first pixel, which is full
-  YCbCr p(data);
+  YCbCr p;
+  YCbCr::LoadYCbCr(&p, data);
   p.process(hue);
   YUV_TO_RGB<version>(p, data);
   data += 3;
@@ -174,7 +162,7 @@ inline void Cr2sRawInterpolator::interpolate_422(int w, int h) {
   assert(h > 0);
 
   for (int y = 0; y < h; y++) {
-    auto data = reinterpret_cast<ushort16*>(mRaw->getData(0, y));
+    auto* data = reinterpret_cast<uint16_t*>(mRaw->getData(0, y));
 
     interpolate_422_row<version>(data, w);
   }
@@ -183,7 +171,7 @@ inline void Cr2sRawInterpolator::interpolate_422(int w, int h) {
 // NOTE: Not thread safe, since it writes inplace.
 template <int version>
 inline void
-Cr2sRawInterpolator::interpolate_420_row(std::array<ushort16*, 3> line, int w) {
+Cr2sRawInterpolator::interpolate_420_row(std::array<uint16_t*, 3> line, int w) {
   assert(line[0]);
   assert(line[1]);
   assert(line[2]);
@@ -225,7 +213,8 @@ Cr2sRawInterpolator::interpolate_420_row(std::array<ushort16*, 3> line, int w) {
     assert(x % 2 == 0);
 
     // load, process and output first pixel of first row, which is full
-    YCbCr p0(line[0]);
+    YCbCr p0;
+    YCbCr::LoadYCbCr(&p0, line[0]);
     p0.process(hue);
     YUV_TO_RGB<version>(p0, line[0]);
     line[0] += 3;
@@ -288,7 +277,8 @@ Cr2sRawInterpolator::interpolate_420_row(std::array<ushort16*, 3> line, int w) {
   //               .. .   .       .. .   .
 
   // load, process and output first pixel of first row, which is full
-  YCbCr p0(line[0]);
+  YCbCr p0;
+  YCbCr::LoadYCbCr(&p0, line[0]);
   p0.process(hue);
   YUV_TO_RGB<version>(p0, line[0]);
   line[0] += 3;
@@ -329,16 +319,16 @@ inline void Cr2sRawInterpolator::interpolate_420(int w, int h) {
   assert(h >= 2);
   assert(h % 2 == 0);
 
-  array<ushort16*, 3> line;
+  array<uint16_t*, 3> line;
 
   int y;
   for (y = 0; y < h - 2; y += 2) {
     assert(y + 4 <= h);
     assert(y % 2 == 0);
 
-    line[0] = reinterpret_cast<ushort16*>(mRaw->getData(0, y));
-    line[1] = reinterpret_cast<ushort16*>(mRaw->getData(0, y + 1));
-    line[2] = reinterpret_cast<ushort16*>(mRaw->getData(0, y + 2));
+    line[0] = reinterpret_cast<uint16_t*>(mRaw->getData(0, y));
+    line[1] = reinterpret_cast<uint16_t*>(mRaw->getData(0, y + 1));
+    line[2] = reinterpret_cast<uint16_t*>(mRaw->getData(0, y + 2));
 
     interpolate_420_row<version>(line, w);
   }
@@ -346,8 +336,8 @@ inline void Cr2sRawInterpolator::interpolate_420(int w, int h) {
   assert(y + 2 == h);
   assert(y % 2 == 0);
 
-  line[0] = reinterpret_cast<ushort16*>(mRaw->getData(0, y));
-  line[1] = reinterpret_cast<ushort16*>(mRaw->getData(0, y + 1));
+  line[0] = reinterpret_cast<uint16_t*>(mRaw->getData(0, y));
+  line[1] = reinterpret_cast<uint16_t*>(mRaw->getData(0, y + 1));
   line[2] = nullptr;
 
   assert(line[0]);
@@ -366,7 +356,8 @@ inline void Cr2sRawInterpolator::interpolate_420(int w, int h) {
     assert(x % 2 == 0);
 
     // load, process and output first pixel of first row, which is full
-    YCbCr p0(line[0]);
+    YCbCr p0;
+    YCbCr::LoadYCbCr(&p0, line[0]);
     p0.process(hue);
     YUV_TO_RGB<version>(p0, line[0]);
     line[0] += 3;
@@ -415,7 +406,8 @@ inline void Cr2sRawInterpolator::interpolate_420(int w, int h) {
   //  row 1:  ... [ Y3 ... ... ] [ Y4 ... ... ]
 
   // load, process and output first pixel of first row, which is full
-  YCbCr p(line[0]);
+  YCbCr p;
+  YCbCr::LoadYCbCr(&p, line[0]);
   p.process(hue);
   YUV_TO_RGB<version>(p, line[0]);
   line[0] += 3;
@@ -438,7 +430,7 @@ inline void Cr2sRawInterpolator::interpolate_420(int w, int h) {
   line[1] += 3;
 }
 
-inline void Cr2sRawInterpolator::STORE_RGB(ushort16* X, int r, int g, int b) {
+inline void Cr2sRawInterpolator::STORE_RGB(uint16_t* X, int r, int g, int b) {
   assert(X);
 
   X[0] = clampBits(r >> 8, 16);
@@ -448,7 +440,7 @@ inline void Cr2sRawInterpolator::STORE_RGB(ushort16* X, int r, int g, int b) {
 
 template </* int version */>
 /* Algorithm found in EOS 40D */
-inline void Cr2sRawInterpolator::YUV_TO_RGB<0>(const YCbCr& p, ushort16* X) {
+inline void Cr2sRawInterpolator::YUV_TO_RGB<0>(const YCbCr& p, uint16_t* X) {
   assert(X);
 
   int r = sraw_coeffs[0] * (p.Y + p.Cr - 512);
@@ -458,7 +450,7 @@ inline void Cr2sRawInterpolator::YUV_TO_RGB<0>(const YCbCr& p, ushort16* X) {
 }
 
 template </* int version */>
-inline void Cr2sRawInterpolator::YUV_TO_RGB<1>(const YCbCr& p, ushort16* X) {
+inline void Cr2sRawInterpolator::YUV_TO_RGB<1>(const YCbCr& p, uint16_t* X) {
   assert(X);
 
   int r = sraw_coeffs[0] * (p.Y + ((50 * p.Cb + 22929 * p.Cr) >> 12));
@@ -469,7 +461,7 @@ inline void Cr2sRawInterpolator::YUV_TO_RGB<1>(const YCbCr& p, ushort16* X) {
 
 template </* int version */>
 /* Algorithm found in EOS 5d Mk III */
-inline void Cr2sRawInterpolator::YUV_TO_RGB<2>(const YCbCr& p, ushort16* X) {
+inline void Cr2sRawInterpolator::YUV_TO_RGB<2>(const YCbCr& p, uint16_t* X) {
   assert(X);
 
   int r = sraw_coeffs[0] * (p.Y + p.Cr);

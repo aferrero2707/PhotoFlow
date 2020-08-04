@@ -21,9 +21,10 @@
 
 #pragma once
 
-#include "common/Common.h"   // for uint32, BitOrder
+#include "common/Common.h"   // for BitOrder
 #include "common/RawImage.h" // for RawImage
 #include "metadata/Camera.h" // for Hints
+#include <cstdint>           // for uint32_t
 #include <string>            // for string
 
 namespace rawspeed {
@@ -121,9 +122,9 @@ protected:
   virtual void decodeMetaDataInternal(const CameraMetaData* meta) = 0;
   virtual void checkSupportInternal(const CameraMetaData* meta) = 0;
 
-  /* Ask for sample submisson, if makes sense */
-  void askForSamples(const CameraMetaData* meta, const std::string& make,
-                     const std::string& model, const std::string& mode) const;
+  /* Ask for sample submission, if makes sense */
+  static void askForSamples(const CameraMetaData* meta, const std::string& make,
+                            const std::string& model, const std::string& mode);
 
   /* Check the camera and mode against the camera database. */
   /* A RawDecoderException will be thrown if the camera isn't supported */
@@ -158,9 +159,9 @@ protected:
 };
 
 struct RawDecoder::RawSlice {
-  uint32 h = 0;
-  uint32 offset = 0;
-  uint32 count = 0;
+  uint32_t h = 0;
+  uint32_t offset = 0;
+  uint32_t count = 0;
 };
 
 } // namespace rawspeed

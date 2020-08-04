@@ -19,9 +19,9 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "rawspeedconfig.h"
+#include "rawspeedconfig.h" // for HAVE_OPENMP, HAV...
 #include "decompressors/AbstractDngDecompressor.h"
-#include "common/Common.h"                          // for BitOrder_LSB
+#include "common/Common.h"                          // for rawspeed_get_num...
 #include "common/Point.h"                           // for iPoint2D
 #include "common/RawImage.h"                        // for RawImageData
 #include "decoders/RawDecoderException.h"           // for RawDecoderException
@@ -34,9 +34,9 @@
 #include "io/Endianness.h"                          // for Endianness, Endi...
 #include "io/IOException.h"                         // for IOException, Thr...
 #include <cassert>                                  // for assert
-#include <cstdio>                                   // for size_t
 #include <limits>                                   // for numeric_limits
 #include <memory>                                   // for unique_ptr
+#include <string>                                   // for string
 #include <vector>                                   // for vector
 
 namespace rawspeed {
@@ -58,7 +58,7 @@ template <> void AbstractDngDecompressor::decompressThread<1>() const noexcept {
       big_endian = true;
 
     try {
-      const uint32 inputPixelBits = mRaw->getCpp() * mBps;
+      const uint32_t inputPixelBits = mRaw->getCpp() * mBps;
 
       if (e->dsc.tileW > std::numeric_limits<int>::max() / inputPixelBits)
         ThrowIOE("Integer overflow when calculating input pitch");
@@ -113,8 +113,9 @@ template <> void AbstractDngDecompressor::decompressThread<8>() const noexcept {
   for (auto e = slices.cbegin(); e < slices.cend(); ++e) {
     DeflateDecompressor z(e->bs, mRaw, mPredictor, mBps);
     try {
-      z.decode(&uBuffer, iPoint2D(e->dsc.tileW, e->dsc.tileH),
-               iPoint2D(e->width, e->height), iPoint2D(e->offX, e->offY));
+      z.decode(&uBuffer, iPoint2D(mRaw->getCpp() * e->dsc.tileW, e->dsc.tileH),
+               iPoint2D(mRaw->getCpp() * e->width, e->height),
+               iPoint2D(mRaw->getCpp() * e->offX, e->offY));
     } catch (RawDecoderException& err) {
       mRaw->setError(err.what());
     } catch (IOException& err) {

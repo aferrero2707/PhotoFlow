@@ -22,8 +22,11 @@
 #include "decoders/NakedDecoder.h"
 #include "common/Common.h"                          // for BitOrder, BitOrd...
 #include "common/Point.h"                           // for iPoint2D
-#include "decoders/RawDecoderException.h"           // for RawDecoderExcept...
+#include "decoders/RawDecoderException.h"           // for ThrowRDE
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
+#include "io/Buffer.h"                              // for Buffer, DataBuffer
+#include "io/ByteStream.h"                          // for ByteStream
+#include "io/Endianness.h"                          // for Endianness, Endi...
 #include "metadata/Camera.h"                        // for Camera, Hints
 #include <map>                                      // for map
 #include <stdexcept>                                // for out_of_range
@@ -34,7 +37,6 @@ using std::string;
 
 namespace rawspeed {
 
-class Buffer;
 class CameraMetaData;
 
 NakedDecoder::NakedDecoder(const Buffer* file, const Camera* c)
@@ -90,7 +92,9 @@ RawImage NakedDecoder::decodeRawInternal() {
   mRaw->dim = iPoint2D(width, height);
   mRaw->createData();
 
-  UncompressedDecompressor u(*mFile, offset, mRaw);
+  UncompressedDecompressor u(
+      ByteStream(DataBuffer(mFile->getSubView(offset), Endianness::little)),
+      mRaw);
 
   iPoint2D pos(0, 0);
   u.readUncompressedRaw(mRaw->dim, pos, width * bits / 8, bits, bo);

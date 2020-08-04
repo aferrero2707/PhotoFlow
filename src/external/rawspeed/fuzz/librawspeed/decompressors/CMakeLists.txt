@@ -19,8 +19,9 @@ set(DECOMPRESSORS
   "LJpegDecompressor"
   "NikonDecompressor"
   "OlympusDecompressor"
-  "PanasonicDecompressor"
+  "PanasonicDecompressorV4"
   "PanasonicDecompressorV5"
+  "PanasonicDecompressorV6"
   "PentaxDecompressor"
   "PhaseOneDecompressor"
   "SamsungV0Decompressor"
@@ -31,6 +32,6 @@ set(DECOMPRESSORS
   "VC5Decompressor"
 )
 
-foreach(decompressor IN LISTS DECOMPRESSORS)
+foreach(decompressor ${DECOMPRESSORS})
   add_simple_fuzzer(${decompressor})
 endforeach()

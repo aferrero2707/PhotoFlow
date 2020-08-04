@@ -21,15 +21,16 @@
 
 #pragma once
 
-#include "common/RawspeedException.h" // for RawspeedException
-#include <string>                     // for string
+#include "rawspeedconfig.h"           // for RAWSPEED_NOINLINE, RAWSPEED_UN...
+#include "common/RawspeedException.h" // for ThrowExceptionHelper, Rawspeed...
 
 namespace rawspeed {
 
 class IOException final : public RawspeedException {
 public:
-  explicit IOException(const std::string& msg) : RawspeedException(msg) {}
-  explicit IOException(const char* msg) : RawspeedException(msg) {}
+  explicit RAWSPEED_UNLIKELY_FUNCTION RAWSPEED_NOINLINE
+  IOException(const char* msg)
+      : RawspeedException(msg) {}
 };
 
 #define ThrowIOE(...) ThrowExceptionHelper(rawspeed::IOException, __VA_ARGS__)

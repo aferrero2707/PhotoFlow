@@ -20,17 +20,21 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
-#include "rawspeedconfig.h"
+#include "rawspeedconfig.h" // for HAVE_OPENMP
 #include "decompressors/PhaseOneDecompressor.h"
-#include "common/Common.h"                // for int32, uint32, ushort16
+#include "common/Array2DRef.h"            // for Array2DRef
+#include "common/Common.h"                // for rawspeed_get_number_of_pro...
 #include "common/Point.h"                 // for iPoint2D
-#include "common/RawImage.h"              // for RawImage, RawImageData
+#include "common/RawImage.h"              // for RawImageData, RawImage
+#include "common/RawspeedException.h"     // for RawspeedException
 #include "decoders/RawDecoderException.h" // for ThrowRDE
 #include "io/BitPumpMSB32.h"              // for BitPumpMSB32
-#include <algorithm>                      // for for_each
+#include <algorithm>                      // for sort
 #include <array>                          // for array
 #include <cassert>                        // for assert
-#include <cstddef>                        // for size_t
+#include <cstdint>                        // for int32_t, uint16_t
+#include <memory>                         // for allocator_traits<>::value_...
+#include <string>                         // for string
 #include <utility>                        // for move
 #include <vector>                         // for vector, vector<>::size_type
 
@@ -42,82 +46,68 @@ PhaseOneDecompressor::PhaseOneDecompressor(const RawImage& img,
   if (mRaw->getDataType() != TYPE_USHORT16)
     ThrowRDE("Unexpected data type");
 
-  if (!((mRaw->getCpp() == 1 && mRaw->getBpp() == 2)))
+  if (!((mRaw->getCpp() == 1 && mRaw->getBpp() == sizeof(uint16_t))))
     ThrowRDE("Unexpected cpp: %u", mRaw->getCpp());
 
   if (!mRaw->dim.hasPositiveArea() || mRaw->dim.x % 2 != 0 ||
-      mRaw->dim.x > 11976 || mRaw->dim.y > 8852) {
+      mRaw->dim.x > 11976 || mRaw->dim.y > 8854) {
     ThrowRDE("Unexpected image dimensions found: (%u; %u)", mRaw->dim.x,
              mRaw->dim.y);
   }
 
-  validateStrips();
+  prepareStrips();
 }
 
-void PhaseOneDecompressor::validateStrips() const {
+void PhaseOneDecompressor::prepareStrips() {
   // The 'strips' vector should contain exactly one element per row of image.
 
-  // If the lenght is different, then the 'strips' vector is clearly incorrect.
+  // If the length is different, then the 'strips' vector is clearly incorrect.
   if (strips.size() != static_cast<decltype(strips)::size_type>(mRaw->dim.y)) {
     ThrowRDE("Height (%u) vs strip count %zu mismatch", mRaw->dim.y,
              strips.size());
   }
 
-  struct RowBin {
-    using value_type = unsigned char;
-    bool isEmpty() const { return data == 0; }
-    void fill() { data = 1; }
-    value_type data = 0;
-  };
-
   // Now, the strips in 'strips' vector aren't in order.
   // The 'decltype(strips)::value_type::n' is the row number of a strip.
   // We need to make sure that we have every row (0..mRaw->dim.y-1), once.
-
-  // There are many ways to do that. Here, we take the histogram of all the
-  // row numbers, and if any bin ends up not being '1' (one strip per row),
-  // then the input is bad.
-  std::vector<RowBin> histogram;
-  histogram.resize(strips.size());
-  int numBinsFilled = 0;
-  std::for_each(strips.begin(), strips.end(),
-                [y = mRaw->dim.y, &histogram,
-                 &numBinsFilled](const PhaseOneStrip& strip) {
-                  if (strip.n < 0 || strip.n >= y)
-                    ThrowRDE("Strip specifies out-of-bounds row %u", strip.n);
-                  RowBin& rowBin = histogram[strip.n];
-                  if (!rowBin.isEmpty())
-                    ThrowRDE("Duplicate row %u", strip.n);
-                  rowBin.fill();
-                  numBinsFilled++;
-                });
-  assert(histogram.size() == strips.size());
-  assert(numBinsFilled == mRaw->dim.y &&
-         "We should only get here if all the rows/bins got filled.");
+  // For that, first let's sort them to have monothonically increasting `n`.
+  // This will also serialize the per-line outputting.
+  std::sort(
+      strips.begin(), strips.end(),
+      [](const PhaseOneStrip& a, const PhaseOneStrip& b) { return a.n < b.n; });
+  // And now ensure that slice number matches the slice's row.
+  for (decltype(strips)::size_type i = 0; i < strips.size(); ++i)
+    if (static_cast<decltype(strips)::size_type>(strips[i].n) != i)
+      ThrowRDE("Strips validation issue.");
+  // All good.
 }
 
 void PhaseOneDecompressor::decompressStrip(const PhaseOneStrip& strip) const {
-  uint32 width = mRaw->dim.x;
-  assert(width % 2 == 0);
+  const Array2DRef<uint16_t> out(mRaw->getU16DataAsUncroppedArray2DRef());
+
+  assert(out.width > 0);
+  assert(out.width % 2 == 0);
 
   static constexpr std::array<const int, 10> length = {8,  7, 6,  9,  11,
                                                        10, 5, 12, 14, 13};
 
   BitPumpMSB32 pump(strip.bs);
 
-  std::array<int32, 2> pred;
+  std::array<int32_t, 2> pred;
   pred.fill(0);
   std::array<int, 2> len;
-  auto* img = reinterpret_cast<ushort16*>(mRaw->getData(0, strip.n));
-  for (uint32 col = 0; col < width; col++) {
-    if (col >= (width & ~7U)) // last 'width % 8' pixels.
+  const int row = strip.n;
+  for (int col = 0; col < out.width; col++) {
+    pump.fill(32);
+    if (static_cast<unsigned>(col) >=
+        (out.width & ~7U)) // last 'width % 8' pixels.
       len[0] = len[1] = 14;
     else if ((col & 7) == 0) {
       for (int& i : len) {
         int j = 0;
 
         for (; j < 5; j++) {
-          if (pump.getBits(1) != 0) {
+          if (pump.getBitsNoFill(1) != 0) {
             if (col == 0)
               ThrowRDE("Can not initialize lengths. Data is corrupt.");
 
@@ -128,18 +118,18 @@ void PhaseOneDecompressor::decompressStrip(const PhaseOneStrip& strip) const {
 
         assert((col == 0 && j > 0) || col != 0);
         if (j > 0)
-          i = length[2 * (j - 1) + pump.getBits(1)];
+          i = length[2 * (j - 1) + pump.getBitsNoFill(1)];
       }
     }
 
     int i = len[col & 1];
     if (i == 14)
-      img[col] = pred[col & 1] = pump.getBits(16);
+      out(row, col) = pred[col & 1] = pump.getBitsNoFill(16);
     else {
       pred[col & 1] +=
-          static_cast<signed>(pump.getBits(i)) + 1 - (1 << (i - 1));
+          static_cast<signed>(pump.getBitsNoFill(i)) + 1 - (1 << (i - 1));
       // FIXME: is the truncation the right solution here?
-      img[col] = ushort16(pred[col & 1]);
+      out(row, col) = uint16_t(pred[col & 1]);
     }
   }
 }

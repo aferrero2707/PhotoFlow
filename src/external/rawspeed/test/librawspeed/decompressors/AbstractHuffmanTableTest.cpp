@@ -19,22 +19,22 @@
 */
 
 #include "decompressors/AbstractHuffmanTable.h" // for AbstractHuffmanTable...
-#include "common/Common.h"                      // for uchar8, uint32
 #include "io/Buffer.h"                          // for Buffer
-#include <algorithm>                            // for min
+#include <algorithm>                            // for max, min
 #include <bitset>                               // for bitset
 #include <cassert>                              // for assert
+#include <cstdint>                              // for uint8_t, uint32_t
 #include <cstdlib>                              // for exit
-#include <gtest/gtest.h>                        // for make_tuple, Message
+#include <gtest/gtest.h>                        // for Message, TestPartResult
 #include <initializer_list>                     // for initializer_list<>::...
 #include <ostream>                              // for operator<<, ostream
 #include <string>                               // for basic_string, operat...
+#include <tuple>                                // for make_tuple, get, tuple
 #include <utility>                              // for move
 #include <vector>                               // for vector
 
 using rawspeed::AbstractHuffmanTable;
 using rawspeed::Buffer;
-using rawspeed::uchar8;
 using std::make_tuple;
 
 namespace rawspeed {
@@ -74,7 +74,7 @@ TEST(AbstractHuffmanTableCodeSymbolTest, Equality) {
 }
 
 #ifndef NDEBUG
-TEST(CodeSymbolDeathTest, CodeSymbolLenght) {
+TEST(CodeSymbolDeathTest, CodeSymbolLength) {
   ASSERT_DEATH({ AbstractHuffmanTable::CodeSymbol(0, 0); }, "code_len > 0");
   ASSERT_DEATH({ AbstractHuffmanTable::CodeSymbol(1, 0); }, "code_len > 0");
   ASSERT_DEATH({ AbstractHuffmanTable::CodeSymbol(0, 17); }, "code_len <= 16");
@@ -204,7 +204,7 @@ TEST_P(CodeSymbolHaveCommonPrefixTest, CodeSymbolHaveCommonPrefixTest) {
   auto symbol_str = ::testing::PrintToString(symbol);
   auto partial_str = ::testing::PrintToString(partial);
   const auto len = std::min(symbol_str.length(), partial_str.length());
-  // Trim them to the same lenght (cut end chars)
+  // Trim them to the same length (cut end chars)
   symbol_str.resize(len);
   partial_str.resize(len);
   ASSERT_EQ(AbstractHuffmanTable::CodeSymbol::HaveCommonPrefix(symbol, partial),
@@ -244,10 +244,10 @@ TEST(CodeSymbolHaveCommonPrefixDeathTest, AsymmetricalDeathTest) {
 }
 #endif
 
-auto genHT = [](std::initializer_list<uchar8>&& nCodesPerLength)
+auto genHT = [](std::initializer_list<uint8_t>&& nCodesPerLength)
     -> AbstractHuffmanTable {
   AbstractHuffmanTable ht;
-  std::vector<uchar8> v(nCodesPerLength.begin(), nCodesPerLength.end());
+  std::vector<uint8_t> v(nCodesPerLength.begin(), nCodesPerLength.end());
   v.resize(16);
   Buffer b(v.data(), v.size());
   ht.setNCodesPerLength(b);
@@ -256,19 +256,19 @@ auto genHT = [](std::initializer_list<uchar8>&& nCodesPerLength)
 };
 
 auto genHTCount =
-    [](std::initializer_list<uchar8>&& nCodesPerLength) -> rawspeed::uint32 {
+    [](std::initializer_list<uint8_t>&& nCodesPerLength) -> uint32_t {
   AbstractHuffmanTable ht;
-  std::vector<uchar8> v(nCodesPerLength.begin(), nCodesPerLength.end());
+  std::vector<uint8_t> v(nCodesPerLength.begin(), nCodesPerLength.end());
   v.resize(16);
   Buffer b(v.data(), v.size());
   return ht.setNCodesPerLength(b);
 };
 
 auto genHTFull =
-    [](std::initializer_list<uchar8>&& nCodesPerLength,
-       std::initializer_list<uchar8>&& codeValues) -> AbstractHuffmanTable {
+    [](std::initializer_list<uint8_t>&& nCodesPerLength,
+       std::initializer_list<uint8_t>&& codeValues) -> AbstractHuffmanTable {
   auto ht = genHT(std::move(nCodesPerLength));
-  std::vector<uchar8> v(codeValues.begin(), codeValues.end());
+  std::vector<uint8_t> v(codeValues.begin(), codeValues.end());
   Buffer b(v.data(), v.size());
   ht.setCodeValues(b);
   return ht;
@@ -277,7 +277,7 @@ auto genHTFull =
 #ifndef NDEBUG
 TEST(AbstractHuffmanTableDeathTest, setNCodesPerLengthRequires16Lengths) {
   for (int i = 0; i < 32; i++) {
-    std::vector<uchar8> v(i, 1);
+    std::vector<uint8_t> v(i, 1);
     ASSERT_EQ(v.size(), i);
 
     Buffer b(v.data(), v.size());
@@ -334,10 +334,10 @@ TEST(AbstractHuffmanTableTest, setNCodesPerLengthTooManyCodesTotal) {
                rawspeed::RawDecoderException);
 }
 
-TEST(AbstractHuffmanTableTest, setNCodesPerLengthTooManyCodesForLenght) {
+TEST(AbstractHuffmanTableTest, setNCodesPerLengthTooManyCodesForLength) {
   for (int len = 1; len < 8; len++) {
     AbstractHuffmanTable ht;
-    std::vector<uchar8> v(16, 0);
+    std::vector<uint8_t> v(16, 0);
     Buffer b(v.data(), v.size());
     for (auto i = 1U; i <= (1U << len); i++) {
       v[len - 1] = i;
@@ -373,11 +373,11 @@ TEST(AbstractHuffmanTableTest, setNCodesPerLengthCounts) {
 TEST(AbstractHuffmanTableDeathTest, setCodeValuesRequiresCount) {
   for (int len = 1; len < 8; len++) {
     AbstractHuffmanTable ht;
-    std::vector<uchar8> l(16, 0);
+    std::vector<uint8_t> l(16, 0);
     Buffer bl(l.data(), l.size());
     l[len - 1] = (1U << len) - 1U;
     const auto count = ht.setNCodesPerLength(bl);
-    std::vector<uchar8> v;
+    std::vector<uint8_t> v;
     v.reserve(count + 1);
     for (auto cnt = count - 1; cnt <= count + 1; cnt++) {
       v.resize(cnt);
@@ -399,7 +399,7 @@ TEST(AbstractHuffmanTableDeathTest, setCodeValuesRequiresCount) {
 
 TEST(AbstractHuffmanTableDeathTest, setCodeValuesRequiresLessThan162) {
   auto ht = genHT({0, 0, 0, 0, 0, 0, 0, 162});
-  std::vector<uchar8> v(163, 0);
+  std::vector<uint8_t> v(163, 0);
   Buffer bv(v.data(), v.size());
   ASSERT_DEATH({ ht.setCodeValues(bv); }, "data.getSize\\(\\) <= 162");
 }
@@ -407,15 +407,12 @@ TEST(AbstractHuffmanTableDeathTest, setCodeValuesRequiresLessThan162) {
 
 TEST(AbstractHuffmanTableTest, setCodeValuesValueLessThan16) {
   auto ht = genHT({1});
-  std::vector<uchar8> v(1);
+  std::vector<uint8_t> v(1);
 
   for (int i = 0; i < 256; i++) {
     v[0] = i;
     Buffer b(v.data(), v.size());
-    if (i <= 16)
-      ASSERT_NO_THROW(ht.setCodeValues(b););
-    else
-      ASSERT_THROW(ht.setCodeValues(b), rawspeed::RawDecoderException);
+    ASSERT_NO_THROW(ht.setCodeValues(b););
   }
 }
 
@@ -435,7 +432,7 @@ TEST(AbstractHuffmanTableTest, EqualCompareAndTrimming) {
   ASSERT_NE(genHTFull({1, 0}, {0}), genHTFull({1}, {1}));
 }
 
-using SignExtendDataType = std::tuple<rawspeed::uint32, rawspeed::uint32, int>;
+using SignExtendDataType = std::tuple<uint32_t, uint32_t, int>;
 class SignExtendTest : public ::testing::TestWithParam<SignExtendDataType> {
 protected:
   SignExtendTest() = default;
@@ -447,8 +444,8 @@ protected:
     value = std::get<2>(p);
   }
 
-  rawspeed::uint32 diff;
-  rawspeed::uint32 len;
+  uint32_t diff;
+  uint32_t len;
   int value;
 };
 
@@ -527,11 +524,11 @@ static const SignExtendDataType signExtendData[]{
 INSTANTIATE_TEST_CASE_P(SignExtendTest, SignExtendTest,
                         ::testing::ValuesIn(signExtendData));
 TEST_P(SignExtendTest, SignExtendTest) {
-  ASSERT_EQ(AbstractHuffmanTable::signExtended(diff, len), value);
+  ASSERT_EQ(AbstractHuffmanTable::extend(diff, len), value);
 }
 
 using generateCodeSymbolsDataType =
-    std::tuple<std::vector<uchar8>,
+    std::tuple<std::vector<uint8_t>,
                std::vector<AbstractHuffmanTable::CodeSymbol>>;
 class generateCodeSymbolsTest
     : protected AbstractHuffmanTable,
@@ -546,35 +543,35 @@ protected:
     expectedSymbols = std::get<1>(p);
   }
 
-  std::vector<uchar8> ncpl;
+  std::vector<uint8_t> ncpl;
   std::vector<AbstractHuffmanTable::CodeSymbol> expectedSymbols;
 };
 static const generateCodeSymbolsDataType generateCodeSymbolsData[]{
-    make_tuple(std::vector<rawspeed::uchar8>{1},
+    make_tuple(std::vector<uint8_t>{1},
                std::vector<AbstractHuffmanTable::CodeSymbol>{{0b0, 1}}),
 
-    make_tuple(std::vector<rawspeed::uchar8>{0, 1},
+    make_tuple(std::vector<uint8_t>{0, 1},
                std::vector<AbstractHuffmanTable::CodeSymbol>{
                    {0b00, 2},
                }),
-    make_tuple(std::vector<rawspeed::uchar8>{0, 2},
+    make_tuple(std::vector<uint8_t>{0, 2},
                std::vector<AbstractHuffmanTable::CodeSymbol>{
                    {0b00, 2},
                    {0b01, 2},
                }),
-    make_tuple(std::vector<rawspeed::uchar8>{0, 3},
+    make_tuple(std::vector<uint8_t>{0, 3},
                std::vector<AbstractHuffmanTable::CodeSymbol>{
                    {0b00, 2},
                    {0b01, 2},
                    {0b10, 2},
                }),
 
-    make_tuple(std::vector<rawspeed::uchar8>{1, 1},
+    make_tuple(std::vector<uint8_t>{1, 1},
                std::vector<AbstractHuffmanTable::CodeSymbol>{
                    {0b0, 1},
                    {0b10, 2},
                }),
-    make_tuple(std::vector<rawspeed::uchar8>{1, 2},
+    make_tuple(std::vector<uint8_t>{1, 2},
                std::vector<AbstractHuffmanTable::CodeSymbol>{
                    {0b0, 1},
                    {0b10, 2},
@@ -587,7 +584,7 @@ INSTANTIATE_TEST_CASE_P(generateCodeSymbolsTest, generateCodeSymbolsTest,
 TEST_P(generateCodeSymbolsTest, generateCodeSymbolsTest) {
   Buffer bl(ncpl.data(), ncpl.size());
   const auto cnt = setNCodesPerLength(bl);
-  std::vector<uchar8> cv(cnt, 0);
+  std::vector<uint8_t> cv(cnt, 0);
   Buffer bv(cv.data(), cv.size());
   setCodeValues(bv);
 
@@ -633,7 +630,7 @@ TEST_F(DummyHuffmanTableDeathTest, VerifyCodeSymbolsTest) {
                  "all code symbols are globally ordered");
   }
   {
-    // Code Lenghts are not decreasing
+    // Code Lengths are not decreasing
     std::vector<AbstractHuffmanTable::CodeSymbol> s{{0b0, 2}, {0b1, 1}};
     ASSERT_DEATH({ VerifyCodeSymbols(s); },
                  "all code symbols are globally ordered");

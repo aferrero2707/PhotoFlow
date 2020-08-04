@@ -11,3 +11,5 @@ build/gmon.out
 
 # hide VIPS' source tree
 libvips/
+
+scripts/exposure-blend.zip

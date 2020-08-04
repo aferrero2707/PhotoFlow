@@ -20,15 +20,16 @@
 */
 
 #include "decompressors/HasselbladDecompressor.h"
-#include "common/Common.h"                // for uint32, ushort16
+#include "common/Array2DRef.h"            // for Array2DRef
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
-#include "decompressors/HuffmanTable.h"   // for HuffmanTable
-#include "io/BitPumpMSB32.h"              // for BitPumpMSB32, BitStream<>::f...
+#include "decompressors/HuffmanTable.h"   // for HuffmanTableLUT, HuffmanTable
+#include "io/BitPumpMSB32.h"              // for BitPumpMSB32, BitStream<>:...
 #include "io/ByteStream.h"                // for ByteStream
 #include <array>                          // for array
 #include <cassert>                        // for assert
+#include <cstdint>                        // for uint16_t
 
 namespace rawspeed {
 
@@ -36,7 +37,7 @@ HasselbladDecompressor::HasselbladDecompressor(const ByteStream& bs,
                                                const RawImage& img)
     : AbstractLJpegDecompressor(bs, img) {
   if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
-      mRaw->getBpp() != 2)
+      mRaw->getBpp() != sizeof(uint16_t))
     ThrowRDE("Unexpected component count / data type");
 
   // FIXME: could be wrong. max "active pixels" - "100 MP"
@@ -50,8 +51,10 @@ HasselbladDecompressor::HasselbladDecompressor(const ByteStream& bs,
 // Returns len bits as a signed value.
 // Highest bit is a sign bit
 inline int HasselbladDecompressor::getBits(BitPumpMSB32* bs, int len) {
+  if (!len)
+    return 0;
   int diff = bs->getBits(len);
-  diff = len > 0 ? HuffmanTable::signExtended(diff, len) : diff;
+  diff = HuffmanTable::extend(diff, len);
   if (diff == 65535)
     return -32768;
   return diff;
@@ -64,28 +67,30 @@ void HasselbladDecompressor::decodeScan() {
              frame.w, frame.h, mRaw->dim.x, mRaw->dim.y);
   }
 
-  assert(frame.h > 0);
-  assert(frame.w > 0);
-  assert(frame.w % 2 == 0);
+  const Array2DRef<uint16_t> out(mRaw->getU16DataAsUncroppedArray2DRef());
+
+  assert(out.height > 0);
+  assert(out.width > 0);
+  assert(out.width % 2 == 0);
 
   const auto ht = getHuffmanTables<1>();
+  ht[0]->verifyCodeSymbolsAreValidDiffLenghts();
 
   BitPumpMSB32 bitStream(input);
   // Pixels are packed two at a time, not like LJPEG:
   // [p1_length_as_huffman][p2_length_as_huffman][p0_diff_with_length][p1_diff_with_length]|NEXT PIXELS
-  for (uint32 y = 0; y < frame.h; y++) {
-    auto* dest = reinterpret_cast<ushort16*>(mRaw->getData(0, y));
+  for (int row = 0; row < out.height; row++) {
     int p1 = 0x8000 + pixelBaseOffset;
     int p2 = 0x8000 + pixelBaseOffset;
-    for (uint32 x = 0; x < frame.w; x += 2) {
-      int len1 = ht[0]->decodeLength(bitStream);
-      int len2 = ht[0]->decodeLength(bitStream);
+    for (int col = 0; col < out.width; col += 2) {
+      int len1 = ht[0]->decodeCodeValue(bitStream);
+      int len2 = ht[0]->decodeCodeValue(bitStream);
       p1 += getBits(&bitStream, len1);
       p2 += getBits(&bitStream, len2);
       // NOTE: this is rather unusual and weird, but appears to be correct.
       // clampBits(p, 16) results in completely garbled images.
-      dest[x] = ushort16(p1);
-      dest[x + 1] = ushort16(p2);
+      out(row, col) = uint16_t(p1);
+      out(row, col + 1) = uint16_t(p2);
     }
   }
   input.skipBytes(bitStream.getBufferPosition());

@@ -19,12 +19,13 @@
 */
 
 #include "common/RawImage.h"              // for RawImageDataFloat, TYPE_FL...
-#include "common/Common.h"                // for uchar8, uint32, writeLog
+#include "common/Common.h"                // for writeLog, DEBUG_PRIO_INFO
 #include "common/Point.h"                 // for iPoint2D
 #include "decoders/RawDecoderException.h" // for ThrowRDE
 #include "metadata/BlackArea.h"           // for BlackArea
 #include <algorithm>                      // for max, min
 #include <array>                          // for array
+#include <cstdint>                        // for uint8_t, uint32_t, uint16_t
 #include <memory>                         // for operator==, unique_ptr
 #include <vector>                         // for vector
 
@@ -34,15 +35,14 @@ using std::max;
 namespace rawspeed {
 
 RawImageDataFloat::RawImageDataFloat() {
-  bpp = 4;
+  bpp = sizeof(float);
   dataType = TYPE_FLOAT32;
   }
 
-  RawImageDataFloat::RawImageDataFloat(const iPoint2D &_dim, uint32 _cpp)
-      : RawImageData(_dim, 4, _cpp) {
+  RawImageDataFloat::RawImageDataFloat(const iPoint2D& _dim, uint32_t _cpp)
+      : RawImageData(_dim, sizeof(float), _cpp) {
     dataType = TYPE_FLOAT32;
   }
-
 
   void RawImageDataFloat::calculateBlackAreas() {
     std::array<float, 4> accPixels;
@@ -59,7 +59,7 @@ RawImageDataFloat::RawImageDataFloat() {
         if (static_cast<int>(area.offset) + static_cast<int>(area.size) >
             uncropped_dim.y)
           ThrowRDE("Offset + size is larger than height of image");
-        for (uint32 y = area.offset; y < area.offset+area.size; y++) {
+        for (uint32_t y = area.offset; y < area.offset + area.size; y++) {
           auto* pixel =
               reinterpret_cast<float*>(getDataUncropped(mOffset.x, y));
 
@@ -80,7 +80,7 @@ RawImageDataFloat::RawImageDataFloat() {
           auto* pixel =
               reinterpret_cast<float*>(getDataUncropped(area.offset, y));
 
-          for (uint32 x = area.offset; x < area.size + area.offset; x++) {
+          for (uint32_t x = area.offset; x < area.size + area.offset; x++) {
             accPixels[((y & 1) << 1) | (x & 1)] += *pixel;
             pixel++;
           }
@@ -162,15 +162,15 @@ RawImageDataFloat::RawImageDataFloat() {
       __m128i sseround;
       __m128i ssesub2;
       __m128i ssesign;
-      auto* sub_mul = alignedMallocArray<uint32, 16, __m128i>(4);
+      auto* sub_mul = alignedMallocArray<uint32_t, 16, __m128i>(4);
 	  if (!sub_mul)
 		ThrowRDE("Out of memory, failed to allocate 128 bytes");
 
-      uint32 gw = pitch / 16;
+      uint32_t gw = pitch / 16;
       // 10 bit fraction
-      uint32 mul = (int)(1024.0F * 65535.0F / (float)(whitePoint - blackLevelSeparate[mOffset.x&1]));
+      uint32_t mul = (int)(1024.0F * 65535.0F / (float)(whitePoint - blackLevelSeparate[mOffset.x&1]));
       mul |= ((int)(1024.0F * 65535.0F / (float)(whitePoint - blackLevelSeparate[(mOffset.x+1)&1])))<<16;
-      uint32 b = blackLevelSeparate[mOffset.x&1] | (blackLevelSeparate[(mOffset.x+1)&1]<<16);
+      uint32_t b = blackLevelSeparate[mOffset.x&1] | (blackLevelSeparate[(mOffset.x+1)&1]<<16);
 
       for (int i = 0; i< 4; i++) {
         sub_mul[i] = b;     // Subtract even lines
@@ -201,7 +201,7 @@ RawImageDataFloat::RawImageDataFloat() {
           ssescale = _mm_load_si128((__m128i*)&sub_mul[12]);
         }
 
-        for (uint32 x = 0 ; x < gw; x++) {
+        for (uint32_t x = 0 ; x < gw; x++) {
           __m128i pix_high;
           __m128i temp;
           _mm_prefetch((char*)(pixel+1), _MM_HINT_T0);
@@ -246,7 +246,7 @@ RawImageDataFloat::RawImageDataFloat() {
         sub[i] = blackLevelSeparate[v];
       }
       for (int y = start_y; y < end_y; y++) {
-        ushort16 *pixel = (ushort16*)getData(0, y);
+        uint16_t *pixel = (uint16_t*)getData(0, y);
         int *mul_local = &mul[2*(y&1)];
         int *sub_local = &sub[2*(y&1)];
         for (int x = 0 ; x < gw; x++) {
@@ -289,56 +289,57 @@ RawImageDataFloat::RawImageDataFloat() {
   /* the horizontal and vertical direction. Pixels found further away */
   /* are weighed less */
 
-void RawImageDataFloat::fixBadPixel( uint32 x, uint32 y, int component )
-{
+void RawImageDataFloat::fixBadPixel(uint32_t x, uint32_t y, int component) {
   std::array<float, 4> values;
   values.fill(-1);
   std::array<float, 4> dist = {{}};
   std::array<float, 4> weight;
 
-  uchar8* bad_line = &mBadPixelMap[y*mBadPixelMapPitch];
+  uint8_t* bad_line = &mBadPixelMap[y * mBadPixelMapPitch];
+  // We can have cfa or no-cfa for RawImageDataFloat
+  int step = isCFA ? 2 : 1;
 
   // Find pixel to the left
-  int x_find = static_cast<int>(x) - 2;
+  int x_find = static_cast<int>(x) - step;
   int curr = 0;
   while (x_find >= 0 && values[curr] < 0) {
     if (0 == ((bad_line[x_find>>3] >> (x_find&7)) & 1)) {
-      values[curr] = (reinterpret_cast<float*>(getData(x_find, y)))[component];
+      values[curr] = (reinterpret_cast<float*>(getDataUncropped(x_find, y)))[component];
       dist[curr] = static_cast<float>(static_cast<int>(x) - x_find);
     }
-    x_find-=2;
+    x_find -= step;
   }
   // Find pixel to the right
-  x_find = static_cast<int>(x) + 2;
+  x_find = static_cast<int>(x) + step;
   curr = 1;
   while (x_find < uncropped_dim.x && values[curr] < 0) {
     if (0 == ((bad_line[x_find>>3] >> (x_find&7)) & 1)) {
-      values[curr] = (reinterpret_cast<float*>(getData(x_find, y)))[component];
+      values[curr] = (reinterpret_cast<float*>(getDataUncropped(x_find, y)))[component];
       dist[curr] = static_cast<float>(x_find - static_cast<int>(x));
     }
-    x_find+=2;
+    x_find += step;
   }
 
   bad_line = &mBadPixelMap[x>>3];
   // Find pixel upwards
-  int y_find = static_cast<int>(y) - 2;
+  int y_find = static_cast<int>(y) - step;
   curr = 2;
   while (y_find >= 0 && values[curr] < 0) {
     if (0 == ((bad_line[y_find*mBadPixelMapPitch] >> (x&7)) & 1)) {
-      values[curr] = (reinterpret_cast<float*>(getData(x, y_find)))[component];
+      values[curr] = (reinterpret_cast<float*>(getDataUncropped(x, y_find)))[component];
       dist[curr] = static_cast<float>(static_cast<int>(y) - y_find);
     }
-    y_find-=2;
+    y_find -= step;
   }
   // Find pixel downwards
-  y_find = static_cast<int>(y) + 2;
+  y_find = static_cast<int>(y) + step;
   curr = 3;
   while (y_find < uncropped_dim.y && values[curr] < 0) {
     if (0 == ((bad_line[y_find*mBadPixelMapPitch] >> (x&7)) & 1)) {
-      values[curr] = (reinterpret_cast<float*>(getData(x, y_find)))[component];
+      values[curr] = (reinterpret_cast<float*>(getDataUncropped(x, y_find)))[component];
       dist[curr] = static_cast<float>(y_find - static_cast<int>(y));
     }
-    y_find+=2;
+    y_find += step;
   }
   // Find x weights
   float total_dist_x = dist[0] + dist[1];
@@ -362,7 +363,7 @@ void RawImageDataFloat::fixBadPixel( uint32 x, uint32 y, int component )
   float total_pixel = 0;
   for (int i = 0; i < 4; i++)
     if (values[i] >= 0)
-      total_pixel += values[i] * dist[i];
+      total_pixel += values[i] * weight[i];
 
   total_pixel /= total_div;
   auto* pix = reinterpret_cast<float*>(getDataUncropped(x, y));
@@ -372,15 +373,14 @@ void RawImageDataFloat::fixBadPixel( uint32 x, uint32 y, int component )
   if (cpp > 1 && component == 0)
     for (int i = 1; i < static_cast<int>(cpp); i++)
       fixBadPixel(x,y,i);
-
 }
-
 
 void RawImageDataFloat::doLookup( int start_y, int end_y ) {
   ThrowRDE("Float point lookup tables not implemented");
 }
 
-void RawImageDataFloat::setWithLookUp(ushort16 value, uchar8* dst, uint32* random) {
+void RawImageDataFloat::setWithLookUp(uint16_t value, uint8_t* dst,
+                                      uint32_t* random) {
   auto* dest = reinterpret_cast<float*>(dst);
   if (table == nullptr) {
     *dest = static_cast<float>(value) * (1.0F / 65535);

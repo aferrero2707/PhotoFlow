@@ -22,7 +22,6 @@
 */
 
 #include "parsers/TiffParser.h"
-#include "common/Common.h"               // for uint32, ushort16
 #include "common/NORangesSet.h"          // for set
 #include "decoders/ArwDecoder.h"         // for ArwDecoder
 #include "decoders/Cr2Decoder.h"         // for Cr2Decoder
@@ -41,10 +40,12 @@
 #include "decoders/Rw2Decoder.h"         // for Rw2Decoder
 #include "decoders/SrwDecoder.h"         // for SrwDecoder
 #include "decoders/ThreefrDecoder.h"     // for ThreefrDecoder
+#include "io/Buffer.h"                   // for Buffer (ptr only), DataBuffer
 #include "io/ByteStream.h"               // for ByteStream
+#include "io/Endianness.h"               // for Endianness, Endianness::unk...
 #include "parsers/TiffParserException.h" // for ThrowTPE
 #include <cassert>                       // for assert
-#include <cstdint>                       // for UINT32_MAX
+#include <cstdint>                       // for UINT32_MAX, uint16_t, uint32_t
 #include <memory>                        // for make_unique, unique_ptr
 #include <string>                        // for string
 #include <tuple>                         // for tie, tuple
@@ -62,21 +63,21 @@ std::unique_ptr<RawDecoder> TiffParser::getDecoder(const CameraMetaData* meta) {
 }
 
 TiffRootIFDOwner TiffParser::parse(TiffIFD* parent, const Buffer& data) {
-  ByteStream bs(data, 0);
+  ByteStream bs(DataBuffer(data, Endianness::unknown));
   bs.setByteOrder(getTiffByteOrder(bs, 0, "TIFF header"));
   bs.skipBytes(2);
 
-  ushort16 magic = bs.getU16();
-  if (magic != 42 && magic != 0x4f52 && magic != 0x5352 && magic != 0x55) // ORF has 0x4f52/0x5352, RW2 0x55 - Brillant!
+  uint16_t magic = bs.getU16();
+  if (magic != 42 && magic != 0x4f52 && magic != 0x5352 && magic != 0x55) // ORF has 0x4f52/0x5352, RW2 0x55 - Brilliant!
     ThrowTPE("Not a TIFF file (magic 42)");
 
   TiffRootIFDOwner root = std::make_unique<TiffRootIFD>(
       parent, nullptr, bs,
-      UINT32_MAX); // tell TiffIFD constructur not to parse bs as IFD
+      UINT32_MAX); // tell TiffIFD constructor not to parse bs as IFD
 
   NORangesSet<Buffer> ifds;
 
-  for (uint32 IFDOffset = bs.getU32(); IFDOffset;
+  for (uint32_t IFDOffset = bs.getU32(); IFDOffset;
        IFDOffset = root->getSubIFDs().back()->getNextIFD()) {
     root->add(std::make_unique<TiffIFD>(root.get(), &ifds, bs, IFDOffset));
   }

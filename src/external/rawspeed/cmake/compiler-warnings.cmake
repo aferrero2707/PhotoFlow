@@ -9,11 +9,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 if(NOT (UNIX OR APPLE))
-  # on windows, resuts in bogus false-positive varnings
+  # on windows, results in bogus false-positive warnings
   CHECK_CXX_COMPILER_FLAG_AND_ENABLE_IT(-Wno-format)
 endif()
 
-if(NOT SPECIAL_BUILD)
+if(NOT RAWSPEED_SPECIAL_BUILD)
   # should be < 64Kb
   math(EXPR MAX_MEANINGFUL_SIZE 4*1024)
   CHECK_CXX_COMPILER_FLAG_AND_ENABLE_IT(-Wstack-usage=${MAX_MEANINGFUL_SIZE})

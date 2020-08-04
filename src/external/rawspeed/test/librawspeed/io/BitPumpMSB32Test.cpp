@@ -19,10 +19,10 @@
 */
 
 #include "io/BitPumpMSB32.h" // for BitPumpMSB32
-#include "common/Common.h"   // for uchar8, uint32
 #include "io/BitPumpTest.h"  // for Pattern, (anonymous), GenOnesBE, BitPum...
 #include <array>             // for array
-#include <gtest/gtest.h>     // for INSTANTIATE_TYPED_TEST_CASE_P, Types
+#include <cstdint>           // for uint32_t, uint8_t
+#include <gtest/gtest.h>     // for Types, INSTANTIATE_TYPED_TEST_CASE_P
 
 using rawspeed::BitPumpMSB32;
 
@@ -32,20 +32,19 @@ struct InvOnesTag;
 struct OnesTag;
 
 template <>
-const std::array<rawspeed::uchar8, 4> Pattern<BitPumpMSB32, OnesTag>::Data = {
+const std::array<uint8_t, 4> Pattern<BitPumpMSB32, OnesTag>::Data = {
     {/* [Byte3 Byte2 Byte1 Byte0] */
      /* Byte: [Bit0 .. Bit7] */
      0b00011111, 0b00001000, 0b01000010, 0b10100100}};
-template <> rawspeed::uint32 Pattern<BitPumpMSB32, OnesTag>::data(int index) {
+template <> uint32_t Pattern<BitPumpMSB32, OnesTag>::data(int index) {
   const auto set = GenOnesBE(1, 0);
   return set[index];
 }
 
 template <>
-const std::array<rawspeed::uchar8, 4> Pattern<BitPumpMSB32, InvOnesTag>::Data =
-    {{0b00001111, 0b00000100, 0b00100001, 0b11010010}};
-template <>
-rawspeed::uint32 Pattern<BitPumpMSB32, InvOnesTag>::data(int index) {
+const std::array<uint8_t, 4> Pattern<BitPumpMSB32, InvOnesTag>::Data = {
+    {0b00001111, 0b00000100, 0b00100001, 0b11010010}};
+template <> uint32_t Pattern<BitPumpMSB32, InvOnesTag>::data(int index) {
   const auto set = GenOnesBE(0, -1);
   return set[index];
 }

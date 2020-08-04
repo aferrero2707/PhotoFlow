@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include "common/Common.h"                // for uint32
 #include "common/RawImage.h"              // for RawImage
 #include "decoders/AbstractTiffDecoder.h" // for AbstractTiffDecoder
 #include "tiff/TiffIFD.h"                 // for TiffIFD (ptr only), TiffRo...
+#include <cstdint>                        // for uint32_t
 #include <vector>                         // for vector
 
 namespace rawspeed {
@@ -48,10 +48,10 @@ public:
 protected:
   int getDecoderVersion() const override { return 0; }
   bool mFixLjpeg;
-  void dropUnsuportedChunks(std::vector<const TiffIFD*>* data);
+  static void dropUnsuportedChunks(std::vector<const TiffIFD*>* data);
   void parseCFA(const TiffIFD* raw);
   DngTilingDescription getTilingDescription(const TiffIFD* raw);
-  void decodeData(const TiffIFD* raw, uint32 sample_format);
+  void decodeData(const TiffIFD* raw, uint32_t sample_format);
   void handleMetadata(const TiffIFD* raw);
   bool decodeMaskedAreas(const TiffIFD* raw);
   bool decodeBlackLevels(const TiffIFD* raw);

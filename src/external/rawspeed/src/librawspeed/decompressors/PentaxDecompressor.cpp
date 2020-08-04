@@ -19,7 +19,8 @@
 */
 
 #include "decompressors/PentaxDecompressor.h"
-#include "common/Common.h"                // for uint32, uchar8, ushort16
+#include "common/Array2DRef.h"            // for Array2DRef
+#include "common/Common.h"                // for extractHighBits, isIntN
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
@@ -28,13 +29,14 @@
 #include "io/Buffer.h"                    // for Buffer
 #include "io/ByteStream.h"                // for ByteStream
 #include <cassert>                        // for assert
+#include <cstdint>                        // for uint8_t, uint32_t, uint16_t
 #include <vector>                         // for vector
 
 namespace rawspeed {
 
 // 16 entries of codes per bit length
 // 13 entries of code values
-const std::array<std::array<std::array<uchar8, 16>, 2>, 1>
+const std::array<std::array<std::array<uint8_t, 16>, 2>, 1>
     PentaxDecompressor::pentax_tree = {{
         {{{0, 2, 3, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0},
           {3, 4, 2, 5, 1, 6, 0, 7, 8, 9, 10, 11, 12}}},
@@ -44,7 +46,7 @@ PentaxDecompressor::PentaxDecompressor(const RawImage& img,
                                        ByteStream* metaData)
     : mRaw(img), ht(SetupHuffmanTable(metaData)) {
   if (mRaw->getCpp() != 1 || mRaw->getDataType() != TYPE_USHORT16 ||
-      mRaw->getBpp() != 2)
+      mRaw->getBpp() != sizeof(uint16_t))
     ThrowRDE("Unexpected component count / data type");
 
   if (!mRaw->dim.x || !mRaw->dim.y || mRaw->dim.x % 2 != 0 ||
@@ -68,30 +70,30 @@ HuffmanTable PentaxDecompressor::SetupHuffmanTable_Legacy() {
 HuffmanTable PentaxDecompressor::SetupHuffmanTable_Modern(ByteStream stream) {
   HuffmanTable ht;
 
-  const uint32 depth = stream.getU16() + 12;
+  const uint32_t depth = stream.getU16() + 12;
   if (depth > 15)
     ThrowRDE("Depth of huffman table is too great (%u).", depth);
 
   stream.skipBytes(12);
 
-  std::array<uint32, 16> v0;
-  std::array<uint32, 16> v1;
-  for (uint32 i = 0; i < depth; i++)
+  std::array<uint32_t, 16> v0;
+  std::array<uint32_t, 16> v1;
+  for (uint32_t i = 0; i < depth; i++)
     v0[i] = stream.getU16();
-  for (uint32 i = 0; i < depth; i++) {
+  for (uint32_t i = 0; i < depth; i++) {
     v1[i] = stream.getByte();
 
     if (v1[i] == 0 || v1[i] > 12)
       ThrowRDE("Data corrupt: v1[%i]=%i, expected [1..12]", depth, v1[i]);
   }
 
-  std::vector<uchar8> nCodesPerLength;
+  std::vector<uint8_t> nCodesPerLength;
   nCodesPerLength.resize(17);
 
-  std::array<uint32, 16> v2;
+  std::array<uint32_t, 16> v2;
   /* Calculate codes and store bitcounts */
-  for (uint32 c = 0; c < depth; c++) {
-    v2[c] = v0[c] >> (12 - v1[c]);
+  for (uint32_t c = 0; c < depth; c++) {
+    v2[c] = extractHighBits(v0[c], v1[c], /*effectiveBitwidth=*/12);
     nCodesPerLength.at(v1[c])++;
   }
 
@@ -100,14 +102,14 @@ HuffmanTable PentaxDecompressor::SetupHuffmanTable_Modern(ByteStream stream) {
   auto nCodes = ht.setNCodesPerLength(Buffer(&nCodesPerLength[1], 16));
   assert(nCodes == depth);
 
-  std::vector<uchar8> codeValues;
+  std::vector<uint8_t> codeValues;
   codeValues.reserve(nCodes);
 
   /* Find smallest */
-  for (uint32 i = 0; i < depth; i++) {
-    uint32 sm_val = 0xfffffff;
-    uint32 sm_num = 0xff;
-    for (uint32 j = 0; j < depth; j++) {
+  for (uint32_t i = 0; i < depth; i++) {
+    uint32_t sm_val = 0xfffffff;
+    uint32_t sm_num = 0xff;
+    for (uint32_t j = 0; j < depth; j++) {
       if (v2[j] <= sm_val) {
         sm_num = j;
         sm_val = v2[j];
@@ -137,36 +139,24 @@ HuffmanTable PentaxDecompressor::SetupHuffmanTable(ByteStream* metaData) {
 }
 
 void PentaxDecompressor::decompress(const ByteStream& data) const {
+  const Array2DRef<uint16_t> out(mRaw->getU16DataAsUncroppedArray2DRef());
+
+  assert(out.height > 0);
+  assert(out.width > 0);
+  assert(out.width % 2 == 0);
+
   BitPumpMSB bs(data);
-  uchar8* draw = mRaw->getData();
+  for (int row = 0; row < out.height; row++) {
+    std::array<int, 2> pred = {{}};
+    if (row >= 2)
+      pred = {out(row - 2, 0), out(row - 2, 1)};
 
-  assert(mRaw->dim.y > 0);
-  assert(mRaw->dim.x > 0);
-  assert(mRaw->dim.x % 2 == 0);
-
-  std::array<int, 2> pUp1 = {{}};
-  std::array<int, 2> pUp2 = {{}};
-
-  for (int y = 0; y < mRaw->dim.y && mRaw->dim.x >= 2; y++) {
-    auto* dest = reinterpret_cast<ushort16*>(&draw[y * mRaw->pitch]);
-
-    pUp1[y & 1] += ht.decodeNext(bs);
-    pUp2[y & 1] += ht.decodeNext(bs);
-
-    int pLeft1 = dest[0] = pUp1[y & 1];
-    int pLeft2 = dest[1] = pUp2[y & 1];
-
-    for (int x = 2; x < mRaw->dim.x; x += 2) {
-      pLeft1 += ht.decodeNext(bs);
-      pLeft2 += ht.decodeNext(bs);
-
-      dest[x] = pLeft1;
-      dest[x + 1] = pLeft2;
-
-      if (pLeft1 < 0 || pLeft1 > 65535)
-        ThrowRDE("decoded value out of bounds at %d:%d", x, y);
-      if (pLeft2 < 0 || pLeft2 > 65535)
-        ThrowRDE("decoded value out of bounds at %d:%d", x, y);
+    for (int col = 0; col < out.width; col++) {
+      pred[col & 1] += ht.decodeDifference(bs);
+      int value = pred[col & 1];
+      if (!isIntN(value, 16))
+        ThrowRDE("decoded value out of bounds at %d:%d", col, row);
+      out(row, col) = value;
     }
   }
 }

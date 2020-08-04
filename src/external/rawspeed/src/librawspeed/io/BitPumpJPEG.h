@@ -20,10 +20,11 @@
 
 #pragma once
 
-#include "common/Common.h" // for uchar8, uint32
+#include "common/Common.h" // for bitwidth
 #include "io/BitStream.h"  // for BitStreamCacheRightInLeftOut, BitStream
 #include "io/Buffer.h"     // for Buffer::size_type
 #include "io/Endianness.h" // for getBE
+#include <cstdint>         // for uint8_t, uint32_t, uint64_t
 
 namespace rawspeed {
 
@@ -38,7 +39,7 @@ template <> struct BitStreamTraits<BitPumpJPEG> final {
 };
 
 template <>
-inline BitPumpJPEG::size_type BitPumpJPEG::fillCache(const uchar8* input,
+inline BitPumpJPEG::size_type BitPumpJPEG::fillCache(const uint8_t* input,
                                                      size_type bufferSize,
                                                      size_type* bufPos) {
   static_assert(BitStreamCacheBase::MaxGetBits >= 32, "check implementation");
@@ -50,7 +51,7 @@ inline BitPumpJPEG::size_type BitPumpJPEG::fillCache(const uchar8* input,
       input[1] != 0xFF &&
       input[2] != 0xFF &&
       input[3] != 0xFF ) {
-    cache.push(getBE<uint32>(input), 32);
+    cache.push(getBE<uint32_t>(input), 32);
     return 4;
   }
 
@@ -69,8 +70,8 @@ inline BitPumpJPEG::size_type BitPumpJPEG::fillCache(const uchar8* input,
         // We should not pop() them, to avoid issues with fillLevel becoming 0.
         cache.cache &= ~0xFFULL;
         // And fully fill the empty space in cache with zeros.
-        cache.cache <<= 64 - cache.fillLevel;
-        cache.fillLevel = 64;
+        cache.cache <<= bitwidth(cache.cache) - cache.fillLevel;
+        cache.fillLevel = bitwidth(cache.cache);
 
         // No further reading from this buffer shall happen.
         // Do signal that by stating that we are at the end of the buffer.

@@ -19,12 +19,12 @@
 */
 
 #include "decompressors/HuffmanTable.h" // for HuffmanTableLUT, HuffmanTable
-#include "common/Common.h"              // for uchar8
 #include "io/BitPumpMSB.h"              // for BitPumpMSB, BitStream<>::fil...
 #include "io/Buffer.h"                  // for Buffer, DataBuffer
 #include "io/ByteStream.h"              // for ByteStream
 #include "io/Endianness.h"              // for Endianness, Endianness::little
 #include <array>                        // for array
+#include <cstdint>                      // for uint8_t
 #include <gtest/gtest.h>                // for Test, Message, TestPartResult
 #include <initializer_list>             // for initializer_list<>::const_it...
 #include <utility>                      // for move
@@ -40,14 +40,13 @@ using rawspeed::ByteStream;
 using rawspeed::DataBuffer;
 using rawspeed::Endianness;
 using rawspeed::HuffmanTable;
-using rawspeed::uchar8;
 
 namespace rawspeed_test {
 
 auto genHT =
-    [](std::initializer_list<uchar8>&& nCodesPerLength) -> HuffmanTable {
+    [](std::initializer_list<uint8_t>&& nCodesPerLength) -> HuffmanTable {
   HuffmanTable ht;
-  std::vector<uchar8> v(nCodesPerLength.begin(), nCodesPerLength.end());
+  std::vector<uint8_t> v(nCodesPerLength.begin(), nCodesPerLength.end());
   v.resize(16);
   Buffer b(v.data(), v.size());
   ht.setNCodesPerLength(b);
@@ -56,17 +55,17 @@ auto genHT =
 };
 
 auto genHTFull =
-    [](std::initializer_list<uchar8>&& nCodesPerLength,
-       std::initializer_list<uchar8>&& codeValues) -> HuffmanTable {
+    [](std::initializer_list<uint8_t>&& nCodesPerLength,
+       std::initializer_list<uint8_t>&& codeValues) -> HuffmanTable {
   auto ht = genHT(std::move(nCodesPerLength));
-  std::vector<uchar8> v(codeValues.begin(), codeValues.end());
+  std::vector<uint8_t> v(codeValues.begin(), codeValues.end());
   Buffer b(v.data(), v.size());
   ht.setCodeValues(b);
   return ht;
 };
 
-TEST(HuffmanTableTest, DecodeLengthIdentityTest) {
-  static const std::array<rawspeed::uchar8, 4> data{
+TEST(HuffmanTableTest, decodeCodeValueIdentityTest) {
+  static const std::array<uint8_t, 4> data{
       {0b01010101, 0b01010101, 0b01010101, 0b01010101}};
   const Buffer b(data.data(), data.size());
   const DataBuffer db(b, Endianness::little);
@@ -78,13 +77,13 @@ TEST(HuffmanTableTest, DecodeLengthIdentityTest) {
   ht.setup(false, false);
 
   for (int i = 0; i < 32; i += 2) {
-    ASSERT_EQ(ht.decodeLength(p), 4);
-    ASSERT_EQ(ht.decodeLength(p), 8);
+    ASSERT_EQ(ht.decodeCodeValue(p), 4);
+    ASSERT_EQ(ht.decodeCodeValue(p), 8);
   }
 }
 
-TEST(HuffmanTableTest, DecodeNextIdentityTest) {
-  static const std::array<rawspeed::uchar8, 4> data{
+TEST(HuffmanTableTest, decodeDifferenceIdentityTest) {
+  static const std::array<uint8_t, 4> data{
       {0b00000000, 0b11010101, 0b01010101, 0b01111111}};
   const Buffer b(data.data(), data.size());
   const DataBuffer db(b, Endianness::little);
@@ -95,13 +94,13 @@ TEST(HuffmanTableTest, DecodeNextIdentityTest) {
   auto ht = genHTFull({2}, {7, 7 + 8});
   ht.setup(true, false);
 
-  ASSERT_EQ(ht.decodeNext(p), -127);
-  ASSERT_EQ(ht.decodeNext(p), 21845);
-  ASSERT_EQ(ht.decodeNext(p), 127);
+  ASSERT_EQ(ht.decodeDifference(p), -127);
+  ASSERT_EQ(ht.decodeDifference(p), 21845);
+  ASSERT_EQ(ht.decodeDifference(p), 127);
 }
 
-TEST(HuffmanTableTest, DecodeLengthBadCodeTest) {
-  static const std::array<rawspeed::uchar8, 4> data{{0b01000000}};
+TEST(HuffmanTableTest, decodeCodeValueBadCodeTest) {
+  static const std::array<uint8_t, 4> data{{0b01000000}};
   const Buffer b(data.data(), data.size());
   const DataBuffer db(b, Endianness::little);
   const ByteStream bs(db);
@@ -111,12 +110,12 @@ TEST(HuffmanTableTest, DecodeLengthBadCodeTest) {
   auto ht = genHTFull({1}, {4});
   ht.setup(false, false);
 
-  ASSERT_EQ(ht.decodeLength(p), 4);
-  ASSERT_THROW(ht.decodeLength(p), rawspeed::RawDecoderException);
+  ASSERT_EQ(ht.decodeCodeValue(p), 4);
+  ASSERT_THROW(ht.decodeCodeValue(p), rawspeed::RawDecoderException);
 }
 
-TEST(HuffmanTableTest, DecodeNextBadCodeTest) {
-  static const std::array<rawspeed::uchar8, 4> data{{0b00100000}};
+TEST(HuffmanTableTest, decodeDifferenceBadCodeTest) {
+  static const std::array<uint8_t, 4> data{{0b00100000}};
   const Buffer b(data.data(), data.size());
   const DataBuffer db(b, Endianness::little);
   const ByteStream bs(db);
@@ -126,8 +125,8 @@ TEST(HuffmanTableTest, DecodeNextBadCodeTest) {
   auto ht = genHTFull({1}, {1});
   ht.setup(true, false);
 
-  ASSERT_EQ(ht.decodeNext(p), -1);
-  ASSERT_THROW(ht.decodeNext(p), rawspeed::RawDecoderException);
+  ASSERT_EQ(ht.decodeDifference(p), -1);
+  ASSERT_THROW(ht.decodeDifference(p), rawspeed::RawDecoderException);
 }
 
 } // namespace rawspeed_test

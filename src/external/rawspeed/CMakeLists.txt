@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4.0)
+cmake_minimum_required(VERSION 3.10.0)
 
 cmake_policy(SET CMP0011 NEW)
 cmake_policy(SET CMP0025 NEW)
@@ -11,14 +11,14 @@ If(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "In-source builds are not permitted. Make a separate folder for building:\nmkdir build; cd build; cmake ..\nBefore that, remove the files already created:\nrm -rf CMakeCache.txt CMakeFiles")
 endif(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
 
-include(GNUInstallDirs)
-include(FeatureSummary)
-include(CheckCXXCompilerFlag)
-
 # NOTE: if rawspeed is being added as a submodule to another build,
 # this CMakeLists.txt should be added via add_subdirectory().
 
 project(rawspeed CXX)
+
+include(FeatureSummary)
+include(CheckCXXCompilerFlag)
+include(GNUInstallDirs)
 
 set(RAWSPEED_SOURCE_DIR "${PROJECT_SOURCE_DIR}" CACHE PATH "" FORCE)
 set(RAWSPEED_BINARY_DIR "${PROJECT_BINARY_DIR}" CACHE PATH "" FORCE)
@@ -245,7 +245,7 @@ if(BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
-if(BUILD_TESTING AND CMAKE_BUILD_TYPE STREQUAL "COVERAGE")
+if(BUILD_TESTING AND RAWSPEED_COVERAGE_BUILD)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     include(llvm-profdata)
     include(llvm-cov)

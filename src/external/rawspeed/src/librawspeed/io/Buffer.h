@@ -22,70 +22,79 @@
 #pragma once
 
 #include "AddressSanitizer.h" // for ASan
-#include "common/Common.h"    // for uchar8, uint64, uint32
-#include "common/Memory.h"    // for alignedFree
-#include "io/Endianness.h"    // for Endianness, Endianness::little, getHos...
+#include "common/Common.h"    // for roundUp
+#include "common/Memory.h"    // for alignedFree, alignedFreeConstPtr, alig...
+#include "io/Endianness.h"    // for Endianness, getHostEndianness, Endiann...
 #include "io/IOException.h"   // for ThrowIOE
 #include <cassert>            // for assert
+#include <cstdint>            // for uint8_t, uint64_t, uint32_t
 #include <memory>             // for unique_ptr
-#include <utility>            // for swap
+#include <utility>            // for move, swap
 
 namespace rawspeed {
 
-// This allows to specify the nuber of bytes that each Buffer needs to
-// allocate additionally to be able to remove one runtime bounds check
-// in BitStream::fill. There are two sane choices:
-// 0 : allocate exactly as much data as required, or
-// set it to the value of  BitStreamCacheBase::MaxProcessBytes
-#define BUFFER_PADDING 0UL
-
-// if the padding is >= 4, bounds checking in BitStream::fill are not compiled,
-// which supposedly saves about 1% on modern CPUs
-// WARNING: if the padding is >= 4, do *NOT* create Buffer from
-// passed unowning pointer and size. Or, subtract BUFFER_PADDING from size.
-// else bound checks will malfunction => bad things can happen !!!
-
 /*************************************************************************
- * This is the buffer abstaction.
+ * This is the buffer abstraction.
  *
  * It allows access to some piece of memory, typically a whole or part
  * of a raw file. The underlying memory may be owned by the buffer or not.
- * It supports move operations to properly deal with owneship transfer.
+ * It supports move operations to properly deal with ownership transfer.
  * It intentionally supports only read/const access to the underlying memory.
  *
  *************************************************************************/
 class Buffer
 {
 public:
-  using size_type = uint32;
+  using size_type = uint32_t;
 
 protected:
-  const uchar8* data = nullptr;
+  const uint8_t* data = nullptr;
   size_type size = 0;
   bool isOwner = false;
 
 public:
   // allocates the databuffer, and returns owning non-const pointer.
-  static std::unique_ptr<uchar8, decltype(&alignedFree)> Create(size_type size);
+  static std::unique_ptr<uint8_t, decltype(&alignedFree)>
+  Create(size_type size) {
+    if (!size)
+      ThrowIOE("Trying to allocate 0 bytes sized buffer.");
+
+    std::unique_ptr<uint8_t, decltype(&alignedFree)> data(
+        alignedMalloc<uint8_t, 16>(roundUp(size, 16)),
+        &alignedFree);
+    if (!data)
+      ThrowIOE("Failed to allocate %uz bytes memory buffer.", size);
+
+    assert(!ASan::RegionIsPoisoned(data.get(), size));
+
+    return data;
+  }
 
   // constructs an empty buffer
   Buffer() = default;
 
-  // Allocates the memory
-  explicit Buffer(size_type size_) : Buffer(Create(size_), size_) {
+  // creates buffer from owning unique_ptr
+  Buffer(std::unique_ptr<uint8_t, decltype(&alignedFree)> data_,
+         size_type size_)
+      : size(size_) {
+    if (!size)
+      ThrowIOE("Buffer has zero size?");
+
+    if (data_.get_deleter() != &alignedFree)
+      ThrowIOE("Wrong deleter. Expected rawspeed::alignedFree()");
+
+    data = data_.release();
+    if (!data)
+      ThrowIOE("Memory buffer is nonexistent");
+
     assert(!ASan::RegionIsPoisoned(data, size));
+
+    isOwner = true;
   }
 
-  // creates buffer from owning unique_ptr
-  Buffer(std::unique_ptr<uchar8, decltype(&alignedFree)> data_,
-         size_type size_);
-
   // Data already allocated
-  explicit Buffer(const uchar8* data_, size_type size_)
+  explicit Buffer(const uint8_t* data_, size_type size_)
       : data(data_), size(size_) {
-    static_assert(BUFFER_PADDING == 0, "please do make sure that you do NOT "
-                                       "call this function from YOUR code, and "
-                                       "then comment-out this assert.");
     assert(!ASan::RegionIsPoisoned(data, size));
   }
 
@@ -102,10 +111,45 @@ public:
   }
 
   // Frees memory if owned
-  ~Buffer();
+  ~Buffer() {
+    if (isOwner) {
+      alignedFreeConstPtr(data);
+    }
+  }
 
-  Buffer& operator=(Buffer&& rhs) noexcept;
-  Buffer& operator=(const Buffer& rhs);
+  Buffer& operator=(Buffer&& rhs) noexcept {
+    if (this == &rhs) {
+      assert(!ASan::RegionIsPoisoned(data, size));
+      return *this;
+    }
+
+    if (isOwner)
+      alignedFreeConstPtr(data);
+
+    data = rhs.data;
+    size = rhs.size;
+    isOwner = rhs.isOwner;
+
+    assert(!ASan::RegionIsPoisoned(data, size));
+
+    rhs.isOwner = false;
+
+    return *this;
+  }
+
+  Buffer& operator=(const Buffer& rhs) {
+    if (this == &rhs) {
+      assert(!ASan::RegionIsPoisoned(data, size));
+      return *this;
+    }
+
+    Buffer unOwningTmp(rhs.data, rhs.size);
+    *this = std::move(unOwningTmp);
+    assert(!isOwner);
+    assert(!ASan::RegionIsPoisoned(data, size));
+
+    return *this;
+  }
 
   Buffer getSubView(size_type offset, size_type size_) const {
     if (!isValid(0, offset))
@@ -123,7 +167,7 @@ public:
   }
 
   // get pointer to memory at 'offset', make sure at least 'count' bytes are accessible
-  const uchar8* getData(size_type offset, size_type count) const {
+  const uint8_t* getData(size_type offset, size_type count) const {
     if (!isValid(offset, count))
       ThrowIOE("Buffer overflow: image file may be truncated");
 
@@ -134,17 +178,15 @@ public:
   }
 
   // convenience getter for single bytes
-  uchar8 operator[](size_type offset) const {
-    return *getData(offset, 1);
-  }
+  uint8_t operator[](size_type offset) const { return *getData(offset, 1); }
 
   // std begin/end iterators to allow for range loop
-  const uchar8* begin() const {
+  const uint8_t* begin() const {
     assert(data);
     assert(!ASan::RegionIsPoisoned(data, 0));
     return data;
   }
-  const uchar8* end() const {
+  const uint8_t* end() const {
     assert(data);
     assert(!ASan::RegionIsPoisoned(data, size));
     return data + size;
@@ -164,14 +206,8 @@ public:
   }
 
   inline bool isValid(size_type offset, size_type count = 1) const {
-    return static_cast<uint64>(offset) + count <=
-           static_cast<uint64>(size) + BUFFER_PADDING;
+    return static_cast<uint64_t>(offset) + count <= static_cast<uint64_t>(size);
   }
-
-//  Buffer* clone();
-//  /* For testing purposes */
-//  void corrupt(int errors);
-//  Buffer* cloneRandomSize();
 };
 
 /*
@@ -187,8 +223,7 @@ class DataBuffer : public Buffer {
 public:
   DataBuffer() = default;
 
-  explicit DataBuffer(const Buffer& data_,
-                      Endianness endianness_ = Endianness::little)
+  explicit DataBuffer(const Buffer& data_, Endianness endianness_)
       : Buffer(data_), endianness(endianness_) {}
 
   // get memory of type T from byte offset 'offset + sizeof(T)*index' and swap

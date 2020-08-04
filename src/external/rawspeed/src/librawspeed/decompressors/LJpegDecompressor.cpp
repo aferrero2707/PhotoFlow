@@ -20,12 +20,13 @@
 */
 
 #include "decompressors/LJpegDecompressor.h"
-#include "common/Common.h"                // for unroll_loop, uint32, ushort16
+#include "common/Common.h"                // for unroll_loop, roundUpDivision
 #include "common/Point.h"                 // for iPoint2D
 #include "common/RawImage.h"              // for RawImage, RawImageData
 #include "decoders/RawDecoderException.h" // for ThrowRDE
 #include "io/BitPumpJPEG.h"               // for BitPumpJPEG, BitStream<>::...
 #include <algorithm>                      // for copy_n
+#include <array>                          // for array
 #include <cassert>                        // for assert
 
 using std::copy_n;
@@ -37,8 +38,9 @@ LJpegDecompressor::LJpegDecompressor(const ByteStream& bs, const RawImage& img)
   if (mRaw->getDataType() != TYPE_USHORT16)
     ThrowRDE("Unexpected data type (%u)", mRaw->getDataType());
 
-  if (!((mRaw->getCpp() == 1 && mRaw->getBpp() == 2) ||
-        (mRaw->getCpp() == 3 && mRaw->getBpp() == 6)))
+  if (!((mRaw->getCpp() == 1 && mRaw->getBpp() == sizeof(uint16_t)) ||
+        (mRaw->getCpp() == 2 && mRaw->getBpp() == 2 * sizeof(uint16_t)) ||
+        (mRaw->getCpp() == 3 && mRaw->getBpp() == 3 * sizeof(uint16_t))))
     ThrowRDE("Unexpected component count (%u)", mRaw->getCpp());
 
   if (mRaw->dim.x == 0 || mRaw->dim.y == 0)
@@ -53,8 +55,9 @@ LJpegDecompressor::LJpegDecompressor(const ByteStream& bs, const RawImage& img)
 #endif
 }
 
-void LJpegDecompressor::decode(uint32 offsetX, uint32 offsetY, uint32 width,
-                               uint32 height, bool fixDng16Bug_) {
+void LJpegDecompressor::decode(uint32_t offsetX, uint32_t offsetY,
+                               uint32_t width, uint32_t height,
+                               bool fixDng16Bug_) {
   if (offsetX >= static_cast<unsigned>(mRaw->dim.x))
     ThrowRDE("X offset outside of image");
   if (offsetY >= static_cast<unsigned>(mRaw->dim.y))
@@ -87,7 +90,7 @@ void LJpegDecompressor::decodeScan()
   if (predictorMode != 1)
     ThrowRDE("Unsupported predictor mode: %u", predictorMode);
 
-  for (uint32 i = 0; i < frame.cps;  i++)
+  for (uint32_t i = 0; i < frame.cps; i++)
     if (frame.compInfo[i].superH != 1 || frame.compInfo[i].superV != 1)
       ThrowRDE("Unsupported subsampling");
 
@@ -178,8 +181,8 @@ template <int N_COMP, bool WeirdWidth> void LJpegDecompressor::decodeN() {
   // For y, we can simply stop decoding when we reached the border.
   for (unsigned y = 0; y < h; ++y) {
     auto destY = offY + y;
-    auto dest =
-        reinterpret_cast<ushort16*>(mRaw->getDataUncropped(offX, destY));
+    auto* dest =
+        reinterpret_cast<uint16_t*>(mRaw->getDataUncropped(offX, destY));
 
     copy_n(predNext, N_COMP, pred.data());
     // the predictor for the next line is the start of this line
@@ -187,13 +190,13 @@ template <int N_COMP, bool WeirdWidth> void LJpegDecompressor::decodeN() {
 
     unsigned x = 0;
 
-    // FIXME: predictor may have value outside of the ushort16.
+    // FIXME: predictor may have value outside of the uint16_t.
     // https://github.com/darktable-org/rawspeed/issues/175
 
     // For x, we first process all full pixel blocks within the image buffer ...
     for (; x < fullBlocks; ++x) {
       unroll_loop<N_COMP>([&](int i) {
-        pred[i] = ushort16(pred[i] + ht[i]->decodeNext(bitStream));
+        pred[i] = uint16_t(pred[i] + ht[i]->decodeDifference(bitStream));
         *dest++ = pred[i];
       });
     }
@@ -209,22 +212,20 @@ template <int N_COMP, bool WeirdWidth> void LJpegDecompressor::decodeN() {
       assert(trailingPixels < N_COMP);
       unsigned c = 0;
       for (; c < trailingPixels; ++c) {
-        pred[c] = ushort16(pred[c] + ht[c]->decodeNext(bitStream));
+        pred[c] = uint16_t(pred[c] + ht[c]->decodeDifference(bitStream));
         *dest++ = pred[c];
       }
       // Discard the rest of the block.
       assert(c < N_COMP);
       for (; c < N_COMP; ++c) {
-        ht[c]->decodeNext(bitStream);
+        ht[c]->decodeDifference(bitStream);
       }
       ++x; // We did just process one more block.
     }
 
     // ... and discard the rest.
     for (; x < frame.w; ++x) {
-      unroll_loop<N_COMP>([&](int i) {
-        ht[i]->decodeNext(bitStream);
-      });
+      unroll_loop<N_COMP>([&](int i) { ht[i]->decodeDifference(bitStream); });
     }
   }
 }

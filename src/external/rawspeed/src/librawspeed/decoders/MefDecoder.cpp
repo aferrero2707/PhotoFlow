@@ -20,9 +20,11 @@
 */
 
 #include "decoders/MefDecoder.h"
-#include "decoders/RawDecoderException.h" // for RawDecoderException (ptr o...
+#include "decoders/RawDecoderException.h"           // for ThrowRDE
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
-#include "io/Endianness.h"                          // for Endianness::big
+#include "io/Buffer.h"                              // for Buffer, DataBuffer
+#include "io/ByteStream.h"                          // for ByteStream
+#include "io/Endianness.h"                          // for Endianness, Endi...
 #include <string>                                   // for operator==, string
 
 namespace rawspeed {
@@ -45,7 +47,8 @@ void MefDecoder::checkImageDimensions() {
 RawImage MefDecoder::decodeRawInternal() {
   SimpleTiffDecoder::prepareForRawDecoding();
 
-  UncompressedDecompressor u(*mFile, off, mRaw);
+  UncompressedDecompressor u(
+      ByteStream(DataBuffer(mFile->getSubView(off), Endianness::little)), mRaw);
 
   u.decode12BitRaw<Endianness::big>(width, height);
 

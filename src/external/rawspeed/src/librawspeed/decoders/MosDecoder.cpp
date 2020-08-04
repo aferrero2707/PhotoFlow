@@ -20,20 +20,22 @@
 */
 
 #include "decoders/MosDecoder.h"
-#include "common/Common.h"                          // for uint32, uchar8
+#include "common/Common.h"                          // for trimSpaces
 #include "common/Point.h"                           // for iPoint2D
-#include "decoders/IiqDecoder.h"                    // for IiqDecoder::isAppr...
+#include "decoders/IiqDecoder.h"                    // for IiqDecoder
 #include "decoders/RawDecoder.h"                    // for RawDecoder
-#include "decoders/RawDecoderException.h"           // for RawDecoderExcept...
+#include "decoders/RawDecoderException.h"           // for ThrowRDE
 #include "decompressors/UncompressedDecompressor.h" // for UncompressedDeco...
-#include "io/Buffer.h"                              // for Buffer
+#include "io/Buffer.h"                              // for DataBuffer, Buffer
 #include "io/ByteStream.h"                          // for ByteStream
-#include "io/Endianness.h"                          // for getU32LE, getLE
+#include "io/Endianness.h"                          // for Endianness, Endi...
 #include "parsers/TiffParserException.h"            // for TiffParserException
 #include "tiff/TiffEntry.h"                         // for TiffEntry
 #include "tiff/TiffIFD.h"                           // for TiffRootIFD, Tif...
-#include "tiff/TiffTag.h"                           // for TiffTag::TILEOFF...
+#include "tiff/TiffTag.h"                           // for TILEOFFSETS, LEA...
+#include <array>                                    // for array
 #include <cassert>                                  // for assert
+#include <cstdint>                                  // for uint32_t
 #include <cstring>                                  // for memchr
 #include <istream>                                  // for istringstream
 #include <memory>                                   // for unique_ptr
@@ -95,7 +97,7 @@ string MosDecoder::getXMPTag(const string &xmp, const string &tag) {
 }
 
 RawImage MosDecoder::decodeRawInternal() {
-  uint32 off = 0;
+  uint32_t off = 0;
 
   const TiffIFD *raw = nullptr;
 
@@ -107,8 +109,8 @@ RawImage MosDecoder::decodeRawInternal() {
     off = raw->getEntry(STRIPOFFSETS)->getU32();
   }
 
-  uint32 width = raw->getEntry(IMAGEWIDTH)->getU32();
-  uint32 height = raw->getEntry(IMAGELENGTH)->getU32();
+  uint32_t width = raw->getEntry(IMAGEWIDTH)->getU32();
+  uint32_t height = raw->getEntry(IMAGELENGTH)->getU32();
 
   // FIXME: could be wrong. max "active pixels" - "80 MP"
   if (width == 0 || height == 0 || width > 10328 || height > 7760)
@@ -117,13 +119,16 @@ RawImage MosDecoder::decodeRawInternal() {
   mRaw->dim = iPoint2D(width, height);
   mRaw->createData();
 
-  UncompressedDecompressor u(*mFile, off, mRaw);
+  const ByteStream bs(DataBuffer(mFile->getSubView(off), Endianness::little));
+  if (bs.getRemainSize() == 0)
+    ThrowRDE("Input buffer is empty");
+
+  UncompressedDecompressor u(bs, mRaw);
 
   int compression = raw->getEntry(COMPRESSION)->getU32();
   if (1 == compression) {
-    const DataBuffer db(*mFile);
-    const ByteStream bs(db);
-    const Endianness endianness = getTiffByteOrder(bs, 0);
+    const Endianness endianness =
+        getTiffByteOrder(ByteStream(DataBuffer(*mFile, Endianness::little)), 0);
 
     if (Endianness::big == endianness)
       u.decodeRawUnpacked<16, Endianness::big>(width, height);
@@ -152,8 +157,8 @@ void MosDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
     ByteStream bs = mRootIFD->getEntryRecursive(LEAFMETADATA)->getData();
 
     // We need at least a couple of bytes:
-    // "NeutObj_neutrals" + 28 bytes binay + 4x uint as strings + 3x space + \0
-    const uint32 minSize = 16+28+4+3+1;
+    // "NeutObj_neutrals" + 28 bytes binary + 4x uint as strings + 3x space + \0
+    const uint32_t minSize = 16 + 28 + 4 + 3 + 1;
 
     // dcraw does actual parsing, since we just want one field we bruteforce it
     while (bs.getRemainSize() > minSize) {
@@ -162,7 +167,7 @@ void MosDecoder::decodeMetaDataInternal(const CameraMetaData* meta) {
         // check for nulltermination of string inside bounds
         if (!memchr(bs.peekData(bs.getRemainSize()), 0, bs.getRemainSize()))
           break;
-        std::array<uint32, 4> tmp = {{}};
+        std::array<uint32_t, 4> tmp = {{}};
         std::istringstream iss(bs.peekString());
         iss >> tmp[0] >> tmp[1] >> tmp[2] >> tmp[3];
         if (!iss.fail() && tmp[0] > 0 && tmp[1] > 0 && tmp[2] > 0 &&

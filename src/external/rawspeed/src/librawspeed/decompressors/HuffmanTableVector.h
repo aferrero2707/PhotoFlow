@@ -25,7 +25,9 @@
 #include "decompressors/AbstractHuffmanTable.h" // for AbstractHuffmanTable...
 #include "io/BitStream.h"                       // for BitStreamTraits
 #include <cassert>                              // for assert
-#include <utility>                              // for make_pair, pair
+#include <cstdint>                              // for uint64_t
+#include <tuple>                                // for tie
+#include <utility>                              // for pair
 #include <vector>                               // for vector
 
 namespace rawspeed {
@@ -33,27 +35,25 @@ namespace rawspeed {
 class HuffmanTableVector final : public AbstractHuffmanTable {
   std::vector<CodeSymbol> symbols;
 
-  bool fullDecode = true;
-  bool fixDNGBug16 = false;
-
   // Given this code len, which code id is the minimal?
   std::vector<unsigned int> extrCodeIdForLen; // index is length of code
 
 protected:
   template <typename BIT_STREAM>
-  inline std::pair<CodeSymbol, unsigned> getSymbol(BIT_STREAM& bs) const {
+  inline std::pair<CodeSymbol, int /*codeValue*/>
+  readSymbol(BIT_STREAM& bs) const {
     static_assert(BitStreamTraits<BIT_STREAM>::canUseWithHuffmanTable,
                   "This BitStream specialization is not marked as usable here");
 
     CodeSymbol partial;
-    unsigned long codeId;
+    uint64_t codeId;
 
     // Read bits until either find the code or detect the uncorrect code
     for (partial.code = 0, partial.code_len = 1;; ++partial.code_len) {
       assert(partial.code_len <= 16);
 
       // Read one more bit
-      const bool bit = bs.getBits(1);
+      const bool bit = bs.getBitsNoFill(1);
 
       partial.code <<= 1;
       partial.code |= bit;
@@ -63,7 +63,7 @@ protected:
            codeId < extrCodeIdForLen[1U + partial.code_len]; codeId++) {
         const CodeSymbol& symbol = symbols[codeId];
         if (symbol == partial) // yay, found?
-          return std::make_pair(symbol, codeId);
+          return {symbol, codeValues[codeId]};
       }
 
       // Ok, but does any symbol have this same prefix?
@@ -88,12 +88,7 @@ protected:
 
 public:
   void setup(bool fullDecode_, bool fixDNGBug16_) {
-    this->fullDecode = fullDecode_;
-    this->fixDNGBug16 = fixDNGBug16_;
-
-    assert(!nCodesPerLength.empty());
-    assert(maxCodesCount() > 0);
-    assert(codeValues.size() == maxCodesCount());
+    AbstractHuffmanTable::setup(fullDecode_, fixDNGBug16_);
 
     // Figure C.1: make table of Huffman code length for each symbol
     // Figure C.2: generate the codes themselves
@@ -110,14 +105,16 @@ public:
     assert(extrCodeIdForLen.size() == 1U + nCodesPerLength.size());
   }
 
-  template <typename BIT_STREAM> inline int decodeLength(BIT_STREAM& bs) const {
+  template <typename BIT_STREAM>
+  inline int decodeCodeValue(BIT_STREAM& bs) const {
     static_assert(BitStreamTraits<BIT_STREAM>::canUseWithHuffmanTable,
                   "This BitStream specialization is not marked as usable here");
     assert(!fullDecode);
     return decode<BIT_STREAM, false>(bs);
   }
 
-  template <typename BIT_STREAM> inline int decodeNext(BIT_STREAM& bs) const {
+  template <typename BIT_STREAM>
+  inline int decodeDifference(BIT_STREAM& bs) const {
     static_assert(BitStreamTraits<BIT_STREAM>::canUseWithHuffmanTable,
                   "This BitStream specialization is not marked as usable here");
     assert(fullDecode);
@@ -134,21 +131,13 @@ public:
                   "This BitStream specialization is not marked as usable here");
     assert(FULL_DECODE == fullDecode);
 
-    const auto got = getSymbol(bs);
-    const unsigned codeId = got.second;
+    bs.fill(32);
 
-    const int diff_l = codeValues[codeId];
+    CodeSymbol symbol;
+    int codeValue;
+    std::tie(symbol, codeValue) = readSymbol(bs);
 
-    if (!FULL_DECODE)
-      return diff_l;
-
-    if (diff_l == 16) {
-      if (fixDNGBug16)
-        bs.skipBits(16);
-      return -32768;
-    }
-
-    return diff_l ? signExtended(bs.getBits(diff_l), diff_l) : 0;
+    return processSymbol<BIT_STREAM, FULL_DECODE>(bs, symbol, codeValue);
   }
 };
 

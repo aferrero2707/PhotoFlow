@@ -22,13 +22,14 @@
 
 #ifdef HAVE_ZLIB
 
-#include "decompressors/DeflateDecompressor.h"
-#include "common/Common.h"                // for uint32, ushort16
+#include "common/Point.h"                 // for iPoint2D
 #include "decoders/RawDecoderException.h" // for ThrowRDE
-#include "io/Endianness.h"                // for getHostEndianness, Endiann...
-#include <cassert>                        // for assert
-#include <cstdio>                         // for size_t
-#include <zlib.h>
+#include "decompressors/DeflateDecompressor.h"
+#include "io/Endianness.h" // for getHostEndianness, Endianness
+#include <cassert>         // for assert
+#include <cstdint>         // for uint32_t, uint16_t
+#include <cstdio>          // for size_t
+#include <zlib.h>          // for uncompress, zError, Z_OK
 
 namespace rawspeed {
 
@@ -68,7 +69,7 @@ static inline void decodeFPDeltaRow(unsigned char* src, unsigned char* dst,
   }
 }
 
-static inline uint32 __attribute__((const)) fp16ToFloat(ushort16 fp16) {
+static inline uint32_t __attribute__((const)) fp16ToFloat(uint16_t fp16) {
   // IEEE-754-2008: binary16:
   // bit 15 - sign
   // bits 14-10 - exponent (5 bit)
@@ -82,16 +83,16 @@ static inline uint32 __attribute__((const)) fp16ToFloat(ushort16 fp16) {
   // exp = 31, fract = +-0: +-infinity
   // exp = 31, fract != 0: NaN
 
-  uint32 sign = (fp16 >> 15) & 1;
-  uint32 fp16_exponent = (fp16 >> 10) & ((1 << 5) - 1);
-  uint32 fp16_fraction = fp16 & ((1 << 10) - 1);
+  uint32_t sign = (fp16 >> 15) & 1;
+  uint32_t fp16_exponent = (fp16 >> 10) & ((1 << 5) - 1);
+  uint32_t fp16_fraction = fp16 & ((1 << 10) - 1);
 
   // Normalized or zero
   // binary32 equation: -1 ^ sign * 2 ^ (exponent - 127) * 1.fraction
   // => exponent32 - 127 = exponent16 - 15, exponent32 = exponent16 + 127 - 15
-  uint32 fp32_exponent = fp16_exponent + 127 - 15;
-  uint32 fp32_fraction = fp16_fraction
-                         << (23 - 10); // 23 is binary32 fraction size
+  uint32_t fp32_exponent = fp16_exponent + 127 - 15;
+  uint32_t fp32_fraction = fp16_fraction
+                           << (23 - 10); // 23 is binary32 fraction size
 
   if (fp16_exponent == 31) {
     // Infinity or NaN
@@ -118,7 +119,7 @@ static inline uint32 __attribute__((const)) fp16ToFloat(ushort16 fp16) {
   return (sign << 31) | (fp32_exponent << 23) | fp32_fraction;
 }
 
-static inline uint32 __attribute__((const)) fp24ToFloat(uint32 fp24) {
+static inline uint32_t __attribute__((const)) fp24ToFloat(uint32_t fp24) {
   // binary24: Not a part of IEEE754-2008, but format is obvious,
   // see https://en.wikipedia.org/wiki/Minifloat
   // bit 23 - sign
@@ -133,16 +134,16 @@ static inline uint32 __attribute__((const)) fp24ToFloat(uint32 fp24) {
   // exp = 127, fract = +-0: +-infinity
   // exp = 127, fract != 0: NaN
 
-  uint32 sign = (fp24 >> 23) & 1;
-  uint32 fp24_exponent = (fp24 >> 16) & ((1 << 7) - 1);
-  uint32 fp24_fraction = fp24 & ((1 << 16) - 1);
+  uint32_t sign = (fp24 >> 23) & 1;
+  uint32_t fp24_exponent = (fp24 >> 16) & ((1 << 7) - 1);
+  uint32_t fp24_fraction = fp24 & ((1 << 16) - 1);
 
   // Normalized or zero
   // binary32 equation: -1 ^ sign * 2 ^ (exponent - 127) * 1.fraction
   // => exponent32 - 127 = exponent24 - 64, exponent32 = exponent16 + 127 - 63
-  uint32 fp32_exponent = fp24_exponent + 127 - 63;
-  uint32 fp32_fraction = fp24_fraction
-                         << (23 - 16); // 23 is binary 32 fraction size
+  uint32_t fp32_exponent = fp24_exponent + 127 - 63;
+  uint32_t fp32_fraction = fp24_fraction
+                           << (23 - 16); // 23 is binary 32 fraction size
 
   if (fp24_exponent == 127) {
     // Infinity or NaN
@@ -170,15 +171,15 @@ static inline uint32 __attribute__((const)) fp24ToFloat(uint32 fp24) {
 }
 
 static inline void expandFP16(unsigned char* dst, int width) {
-  auto* dst16 = reinterpret_cast<ushort16*>(dst);
-  auto* dst32 = reinterpret_cast<uint32*>(dst);
+  auto* dst16 = reinterpret_cast<uint16_t*>(dst);
+  auto* dst32 = reinterpret_cast<uint32_t*>(dst);
 
   for (int x = width - 1; x >= 0; x--)
     dst32[x] = fp16ToFloat(dst16[x]);
 }
 
 static inline void expandFP24(unsigned char* dst, int width) {
-  auto* dst32 = reinterpret_cast<uint32*>(dst);
+  auto* dst32 = reinterpret_cast<uint32_t*>(dst);
   dst += (width - 1) * 3;
   for (int x = width - 1; x >= 0; x--) {
     dst32[x] = fp24ToFloat((dst[0] << 16) | (dst[1] << 8) | dst[2]);
@@ -218,14 +219,14 @@ void DeflateDecompressor::decode(
     predFactor = 0;
     break;
   }
+  predFactor *= mRaw->getCpp();
 
   int bytesps = bps / 8;
 
   for (auto row = 0; row < dim.y; ++row) {
     unsigned char* src = uBuffer->get() + row * maxDim.x * bytesps;
-    unsigned char* dst =
-        static_cast<unsigned char*>(mRaw->getData()) +
-        ((off.y + row) * mRaw->pitch + off.x * sizeof(float) * mRaw->getCpp());
+    unsigned char* dst = static_cast<unsigned char*>(mRaw->getData()) +
+                         ((off.y + row) * mRaw->pitch + off.x * sizeof(float));
 
     if (predFactor)
       decodeFPDeltaRow(src, dst, dim.x, maxDim.x, bytesps, predFactor);

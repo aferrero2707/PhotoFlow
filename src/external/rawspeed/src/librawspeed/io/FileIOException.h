@@ -21,16 +21,17 @@
 
 #pragma once
 
+#include "rawspeedconfig.h"               // for RAWSPEED_NOINLINE, RAWSPEE...
 #include "common/RawspeedException.h"     // for ThrowExceptionHelper
 #include "decoders/RawDecoderException.h" // for RawDecoderException
-#include <string>                         // for string
 
 namespace rawspeed {
 
 class FileIOException final : public RawDecoderException {
 public:
-  explicit FileIOException(const std::string& msg) : RawDecoderException(msg) {}
-  explicit FileIOException(const char* msg) : RawDecoderException(msg) {}
+  explicit RAWSPEED_UNLIKELY_FUNCTION RAWSPEED_NOINLINE
+  FileIOException(const char* msg)
+      : RawDecoderException(msg) {}
 };
 
 #define ThrowFIE(...)                                                          \
