@@ -33,7 +33,7 @@
 #define NOMINMAX // do not want the min()/max() macros!
 #endif
 
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 namespace rawspeed {
