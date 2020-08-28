@@ -23,6 +23,7 @@
 
 #include <algorithm>   // for max, min
 #include <cstddef>     // for size_t
+#include <cstdlib>     // for abs
 #include <type_traits> // for make_signed, make_signed<>::type
 
 namespace rawspeed {
