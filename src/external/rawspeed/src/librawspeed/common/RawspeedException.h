@@ -39,11 +39,13 @@ template <typename T>
 #if defined(HAVE_CXX_THREAD_LOCAL)
   static thread_local std::array<char, bufSize> buf;
 #elif defined(HAVE_GCC_THREAD_LOCAL)
-  static __thread char buf[bufSize];
+  //static __thread char buf[bufSize];
+  static __thread std::array<char, bufSize> buf;
 #else
 #pragma message                                                                \
     "Don't have thread-local-storage! Exception text may be garbled if used multithreaded"
-  static char buf[bufSize];
+  //static char buf[bufSize];
+  static std::array<char, bufSize> buf;
 #endif
 
   va_list val;
