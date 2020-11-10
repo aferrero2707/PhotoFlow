@@ -201,12 +201,12 @@ int main (int argc, char *argv[])
     std::cout<<"bname="<<bname<<std::endl;
     std::string ext;
     if( !PF::getFileExtension( "", bname, ext ) ) {
-      std::cout<<"Cannot detemine input file extension. Exiting."<<std::endl;
+      std::cout<<"Cannot determine input file extension. Exiting."<<std::endl;
       return 1;
     }
     std::string iname;
     if( !PF::getFileName( "", bname, iname ) ) {
-      std::cout<<"Cannot detemine input file name. Exiting."<<std::endl;
+      std::cout<<"Cannot determine input file name. Exiting."<<std::endl;
       return 1;
     }
     std::cout<<"iname="<<iname<<std::endl;
@@ -228,7 +228,7 @@ int main (int argc, char *argv[])
 
     std::string oext;
     if( !PF::getFileExtension( "", img_out, oext ) ) {
-      std::cout<<"Cannot detemine input file extension. Exiting."<<std::endl;
+      std::cout<<"Cannot determine input file extension. Exiting."<<std::endl;
       return 1;
     }
     if( oext == "pfi") {

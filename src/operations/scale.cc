@@ -325,7 +325,7 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
       std::cout<<"rotation: out_width="<<out_width<<" dw1="<<dw1<<" dw2="<<dw2<<" dw="<<dw<<std::endl;
       //std::cout<<"rotation: width="<<srcimg->Xsize<<"->"<<cropped_width<<"  height="<<srcimg->Ysize<<"->"<<cropped_height<<std::endl;
       if( vips_crop( srcimg, &out, dw, dh, out_width-2*dw, out_height-2*dh, NULL ) ) {
-        std::cout<<"WARNIG: ScalePar::build(): vips_crop() failed."<<std::endl;
+        std::cout<<"WARNING: ScalePar::build(): vips_crop() failed."<<std::endl;
         //std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  srcimg->Ysize="<<srcimg->Ysize<<std::endl;
         //std::cout<<"vips_crop( srcimg, &out, "<<crop_left.get()/scale_factor<<", "<<crop_top.get()/scale_factor<<", "
         //    <<crop_width.get()/scale_factor<<", "<<crop_height.get()/scale_factor<<", NULL )"<<std::endl;
@@ -337,7 +337,7 @@ VipsImage* PF::ScalePar::build(std::vector<VipsImage*>& in, int first,
       int dw = rotated->Xsize - roi_out.width;
       int dh = rotated->Ysize - roi_out.height;
       if( vips_crop( rotated, &out, dw/2, dh/2, roi_out.width, roi_out.height, NULL ) ) {
-        std::cout<<"WARNIG: ScalePar::build(): vips_crop() failed."<<std::endl;
+        std::cout<<"WARNING: ScalePar::build(): vips_crop() failed."<<std::endl;
         //std::cout<<"srcimg->Xsize="<<srcimg->Xsize<<"  srcimg->Ysize="<<srcimg->Ysize<<std::endl;
         //std::cout<<"vips_crop( srcimg, &out, "<<crop_left.get()/scale_factor<<", "<<crop_top.get()/scale_factor<<", "
         //    <<crop_width.get()/scale_factor<<", "<<crop_height.get()/scale_factor<<", NULL )"<<std::endl;

@@ -4718,7 +4718,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
         // Check if a new name has been requested for a command that does not allow that.
         if (new_name && !is_double_hyphen && !is_input_command)
           error(images,0,0,
-                "Item '%s %s': Unknow name '%s'.",
+                "Item '%s %s': Unknown name '%s'.",
                 initial_item,initial_argument,new_name.data());
 
         // Dispatch to dedicated parsing code, regarding the first character of the command.
@@ -11792,7 +11792,7 @@ gmic& gmic::_run(const CImgList<char>& commands_line, unsigned int& position,
               commands_names[i].assign();
               commands_has_arguments[i].assign();
             }
-            print(images,0,"Discard definitions of all custom commmands (%u command%s discarded).",
+            print(images,0,"Discard definitions of all custom commands (%u command%s discarded).",
                   nb_commands,nb_commands>1?"s":"");
           } else { // Discard one or several custom command.
             g_list_c = CImg<char>::string(argument).get_split(CImg<char>::vector(','),0,false);

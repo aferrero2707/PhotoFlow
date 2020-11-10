@@ -69,7 +69,7 @@ VipsImage* PF::CLAHEPar::build(std::vector<VipsImage*>& in, int first,
 
 
   if( vips_hist_local( ucharimg, &claheimg, width.get(), width.get(), "max_slope", slope.get(), NULL ) ) {
-    std::cout<<"WARNIG: CLAHEPar::build(): vips_hist_local() failed."<<std::endl;
+    std::cout<<"WARNING: CLAHEPar::build(): vips_hist_local() failed."<<std::endl;
     return NULL;
   }
 

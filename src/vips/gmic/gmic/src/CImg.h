@@ -10549,7 +10549,7 @@ namespace cimg_library_suffixed {
       if (siz!=curr_siz) {
 	if (_is_shared)
           throw CImgArgumentException(_cimg_instance
-                                      "assign(): Invalid assignement request of shared instance from specified "
+                                      "assign(): Invalid assignment request of shared instance from specified "
                                       "image (%u,%u,%u,%u).",
                                       cimg_instance,
                                       size_x,size_y,size_z,size_c);
@@ -17185,7 +17185,7 @@ namespace cimg_library_suffixed {
               if (ss0!=expr._data || code.width()) { // (only allowed as the first instruction)
                 *se = saved_char; cimg::strellipsize(expr,64);
                 throw CImgArgumentException("[_cimg_math_parser] "
-                                            "CImg<%s>::%s: %s: Init invokation not done at the "
+                                            "CImg<%s>::%s: %s: Init invocation not done at the "
                                             "beginning of expression '%s%s%s'.",
                                             pixel_type(),_cimg_mp_calling_function,s_op,
                                             (ss - 4)>expr._data?"...":"",
