@@ -669,7 +669,7 @@ g=$_gmic_g c=$_gmic_c n=$_gmic_n r=$_gmic_r
 \n          cropped region of image "${g}"[ind]"$n" (or from default image selected if '"${c}"ind"$n"' is not specified).
 \n          Cropped region starts from point "${g}"(x,y,z,c)"$n" and has a size of "${g}"dx x dy x dz x dc"$n". Arguments for
 \n          coordinates and sizes can be omitted if they are not ambiguous (e.g. '"${c}"crop(#ind,x,y,dx,dy)"$n"' is a
-\n          valid invokation of this function).
+\n          valid invocation of this function).
 \n       . '"${c}"draw(_#ind,S,x,y,z,c,dx,_dy,_dz,_dc,_opacity,_M,_max_M)"$n"' draws a sprite "${g}"S"$n" in image "${g}"[ind]"$n"
 \n          (or in default image selected if '"${c}"ind"$n"' is not specified) at specified coordinates "${g}"(x,y,z,c)"$n".
 \n          The size of the sprite "${g}"dx x dy x dz x dc"$n" must be specified. You can also specify a corresponding

@@ -352,7 +352,7 @@ VipsImage* PF::LensFunParStep::build(std::vector<VipsImage*>& in, int first,
         int ctop = (outnew->Ysize - ch)/2;
         VipsImage* timg = NULL;
         if( vips_crop( outnew, &timg, cleft, ctop, cw, ch, NULL ) ) {
-          std::cout<<"WARNIG: LensFunPar::build(): vips_crop() failed."<<std::endl;
+          std::cout<<"WARNING: LensFunPar::build(): vips_crop() failed."<<std::endl;
           std::cout<<"outnew->Xsize="<<outnew->Xsize<<"  outnew->Ysize="<<outnew->Ysize<<std::endl;
           std::cout<<"vips_crop( outnew, &timg, "<<cleft<<", "<<ctop<<", "
               <<cw<<", "<<ch<<", NULL )"<<std::endl;
