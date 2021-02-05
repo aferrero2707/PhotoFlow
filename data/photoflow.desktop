@@ -2,6 +2,7 @@
 Name=PhotoFlow
 GenericName=RAW and bitmap photo editing
 Comment=Edit images from digital cameras
+Comment[de]=Bearbeite Bilder von Digitalkameras 
 
 X-GNOME-FullName=PhotoFlow Photo Editing Software
 
